@@ -7,7 +7,7 @@ options:
   createIntermediateGroups: true
 
 targets:
-  NanoChat:
+  NanoChatApp:
     type: application
     platform: iOS
     deploymentTarget: "26.0"
@@ -31,10 +31,10 @@ targets:
       - NanoChat
 
 schemes:
-  NanoChat:
+  NanoChatApp:
     build:
       targets:
-        NanoChat: all
+        NanoChatApp: all
     run:
       config: Debug
     archive:

@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "96647E4F8AA8BF0AA7D9D3F9"
-               BuildableName = "NanoChat.app"
-               BlueprintName = "NanoChat"
+               BlueprintIdentifier = "A561CCBB52A6DE0FD91B1DA9"
+               BuildableName = "NanoChatApp.app"
+               BlueprintName = "NanoChatApp"
                ReferencedContainer = "container:NanoChatApp.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "96647E4F8AA8BF0AA7D9D3F9"
-            BuildableName = "NanoChat.app"
-            BlueprintName = "NanoChat"
+            BlueprintIdentifier = "A561CCBB52A6DE0FD91B1DA9"
+            BuildableName = "NanoChatApp.app"
+            BlueprintName = "NanoChatApp"
             ReferencedContainer = "container:NanoChatApp.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,9 +55,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "96647E4F8AA8BF0AA7D9D3F9"
-            BuildableName = "NanoChat.app"
-            BlueprintName = "NanoChat"
+            BlueprintIdentifier = "A561CCBB52A6DE0FD91B1DA9"
+            BuildableName = "NanoChatApp.app"
+            BlueprintName = "NanoChatApp"
             ReferencedContainer = "container:NanoChatApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -74,9 +74,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "96647E4F8AA8BF0AA7D9D3F9"
-            BuildableName = "NanoChat.app"
-            BlueprintName = "NanoChat"
+            BlueprintIdentifier = "A561CCBB52A6DE0FD91B1DA9"
+            BuildableName = "NanoChatApp.app"
+            BlueprintName = "NanoChatApp"
             ReferencedContainer = "container:NanoChatApp.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
