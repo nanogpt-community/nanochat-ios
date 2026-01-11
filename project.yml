@@ -1,0 +1,41 @@
+name: NanoChat
+options:
+  bundleIdPrefix: com.nanochat
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+
+targets:
+  NanoChat:
+    type: application
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - NanoChat
+    settings:
+      base:
+        INFOPLIST_FILE: NanoChat/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.nanochat.app
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.2"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Automatic
+        ENABLE_PREVIEWS: YES
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    schemes:
+      - NanoChat
+
+schemes:
+  NanoChat:
+    build:
+      targets:
+        NanoChat: all
+    run:
+      config: Debug
+    archive:
+      config: Release

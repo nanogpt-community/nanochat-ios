@@ -1,0 +1,473 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 63;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		173A33F93354C17FDBB17922 /* AttachmentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3A6AE8C9B384D11D79E8763 /* AttachmentButton.swift */; };
+		23121E3AB8AEBA0A6508C23E /* ModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3789D62FA90DDF8BD59691A5 /* ModelManager.swift */; };
+		33FDC3EA9DD39D9E55566663 /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6126520B82D8AFC69B5F7669 /* Conversation.swift */; };
+		3552B17408B17A1A1591F132 /* AssistantManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95B77028C20DA62860771E5E /* AssistantManager.swift */; };
+		4278EF3A88E9AB641D069C00 /* WebSearchMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = B818F1440CC035B583AC9AFE /* WebSearchMode.swift */; };
+		46D8DBB07B61CA5AA123564C /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18F8EB64FA0B59E4E582A32A /* Message.swift */; };
+		4F0AD4799CE723048EA2CAB3 /* NanoChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90153657BE215C63608BE8D /* NanoChatApp.swift */; };
+		567D506032C231F0FB20A45D /* LiquidGlassModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71A474260513538212437D7F /* LiquidGlassModifiers.swift */; };
+		680CC7C02123B2F92084DB20 /* WebSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C269EBF4F1718413F1D60A3D /* WebSearchProvider.swift */; };
+		6DEC9D280A50162981650874 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C613FF8CC39FE8255AA5ACA /* Project.swift */; };
+		6F557948A71CD3EEE417C12A /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2708FA29C60473499D21F625 /* Extensions.swift */; };
+		79702461C207FF51B1AB68BB /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = 863B8B1427F2CE5B2B17A13B /* Model.swift */; };
+		8B527D8BEA0A131B7F59931A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3661A619437AD648EE32DE4 /* SettingsView.swift */; };
+		9346E6C8A33896FA06288FBD /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06413550EAE692B39A6E2CD /* ThemeManager.swift */; };
+		95BEA2D92E44B7D12E223F2C /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEC2D18F0DB8605370F719D /* AuthenticationView.swift */; };
+		967099220B6F5C936888F001 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 298D61EC623CB6E53CB5881F /* MainTabView.swift */; };
+		A4858F49237AD809D2C7C1AC /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E42407E9ACE656FB83FDEFA /* ChatViewModel.swift */; };
+		A71969367523379AEA736620 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4155F6764F4A4EB55B1D99F4 /* Theme.swift */; };
+		AA59877BF223ECF5EAB8C65A /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A673CA8B8EA5ADAC578DEB9B /* AuthenticationManager.swift */; };
+		B2BA66F96E3DDCB8F1F9BB05 /* WebSearchToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 955F750455FB9D0CB63F32DA /* WebSearchToggle.swift */; };
+		B4F3536B2283A1D2BDF841DF /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 698226234E821BBC5E0C11BC /* APIConfiguration.swift */; };
+		B5C2B81494F9C62710609829 /* ServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F1789197D28BA1D6FE68623 /* ServerSettingsView.swift */; };
+		C0AB121446C751CE8C9F0633 /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 962B0AECE974E05EC5699868 /* NanoChatAPI.swift */; };
+		CAFF8499ECC76E952EB1112C /* ConversationsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B1D8F2985D9776A07CC201 /* ConversationsListView.swift */; };
+		D7252E51A41A17E4AC30F535 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = 105A454ED8DAB5375AB15713 /* Entitlements.plist */; };
+		D97CDAF202DA24788BEB7718 /* AssistantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6998A3A9FAEB8C0272BCEC4 /* AssistantsListView.swift */; };
+		E1FAB46E26B83C4F49E71AC9 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A83085FE27352957E3E453DD /* ContentView.swift */; };
+		F0619BDA0C7EDC4BC5C0BA5B /* Assistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EA7DCDC19688C36F787882A /* Assistant.swift */; };
+		F8331AA2115B5B698DB9E41D /* ModelCapabilityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 321C351D505DA55F4D318C75 /* ModelCapabilityBadge.swift */; };
+		FC271111858BC2218F2C78FB /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5A86C6E2D66DD6203E781CA /* ChatView.swift */; };
+		FF309C4C845BA3961D85A4AC /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D389D924541355697D9636C /* ProjectsListView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0D389D924541355697D9636C /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		0F1789197D28BA1D6FE68623 /* ServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSettingsView.swift; sourceTree = "<group>"; };
+		105A454ED8DAB5375AB15713 /* Entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Entitlements.plist; sourceTree = "<group>"; };
+		18F8EB64FA0B59E4E582A32A /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
+		1E42407E9ACE656FB83FDEFA /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		2708FA29C60473499D21F625 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		298D61EC623CB6E53CB5881F /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		321C351D505DA55F4D318C75 /* ModelCapabilityBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCapabilityBadge.swift; sourceTree = "<group>"; };
+		3789D62FA90DDF8BD59691A5 /* ModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManager.swift; sourceTree = "<group>"; };
+		4155F6764F4A4EB55B1D99F4 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		4FEC2D18F0DB8605370F719D /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
+		5C613FF8CC39FE8255AA5ACA /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		5EA7DCDC19688C36F787882A /* Assistant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Assistant.swift; sourceTree = "<group>"; };
+		6126520B82D8AFC69B5F7669 /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
+		698226234E821BBC5E0C11BC /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
+		71A474260513538212437D7F /* LiquidGlassModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassModifiers.swift; sourceTree = "<group>"; };
+		79A18138538D0C1863159BFF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		863B8B1427F2CE5B2B17A13B /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		8FA31550E7FCBD351CE833A0 /* NanoChat.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NanoChat.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		955F750455FB9D0CB63F32DA /* WebSearchToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchToggle.swift; sourceTree = "<group>"; };
+		95B77028C20DA62860771E5E /* AssistantManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantManager.swift; sourceTree = "<group>"; };
+		962B0AECE974E05EC5699868 /* NanoChatAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatAPI.swift; sourceTree = "<group>"; };
+		A1B1D8F2985D9776A07CC201 /* ConversationsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsListView.swift; sourceTree = "<group>"; };
+		A3A6AE8C9B384D11D79E8763 /* AttachmentButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentButton.swift; sourceTree = "<group>"; };
+		A5A86C6E2D66DD6203E781CA /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
+		A673CA8B8EA5ADAC578DEB9B /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
+		A83085FE27352957E3E453DD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B818F1440CC035B583AC9AFE /* WebSearchMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchMode.swift; sourceTree = "<group>"; };
+		C269EBF4F1718413F1D60A3D /* WebSearchProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchProvider.swift; sourceTree = "<group>"; };
+		D06413550EAE692B39A6E2CD /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
+		D3661A619437AD648EE32DE4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D6998A3A9FAEB8C0272BCEC4 /* AssistantsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantsListView.swift; sourceTree = "<group>"; };
+		F90153657BE215C63608BE8D /* NanoChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0334524ED08302FFC2E7206A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5EA7DCDC19688C36F787882A /* Assistant.swift */,
+				6126520B82D8AFC69B5F7669 /* Conversation.swift */,
+				18F8EB64FA0B59E4E582A32A /* Message.swift */,
+				863B8B1427F2CE5B2B17A13B /* Model.swift */,
+				5C613FF8CC39FE8255AA5ACA /* Project.swift */,
+				B818F1440CC035B583AC9AFE /* WebSearchMode.swift */,
+				C269EBF4F1718413F1D60A3D /* WebSearchProvider.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		0B2C3BA36F7BBB54EB07A7C5 /* NanoChat */ = {
+			isa = PBXGroup;
+			children = (
+				A83085FE27352957E3E453DD /* ContentView.swift */,
+				105A454ED8DAB5375AB15713 /* Entitlements.plist */,
+				79A18138538D0C1863159BFF /* Info.plist */,
+				F90153657BE215C63608BE8D /* NanoChatApp.swift */,
+				0334524ED08302FFC2E7206A /* Models */,
+				CBC0984B0D9BD52A928F71CC /* Services */,
+				214109F021A3DD22CB136ADA /* Utilities */,
+				2F3A617CA7E5901CB5CD7E8D /* ViewModels */,
+				3976DDB6D5262D4A09013BC1 /* Views */,
+			);
+			path = NanoChat;
+			sourceTree = "<group>";
+		};
+		204A5F665FC795CDF3C8E492 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8FA31550E7FCBD351CE833A0 /* NanoChat.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		214109F021A3DD22CB136ADA /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				2708FA29C60473499D21F625 /* Extensions.swift */,
+				71A474260513538212437D7F /* LiquidGlassModifiers.swift */,
+				4155F6764F4A4EB55B1D99F4 /* Theme.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		2F3A617CA7E5901CB5CD7E8D /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				95B77028C20DA62860771E5E /* AssistantManager.swift */,
+				A673CA8B8EA5ADAC578DEB9B /* AuthenticationManager.swift */,
+				1E42407E9ACE656FB83FDEFA /* ChatViewModel.swift */,
+				3789D62FA90DDF8BD59691A5 /* ModelManager.swift */,
+				D06413550EAE692B39A6E2CD /* ThemeManager.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		3976DDB6D5262D4A09013BC1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D6998A3A9FAEB8C0272BCEC4 /* AssistantsListView.swift */,
+				A3A6AE8C9B384D11D79E8763 /* AttachmentButton.swift */,
+				4FEC2D18F0DB8605370F719D /* AuthenticationView.swift */,
+				A5A86C6E2D66DD6203E781CA /* ChatView.swift */,
+				A1B1D8F2985D9776A07CC201 /* ConversationsListView.swift */,
+				298D61EC623CB6E53CB5881F /* MainTabView.swift */,
+				321C351D505DA55F4D318C75 /* ModelCapabilityBadge.swift */,
+				0D389D924541355697D9636C /* ProjectsListView.swift */,
+				0F1789197D28BA1D6FE68623 /* ServerSettingsView.swift */,
+				D3661A619437AD648EE32DE4 /* SettingsView.swift */,
+				955F750455FB9D0CB63F32DA /* WebSearchToggle.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3BBD1EBDC16B69CA107E7C36 = {
+			isa = PBXGroup;
+			children = (
+				0B2C3BA36F7BBB54EB07A7C5 /* NanoChat */,
+				204A5F665FC795CDF3C8E492 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CBC0984B0D9BD52A928F71CC /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				698226234E821BBC5E0C11BC /* APIConfiguration.swift */,
+				962B0AECE974E05EC5699868 /* NanoChatAPI.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BDC33F613A61DBA80FA048BD /* NanoChat */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 222659E2456DF21CA7C9E62C /* Build configuration list for PBXNativeTarget "NanoChat" */;
+			buildPhases = (
+				0CB2052816CAE33350C55F4A /* Sources */,
+				D838BBD55D5312B7B30B6CCE /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NanoChat;
+			packageProductDependencies = (
+			);
+			productName = NanoChat;
+			productReference = 8FA31550E7FCBD351CE833A0 /* NanoChat.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		9A9D923B1FB9376708EC74D9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					BDC33F613A61DBA80FA048BD = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 1D390791B820F832C7291364 /* Build configuration list for PBXProject "NanoChat" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 3BBD1EBDC16B69CA107E7C36;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BDC33F613A61DBA80FA048BD /* NanoChat */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D838BBD55D5312B7B30B6CCE /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D7252E51A41A17E4AC30F535 /* Entitlements.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0CB2052816CAE33350C55F4A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B4F3536B2283A1D2BDF841DF /* APIConfiguration.swift in Sources */,
+				F0619BDA0C7EDC4BC5C0BA5B /* Assistant.swift in Sources */,
+				3552B17408B17A1A1591F132 /* AssistantManager.swift in Sources */,
+				D97CDAF202DA24788BEB7718 /* AssistantsListView.swift in Sources */,
+				173A33F93354C17FDBB17922 /* AttachmentButton.swift in Sources */,
+				AA59877BF223ECF5EAB8C65A /* AuthenticationManager.swift in Sources */,
+				95BEA2D92E44B7D12E223F2C /* AuthenticationView.swift in Sources */,
+				FC271111858BC2218F2C78FB /* ChatView.swift in Sources */,
+				A4858F49237AD809D2C7C1AC /* ChatViewModel.swift in Sources */,
+				E1FAB46E26B83C4F49E71AC9 /* ContentView.swift in Sources */,
+				33FDC3EA9DD39D9E55566663 /* Conversation.swift in Sources */,
+				CAFF8499ECC76E952EB1112C /* ConversationsListView.swift in Sources */,
+				6F557948A71CD3EEE417C12A /* Extensions.swift in Sources */,
+				567D506032C231F0FB20A45D /* LiquidGlassModifiers.swift in Sources */,
+				967099220B6F5C936888F001 /* MainTabView.swift in Sources */,
+				46D8DBB07B61CA5AA123564C /* Message.swift in Sources */,
+				79702461C207FF51B1AB68BB /* Model.swift in Sources */,
+				F8331AA2115B5B698DB9E41D /* ModelCapabilityBadge.swift in Sources */,
+				23121E3AB8AEBA0A6508C23E /* ModelManager.swift in Sources */,
+				C0AB121446C751CE8C9F0633 /* NanoChatAPI.swift in Sources */,
+				4F0AD4799CE723048EA2CAB3 /* NanoChatApp.swift in Sources */,
+				6DEC9D280A50162981650874 /* Project.swift in Sources */,
+				FF309C4C845BA3961D85A4AC /* ProjectsListView.swift in Sources */,
+				B5C2B81494F9C62710609829 /* ServerSettingsView.swift in Sources */,
+				8B527D8BEA0A131B7F59931A /* SettingsView.swift in Sources */,
+				A71969367523379AEA736620 /* Theme.swift in Sources */,
+				9346E6C8A33896FA06288FBD /* ThemeManager.swift in Sources */,
+				4278EF3A88E9AB641D069C00 /* WebSearchMode.swift in Sources */,
+				680CC7C02123B2F92084DB20 /* WebSearchProvider.swift in Sources */,
+				B2BA66F96E3DDCB8F1F9BB05 /* WebSearchToggle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		17E391B9DE483AF352AAD9AA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		27874F5AD37890525A5CD857 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		4622F4814D49F58C7C516967 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YP8HMR9NR6;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = NanoChat/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nanochat.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		5B63AB6095236F695AF24C89 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YP8HMR9NR6;
+				ENABLE_PREVIEWS = YES;
+				INFOPLIST_FILE = NanoChat/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nanochat.app;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1D390791B820F832C7291364 /* Build configuration list for PBXProject "NanoChat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				17E391B9DE483AF352AAD9AA /* Debug */,
+				27874F5AD37890525A5CD857 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		222659E2456DF21CA7C9E62C /* Build configuration list for PBXNativeTarget "NanoChat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5B63AB6095236F695AF24C89 /* Debug */,
+				4622F4814D49F58C7C516967 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 9A9D923B1FB9376708EC74D9 /* Project object */;
+}
