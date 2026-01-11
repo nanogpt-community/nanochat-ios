@@ -2,6 +2,10 @@
 
 A native iOS application for [NanoChat](https://github.com/nanogpt-community/nanochat), built with SwiftUI and the Liquid Glass design system.
 
+## Download
+
+[Join the TestFlight Beta](https://testflight.apple.com/join/afmPp2xW)
+
 ## Features
 
 - **Liquid Glass UI** - Modern, translucent interface with iOS 26's Liquid Glass design
