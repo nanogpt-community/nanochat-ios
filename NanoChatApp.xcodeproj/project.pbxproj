@@ -15,6 +15,7 @@
 		5215DCDD9B453CF24AF9486F /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */; };
 		54DA164D31C8050F27623042 /* ModelManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76F6D30C2E95E614927E80D /* ModelManager.swift */; };
 		5EEE81464BCD2D36BFA184A4 /* Assistant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75DDA00B86BE0AD1AEE09BF6 /* Assistant.swift */; };
+		5FFD33DB234B67854728DBEB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 9D88E40B7C7F78BA5DB11E5D /* Assets.xcassets */; };
 		67073A55CB590A27D2D6B5DA /* WebSearchMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */; };
 		6724EB484F57DB985EA35281 /* NanoChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41936341BC22F3B70EA5CBFF /* NanoChatApp.swift */; };
 		6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025014189CB03650FFDD2E8C /* Conversation.swift */; };
@@ -61,6 +62,7 @@
 		8E1E8D6FB041CE9A0E34235B /* ConversationsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationsListView.swift; sourceTree = "<group>"; };
 		92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelCapabilityBadge.swift; sourceTree = "<group>"; };
 		97F8CD0478EEB7EC20F2910F /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		9D88E40B7C7F78BA5DB11E5D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9DF5795352F6BCA8014DCA33 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentButton.swift; sourceTree = "<group>"; };
 		BD93C9CDA2EFBB4F93A3B35D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -159,6 +161,7 @@
 		F65068D7ADB3B206915CCD1E /* NanoChat */ = {
 			isa = PBXGroup;
 			children = (
+				9D88E40B7C7F78BA5DB11E5D /* Assets.xcassets */,
 				BD93C9CDA2EFBB4F93A3B35D /* ContentView.swift */,
 				F525CE460E1FE06B29624306 /* Entitlements.plist */,
 				793AFCFE19A9848C1B74ED93 /* Info.plist */,
@@ -230,6 +233,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5FFD33DB234B67854728DBEB /* Assets.xcassets in Resources */,
 				D5C5A81FCBB0A5371E511830 /* Entitlements.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

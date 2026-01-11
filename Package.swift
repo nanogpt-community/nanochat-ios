@@ -21,12 +21,11 @@ let package = Package(
         .target(
             name: "NanoChat",
             dependencies: [],
-            path: "NanoChat"
+            path: "NanoChat",
+            resources: [
+                .process("Assets.xcassets")
+            ]
         ),
-        .testTarget(
-            name: "NanoChatTests",
-            dependencies: ["NanoChat"],
-            path: "NanoChatTests"
-        )
+
     ]
 )
