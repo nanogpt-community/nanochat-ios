@@ -12,6 +12,7 @@ struct UserModel: Codable, Identifiable, Hashable {
     let description: String?
     let capabilities: ModelCapabilities?
     let costEstimate: Double?
+    let subscriptionIncluded: Bool?
 
     // Use modelId as the id for Identifiable
     var id: String { modelId }
@@ -25,6 +26,7 @@ struct UserModel: Codable, Identifiable, Hashable {
         case description
         case capabilities
         case costEstimate
+        case subscriptionIncluded
     }
 }
 

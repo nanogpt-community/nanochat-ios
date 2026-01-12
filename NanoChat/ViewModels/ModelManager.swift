@@ -8,6 +8,7 @@ final class ModelManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var selectedModel: UserModel?
+    @Published var hiddenModelIds: Set<String> = []
 
     private let api = NanoChatAPI.shared
 
@@ -17,7 +18,19 @@ final class ModelManager: ObservableObject {
 
         do {
             allModels = try await api.getUserModels()
-            groupedModels = allModels.filterEnabled().groupedByProvider()
+            
+            // Load hidden models
+            if UserDefaults.standard.object(forKey: "hiddenModelIds") != nil {
+                if let savedHiddenIds = UserDefaults.standard.array(forKey: "hiddenModelIds") as? [String] {
+                    hiddenModelIds = Set(savedHiddenIds)
+                }
+            } else {
+                // First time load: hide models that are disabled on server
+                let serverDisabledIds = allModels.filter { !$0.enabled }.map { $0.modelId }
+                hiddenModelIds = Set(serverDisabledIds)
+            }
+            
+            updateGroupedModels()
 
             // Try to restore the last used model
             let lastUsedModelId = UserDefaults.standard.string(forKey: "lastUsedModel")
@@ -42,5 +55,23 @@ final class ModelManager: ObservableObject {
 
     func selectModel(_ model: UserModel) {
         selectedModel = model
+    }
+    
+    func toggleModelVisibility(id: String) {
+        if hiddenModelIds.contains(id) {
+            hiddenModelIds.remove(id)
+        } else {
+            hiddenModelIds.insert(id)
+        }
+        
+        UserDefaults.standard.set(Array(hiddenModelIds), forKey: "hiddenModelIds")
+        updateGroupedModels()
+    }
+    
+    private func updateGroupedModels() {
+        groupedModels = allModels
+            // .filterEnabled() <-- REMOVED: We now rely purely on hiddenModelIds for user preference
+            .filter { !hiddenModelIds.contains($0.modelId) }
+            .groupedByProvider()
     }
 }

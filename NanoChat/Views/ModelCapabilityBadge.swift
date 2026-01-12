@@ -57,16 +57,39 @@ enum CapabilityType {
 
 struct ModelCapabilityBadges: View {
     let capabilities: ModelCapabilities?
+    var subscriptionIncluded: Bool? = nil
 
     var body: some View {
         HStack(spacing: 4) {
             if let capabilities {
-                ModelCapabilityBadge(capability: .vision, isEnabled: capabilities.vision == true)
-                ModelCapabilityBadge(capability: .reasoning, isEnabled: capabilities.reasoning == true)
-                ModelCapabilityBadge(capability: .images, isEnabled: capabilities.images == true)
-                ModelCapabilityBadge(capability: .video, isEnabled: capabilities.video == true)
+                if capabilities.vision == true {
+                    capabilityIcon(CapabilityType.vision)
+                }
+                if capabilities.reasoning == true {
+                    capabilityIcon(CapabilityType.reasoning)
+                }
+                if capabilities.images == true {
+                    capabilityIcon(CapabilityType.images)
+                }
+                if capabilities.video == true {
+                    capabilityIcon(CapabilityType.video)
+                }
+            }
+
+            if let subscriptionIncluded, subscriptionIncluded {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(Theme.Colors.success)
+                    .fixedSize()
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
+    }
+
+    @ViewBuilder
+    private func capabilityIcon(_ type: CapabilityType) -> some View {
+        Image(systemName: type.iconName)
+            .foregroundStyle(type.color)
+            .fixedSize()
     }
 }
 

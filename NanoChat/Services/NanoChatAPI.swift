@@ -239,10 +239,8 @@ final class NanoChatAPI: Sendable {
     // MARK: - User Models
 
     func getUserModels() async throws -> [UserModel] {
-        // The API returns a dictionary keyed by "provider:modelId"
-        let decoder = JSONDecoder()
-
-        let urlComponents = URLComponents(string: "\(config.baseURL)/api/db/user-models")
+        // Use the new endpoint that includes capabilities
+        let urlComponents = URLComponents(string: "\(config.baseURL)/api/models")
         guard let url = urlComponents?.url else {
             throw APIError.invalidURL
         }
@@ -265,24 +263,32 @@ final class NanoChatAPI: Sendable {
             throw APIError.httpError(statusCode: httpResponse.statusCode)
         }
 
-        // Decode as dictionary and convert to array
-        if let dict = try? decoder.decode([String: UserModelRaw].self, from: data) {
-            return dict.values.map { raw in
-                UserModel(
-                    modelId: raw.modelId,
-                    provider: raw.provider,
-                    enabled: raw.enabled ?? true,
-                    pinned: (raw.pinnedInt ?? 0) == 1,
-                    name: raw.name,
-                    description: raw.description,
-                    capabilities: raw.capabilities,
-                    costEstimate: raw.costEstimate
-                )
+        // Decode as array directly from the new endpoint
+        let models = try JSONDecoder().decode([NanoGPTModelResponse].self, from: data)
+
+        // Debug: print capabilities
+        for model in models {
+            if let caps = model.capabilities {
+                print("Model: \(model.name), Vision: \(caps.vision ?? false), Reasoning: \(caps.reasoning ?? false), Images: \(caps.images ?? false), Video: \(caps.video ?? false)")
+            } else {
+                print("Model: \(model.name), Capabilities: nil")
             }
         }
 
-        // Fallback: try decoding as array directly
-        return try decoder.decode([UserModel].self, from: data)
+        // Convert to UserModel format
+        return models.map { model in
+            UserModel(
+                modelId: model.id,
+                provider: "nanogpt",
+                enabled: model.enabled,
+                pinned: model.pinned,
+                name: model.name,
+                description: model.description,
+                capabilities: model.capabilities,
+                costEstimate: model.pricing?.prompt.flatMap { Double($0) },
+                subscriptionIncluded: model.subscription?.included
+            )
+        }
     }
 
     func fetchModelProviders(modelId: String) async throws -> ModelProvidersResponse {
@@ -530,6 +536,85 @@ final class NanoChatAPI: Sendable {
         )
         return try await self.request(endpoint: "/api/projects", method: .post, body: request)
     }
+
+    // MARK: - User Settings
+
+    func getUserSettings() async throws -> UserSettings {
+        let urlComponents = URLComponents(string: "\(config.baseURL)/api/db/user-settings")
+        guard let url = urlComponents?.url else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            print("User settings API error: \(httpResponse.statusCode)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Response body: \(jsonString)")
+            }
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+
+        // Debug logging
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("User settings response: \(jsonString)")
+        }
+
+        do {
+            let decoded = try JSONDecoder().decode(UserSettings.self, from: data)
+            return decoded
+        } catch {
+            print("Decoding error for user settings: \(error)")
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("Response body: \(jsonString)")
+            }
+            throw APIError.decodingError(error)
+        }
+    }
+
+    func updateUserSettings(
+        privacyMode: Bool? = nil,
+        contextMemoryEnabled: Bool? = nil,
+        persistentMemoryEnabled: Bool? = nil,
+        youtubeTranscriptsEnabled: Bool? = nil,
+        webScrapingEnabled: Bool? = nil,
+        mcpEnabled: Bool? = nil,
+        followUpQuestionsEnabled: Bool? = nil,
+        karakeepUrl: String? = nil,
+        karakeepApiKey: String? = nil,
+        theme: String? = nil,
+        titleModelId: String? = nil,
+        followUpModelId: String? = nil
+    ) async throws -> UserSettings {
+        let request = UpdateUserSettingsRequest(
+            action: "update",
+            privacyMode: privacyMode,
+            contextMemoryEnabled: contextMemoryEnabled,
+            persistentMemoryEnabled: persistentMemoryEnabled,
+            youtubeTranscriptsEnabled: youtubeTranscriptsEnabled,
+            webScrapingEnabled: webScrapingEnabled,
+            mcpEnabled: mcpEnabled,
+            followUpQuestionsEnabled: followUpQuestionsEnabled,
+            karakeepUrl: karakeepUrl,
+            karakeepApiKey: karakeepApiKey,
+            theme: theme,
+            titleModelId: titleModelId,
+            followUpModelId: followUpModelId
+        )
+        return try await self.request(endpoint: "/api/db/user-settings", method: .post, body: request)
+    }
 }
 
 enum HTTPMethod: String {
@@ -658,4 +743,136 @@ enum DocumentFileType: String, Codable {
     case markdown
     case text
     case epub
+}
+
+// MARK: - NanoGPT Model Types
+
+struct NanoGPTModelResponse: Codable {
+    let id: String
+    let name: String
+    let description: String
+    let enabled: Bool
+    let pinned: Bool
+    let capabilities: ModelCapabilities?
+    let pricing: NanoGPTPricing?
+    let subscription: NanoGPTSubscription?
+}
+
+struct NanoGPTPricing: Codable {
+    let prompt: String?
+    let completion: String?
+    let image: String?
+    let request: String?
+}
+
+struct NanoGPTSubscription: Codable {
+    let included: Bool
+    let note: String
+}
+
+// MARK: - User Settings Types
+
+struct UpdateUserSettingsRequest: Codable {
+    let action: String
+    let privacyMode: Bool?
+    let contextMemoryEnabled: Bool?
+    let persistentMemoryEnabled: Bool?
+    let youtubeTranscriptsEnabled: Bool?
+    let webScrapingEnabled: Bool?
+    let mcpEnabled: Bool?
+    let followUpQuestionsEnabled: Bool?
+    let karakeepUrl: String?
+    let karakeepApiKey: String?
+    let theme: String?
+    let titleModelId: String?
+    let followUpModelId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case action
+        case privacyMode = "privacyMode"
+        case contextMemoryEnabled = "contextMemoryEnabled"
+        case persistentMemoryEnabled = "persistentMemoryEnabled"
+        case youtubeTranscriptsEnabled = "youtubeTranscriptsEnabled"
+        case webScrapingEnabled = "webScrapingEnabled"
+        case mcpEnabled = "mcpEnabled"
+        case followUpQuestionsEnabled = "followUpQuestionsEnabled"
+        case karakeepUrl = "karakeepUrl"
+        case karakeepApiKey = "karakeepApiKey"
+        case theme
+        case titleModelId = "titleModelId"
+        case followUpModelId = "followUpModelId"
+    }
+
+    init(
+        action: String,
+        privacyMode: Bool? = nil,
+        contextMemoryEnabled: Bool? = nil,
+        persistentMemoryEnabled: Bool? = nil,
+        youtubeTranscriptsEnabled: Bool? = nil,
+        webScrapingEnabled: Bool? = nil,
+        mcpEnabled: Bool? = nil,
+        followUpQuestionsEnabled: Bool? = nil,
+        karakeepUrl: String? = nil,
+        karakeepApiKey: String? = nil,
+        theme: String? = nil,
+        titleModelId: String? = nil,
+        followUpModelId: String? = nil
+    ) {
+        self.action = action
+        self.privacyMode = privacyMode
+        self.contextMemoryEnabled = contextMemoryEnabled
+        self.persistentMemoryEnabled = persistentMemoryEnabled
+        self.youtubeTranscriptsEnabled = youtubeTranscriptsEnabled
+        self.webScrapingEnabled = webScrapingEnabled
+        self.mcpEnabled = mcpEnabled
+        self.followUpQuestionsEnabled = followUpQuestionsEnabled
+        self.karakeepUrl = karakeepUrl
+        self.karakeepApiKey = karakeepApiKey
+        self.theme = theme
+        self.titleModelId = titleModelId
+        self.followUpModelId = followUpModelId
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(action, forKey: .action)
+
+        // Only include non-nil values
+        if let privacyMode = privacyMode {
+            try container.encode(privacyMode, forKey: .privacyMode)
+        }
+        if let contextMemoryEnabled = contextMemoryEnabled {
+            try container.encode(contextMemoryEnabled, forKey: .contextMemoryEnabled)
+        }
+        if let persistentMemoryEnabled = persistentMemoryEnabled {
+            try container.encode(persistentMemoryEnabled, forKey: .persistentMemoryEnabled)
+        }
+        if let youtubeTranscriptsEnabled = youtubeTranscriptsEnabled {
+            try container.encode(youtubeTranscriptsEnabled, forKey: .youtubeTranscriptsEnabled)
+        }
+        if let webScrapingEnabled = webScrapingEnabled {
+            try container.encode(webScrapingEnabled, forKey: .webScrapingEnabled)
+        }
+        if let mcpEnabled = mcpEnabled {
+            try container.encode(mcpEnabled, forKey: .mcpEnabled)
+        }
+        if let followUpQuestionsEnabled = followUpQuestionsEnabled {
+            try container.encode(followUpQuestionsEnabled, forKey: .followUpQuestionsEnabled)
+        }
+        if let karakeepUrl = karakeepUrl {
+            try container.encode(karakeepUrl, forKey: .karakeepUrl)
+        }
+        if let karakeepApiKey = karakeepApiKey {
+            try container.encode(karakeepApiKey, forKey: .karakeepApiKey)
+        }
+        if let theme = theme {
+            try container.encode(theme, forKey: .theme)
+        }
+        if let titleModelId = titleModelId {
+            try container.encode(titleModelId, forKey: .titleModelId)
+        }
+        if let followUpModelId = followUpModelId {
+            try container.encode(followUpModelId, forKey: .followUpModelId)
+        }
+    }
 }

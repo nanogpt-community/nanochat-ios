@@ -5,13 +5,15 @@ struct SettingsView: View {
     @EnvironmentObject var themeManager: ThemeManager
     @Environment(\.dismiss) var dismiss
     @State private var showingLogoutAlert = false
+    @State private var showingAccountSettings = false
+    @StateObject private var modelManager = ModelManager()
 
     var body: some View {
         ZStack {
             // Background
             Theme.Gradients.background
                 .ignoresSafeArea()
-            
+
             // Decorative glow
             Circle()
                 .fill(
@@ -25,7 +27,7 @@ struct SettingsView: View {
                 .frame(width: 400, height: 400)
                 .offset(x: 150, y: -100)
                 .ignoresSafeArea()
-            
+
             NavigationStack {
                 ScrollView {
                     VStack(spacing: Theme.Spacing.xl) {
@@ -36,7 +38,7 @@ struct SettingsView: View {
                                     Circle()
                                         .fill(Theme.Gradients.primary)
                                         .frame(width: 50, height: 50)
-                                    
+
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 22))
                                         .foregroundStyle(.white)
@@ -54,11 +56,38 @@ struct SettingsView: View {
                                 }
 
                                 Spacer()
-                                
+
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.title2)
                                     .foregroundStyle(Theme.Colors.success)
                             }
+
+                            Divider()
+                                .background(Theme.Colors.glassBorder)
+
+                            Button {
+                                HapticManager.shared.tap()
+                                showingAccountSettings = true
+                            } label: {
+                                HStack {
+                                    Image(systemName: "person.text.rectangle")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.Colors.primary)
+                                        .frame(width: 28)
+
+                                    Text("Account Settings")
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         // Configuration Section
@@ -70,7 +99,7 @@ struct SettingsView: View {
                                     title: "Server URL",
                                     value: authManager.baseURL
                                 )
-                                
+
                                 Divider()
                                     .background(Theme.Colors.glassBorder)
 
@@ -80,7 +109,7 @@ struct SettingsView: View {
                                     title: "API Key",
                                     value: String(authManager.apiKey.prefix(16)) + "..."
                                 )
-                                
+
                                 Divider()
                                     .background(Theme.Colors.glassBorder)
 
@@ -93,17 +122,18 @@ struct SettingsView: View {
                                             .font(.system(size: 14))
                                             .foregroundStyle(Theme.Colors.secondary)
                                             .frame(width: 28)
-                                        
+
                                         Text("Update Credentials")
                                             .font(.subheadline)
                                             .foregroundStyle(Theme.Colors.text)
-                                        
+
                                         Spacer()
-                                        
+
                                         Image(systemName: "chevron.right")
                                             .font(.caption)
                                             .foregroundStyle(Theme.Colors.textTertiary)
                                     }
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -117,13 +147,13 @@ struct SettingsView: View {
                                         .font(.system(size: 14))
                                         .foregroundStyle(Theme.Colors.accent)
                                         .frame(width: 28)
-                                    
+
                                     Text("Theme")
                                         .font(.subheadline)
                                         .foregroundStyle(Theme.Colors.text)
-                                    
+
                                     Spacer()
-                                    
+
                                     Picker("", selection: $themeManager.currentTheme) {
                                         Text("System").tag(ThemeManager.Theme.system)
                                         Text("Light").tag(ThemeManager.Theme.light)
@@ -144,7 +174,7 @@ struct SettingsView: View {
                                     title: "Version",
                                     value: Bundle.main.fullVersion
                                 )
-                                
+
                                 Divider()
                                     .background(Theme.Colors.glassBorder)
 
@@ -154,13 +184,13 @@ struct SettingsView: View {
                                             .font(.system(size: 14))
                                             .foregroundStyle(Theme.Colors.primary)
                                             .frame(width: 28)
-                                        
+
                                         Text("Documentation")
                                             .font(.subheadline)
                                             .foregroundStyle(Theme.Colors.text)
-                                        
+
                                         Spacer()
-                                        
+
                                         Image(systemName: "arrow.up.right")
                                             .font(.caption)
                                             .foregroundStyle(Theme.Colors.textTertiary)
@@ -180,17 +210,17 @@ struct SettingsView: View {
                                         .font(.system(size: 14))
                                         .foregroundStyle(Theme.Colors.error)
                                         .frame(width: 28)
-                                    
+
                                     Text("Sign Out")
                                         .font(.subheadline)
                                         .foregroundStyle(Theme.Colors.error)
-                                    
+
                                     Spacer()
                                 }
                             }
                             .buttonStyle(.plain)
                         }
-                        
+
                         Spacer(minLength: Theme.Spacing.xxl)
                     }
                     .padding(.horizontal, Theme.Spacing.lg)
@@ -210,6 +240,9 @@ struct SettingsView: View {
                 } message: {
                     Text("Are you sure you want to sign out? Your local data will remain.")
                 }
+                .sheet(isPresented: $showingAccountSettings) {
+                    AccountSettingsView(modelManager: modelManager)
+                }
             }
         }
     }
@@ -220,7 +253,7 @@ struct SettingsView: View {
 struct SettingsSection<Content: View>: View {
     let title: String
     @ViewBuilder let content: Content
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
             Text(title.uppercased())
@@ -228,7 +261,7 @@ struct SettingsSection<Content: View>: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(Theme.Colors.textTertiary)
                 .padding(.horizontal, Theme.Spacing.sm)
-            
+
             content
                 .padding(Theme.Spacing.md)
                 .background(.ultraThinMaterial)
@@ -248,20 +281,20 @@ struct SettingsRow: View {
     let iconColor: Color
     let title: String
     let value: String
-    
+
     var body: some View {
         HStack {
             Image(systemName: icon)
                 .font(.system(size: 14))
                 .foregroundStyle(iconColor)
                 .frame(width: 28)
-            
+
             Text(title)
                 .font(.subheadline)
                 .foregroundStyle(Theme.Colors.text)
-            
+
             Spacer()
-            
+
             Text(value)
                 .font(.subheadline)
                 .foregroundStyle(Theme.Colors.textSecondary)

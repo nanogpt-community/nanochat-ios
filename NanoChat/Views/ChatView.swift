@@ -14,6 +14,7 @@ struct ChatView: View {
     @State private var selectedDocuments: [URL] = []
     @State private var isUploading = false
     @State private var showProviderPicker = false
+    @State private var showModelPicker = false
 
     var body: some View {
         ZStack {
@@ -102,7 +103,7 @@ struct ChatView: View {
                             removal: .opacity
                         ))
                     }
-                    
+
                     // Typing indicator when generating
                     if viewModel.isGenerating {
                         TypingIndicator()
@@ -133,7 +134,7 @@ struct ChatView: View {
                     .fill(Theme.Colors.secondary.opacity(0.15))
                     .frame(width: 100, height: 100)
                     .blur(radius: 20)
-                
+
                 Circle()
                     .fill(Theme.Gradients.primary)
                     .frame(width: 70, height: 70)
@@ -144,18 +145,18 @@ struct ChatView: View {
                     )
                     .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 15, x: 0, y: 8)
             }
-            
+
             VStack(spacing: Theme.Spacing.sm) {
                 Text("Start a conversation")
                     .font(.title3)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
-                
+
                 Text("Ask me anything or try one of these")
                     .font(.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
-            
+
             // Suggestion chips
             LazyVGrid(columns: [
                 GridItem(.flexible()),
@@ -398,32 +399,8 @@ struct ChatView: View {
 
     @ViewBuilder
     private func modelSelector(model: UserModel) -> some View {
-        Menu {
-            ForEach(modelManager.groupedModels) { group in
-                Section(group.name) {
-                    ForEach(group.models) { model in
-                        Button {
-                            modelManager.selectModel(model)
-                            UserDefaults.standard.set(model.modelId, forKey: "lastUsedModel")
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(model.name ?? model.modelId)
-                                        .font(.subheadline)
-                                        .foregroundStyle(Theme.Colors.text)
-
-                                    ModelCapabilityBadges(capabilities: model.capabilities)
-                                }
-
-                                if model.id == model.id {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(Theme.Colors.secondary)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        Button {
+            showModelPicker = true
         } label: {
             HStack(spacing: Theme.Spacing.sm) {
                 ZStack {
@@ -454,6 +431,37 @@ struct ChatView: View {
             .frame(minWidth: 140)
             .glassCard()
             .animation(.none, value: model.modelId)
+        }
+        .sheet(isPresented: $showModelPicker) {
+            ModelPicker(
+                groupedModels: modelManager.groupedModels,
+                selectedModelId: modelManager.selectedModel?.modelId
+            ) { selectedModel in
+                modelManager.selectModel(selectedModel)
+                UserDefaults.standard.set(selectedModel.modelId, forKey: "lastUsedModel")
+                showModelPicker = false
+            }
+            .presentationDetents([PresentationDetent.medium, PresentationDetent.large])
+            .presentationDragIndicator(Visibility.visible)
+        }
+    }
+
+    @ViewBuilder
+    private func modelSelectorLabel(model: UserModel) -> some View {
+        HStack {
+            Text(model.name ?? model.modelId)
+                .font(.subheadline)
+                .foregroundStyle(Theme.Colors.text)
+
+            Spacer()
+
+            ModelCapabilityBadges(capabilities: model.capabilities, subscriptionIncluded: model.subscriptionIncluded)
+                .font(.caption)
+
+            if modelManager.selectedModel?.id == model.id {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(Theme.Colors.secondary)
+            }
         }
     }
 
@@ -550,7 +558,7 @@ struct ChatView: View {
 
         // Haptic feedback on send
         HapticManager.shared.tap()
-        
+
         isInputFocused = false
         let currentMessage = messageText
         let currentImages = selectedImages
@@ -1009,9 +1017,9 @@ struct SuggestionChip: View {
     let text: String
     let color: Color
     let action: () -> Void
-    
+
     @State private var isPressed = false
-    
+
     var body: some View {
         Button(action: {
             HapticManager.shared.lightTap()
@@ -1021,10 +1029,12 @@ struct SuggestionChip: View {
                 Image(systemName: icon)
                     .font(.system(size: 14))
                     .foregroundStyle(color)
-                
+
                 Text(text)
                     .font(.subheadline)
                     .foregroundStyle(Theme.Colors.text)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Theme.Spacing.md)
@@ -1057,9 +1067,9 @@ struct TypingIndicator: View {
     @State private var animatingDot2 = false
     @State private var animatingDot3 = false
     @State private var glowOpacity: Double = 0.3
-    
+
     let animationDuration: Double = 0.5
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.sm) {
             // Avatar (matches assistant avatar)
@@ -1068,7 +1078,7 @@ struct TypingIndicator: View {
                     .fill(Theme.Colors.secondary.opacity(glowOpacity))
                     .frame(width: 40, height: 40)
                     .blur(radius: 10)
-                
+
                 Circle()
                     .fill(
                         LinearGradient(
@@ -1084,13 +1094,13 @@ struct TypingIndicator: View {
                             .foregroundStyle(.white)
                     )
             }
-            
+
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 Text("Assistant")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
-                
+
                 // Typing dots container
                 HStack(spacing: 6) {
                     TypingDot(isAnimating: animatingDot1)
@@ -1106,7 +1116,7 @@ struct TypingIndicator: View {
                         .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                 )
             }
-            
+
             Spacer()
         }
         .padding(.vertical, Theme.Spacing.xs)
@@ -1114,7 +1124,7 @@ struct TypingIndicator: View {
             startAnimation()
         }
     }
-    
+
     private func startAnimation() {
         withAnimation(
             .easeInOut(duration: animationDuration)
@@ -1122,7 +1132,7 @@ struct TypingIndicator: View {
         ) {
             animatingDot1 = true
         }
-        
+
         withAnimation(
             .easeInOut(duration: animationDuration)
             .repeatForever(autoreverses: true)
@@ -1130,7 +1140,7 @@ struct TypingIndicator: View {
         ) {
             animatingDot2 = true
         }
-        
+
         withAnimation(
             .easeInOut(duration: animationDuration)
             .repeatForever(autoreverses: true)
@@ -1138,7 +1148,7 @@ struct TypingIndicator: View {
         ) {
             animatingDot3 = true
         }
-        
+
         withAnimation(
             .easeInOut(duration: 1.2)
             .repeatForever(autoreverses: true)
@@ -1151,7 +1161,7 @@ struct TypingIndicator: View {
 /// Individual animated dot for typing indicator
 struct TypingDot: View {
     let isAnimating: Bool
-    
+
     var body: some View {
         Circle()
             .fill(
