@@ -16,6 +16,9 @@ struct ChatView: View {
     @State private var showProviderPicker = false
     @State private var showModelPicker = false
 
+    @State private var showImageSettings = false
+    @State private var showVideoSettings = false
+
     var body: some View {
         ZStack {
             backgroundView
@@ -197,7 +200,7 @@ struct ChatView: View {
                let model = modelManager.selectedModel {
                 Task {
                     await viewModel.sendMessage(
-                        message: lastUserMessage.content,
+                        message: lastUserMessage.content.isEmpty ? "Generated Image" : lastUserMessage.content,
                         modelId: model.modelId,
                         conversationId: conversation.id,
                         webSearchEnabled: viewModel.webSearchEnabled,
@@ -287,20 +290,92 @@ struct ChatView: View {
                         .tint(Theme.Colors.secondary)
                 }
 
-                // Web Search Toggle
-                WebSearchToggle(
-                    webSearchMode: $webSearchMode,
-                    webSearchEnabled: $viewModel.webSearchEnabled,
-                    webSearchProvider: $webSearchProvider
-                )
+                // Check Model Capabilities
+                let isImageModel = modelManager.selectedModel?.capabilities?.images == true
+                let isVideoModel = modelManager.selectedModel?.capabilities?.video == true
 
-                // Provider Selection Button (only show if model supports provider selection)
-                if viewModel.supportsProviderSelection {
-                    providerSelectorButton
+                if isImageModel {
+                    // Image Generation Settings Button
+                    Button {
+                        showImageSettings = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .fill(Theme.Colors.glassBackground)
+                                    .frame(width: 24, height: 24)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                    )
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.Colors.secondary)
+                            }
+                            Text("Image Settings")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+                        .padding(.horizontal, Theme.Spacing.md)
+                        .padding(.vertical, Theme.Spacing.sm)
+                        .glassCard()
+                    }
+                    .sheet(isPresented: $showImageSettings) {
+                        if let model = modelManager.selectedModel {
+                            ImageGenerationSettingsView(model: model, params: $viewModel.imageParams)
+                                .presentationDetents([.medium, .large])
+                                .presentationDragIndicator(.visible)
+                        }
+                    }
+                } else if isVideoModel {
+                    // Video Generation Settings Button
+                    Button {
+                        showVideoSettings = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            ZStack {
+                                Circle()
+                                    .fill(Theme.Colors.glassBackground)
+                                    .frame(width: 24, height: 24)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                    )
+                                Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.Colors.secondary)
+                            }
+                            Text("Video Settings")
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+                        .padding(.horizontal, Theme.Spacing.md)
+                        .padding(.vertical, Theme.Spacing.sm)
+                        .glassCard()
+                    }
+                    .sheet(isPresented: $showVideoSettings) {
+                        if let model = modelManager.selectedModel {
+                            VideoGenerationSettingsView(model: model, params: $viewModel.videoParams)
+                                .presentationDetents([.medium, .large])
+                                .presentationDragIndicator(.visible)
+                        }
+                    }
+                } else {
+                    // Standard Web Search Toggle
+                    WebSearchToggle(
+                        webSearchMode: $webSearchMode,
+                        webSearchEnabled: $viewModel.webSearchEnabled,
+                        webSearchProvider: $webSearchProvider
+                    )
+                    
+                    // Provider Selection Button (only show if model supports provider selection)
+                    if viewModel.supportsProviderSelection {
+                        providerSelectorButton
+                    }
                 }
             }
 
-            // Attachment previews
+            // Attachment previews (existing)
             if !selectedImages.isEmpty || !selectedDocuments.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: Theme.Spacing.sm) {
@@ -365,7 +440,7 @@ struct ChatView: View {
                 .frame(height: 100)
             }
 
-            // Message Input
+            // Message Input (existing)
             HStack(alignment: .bottom, spacing: Theme.Spacing.sm) {
                 AttachmentButton { imageData in
                     selectedImages.append(imageData)
@@ -574,7 +649,7 @@ struct ChatView: View {
         HapticManager.shared.tap()
 
         isInputFocused = false
-        let currentMessage = messageText
+        let currentMessage = messageText.isEmpty ? "Generated Image" : messageText
         let currentImages = selectedImages
         let currentDocuments = selectedDocuments
 
@@ -585,6 +660,9 @@ struct ChatView: View {
         let webSearchEnabled = viewModel.webSearchEnabled
         let webSearchModeString = webSearchEnabled ? webSearchMode.rawValue : nil
         let webSearchProviderString = webSearchEnabled ? webSearchProvider.rawValue : nil
+        
+        let isImageModel = model.capabilities?.images == true
+        let isVideoModel = model.capabilities?.video == true
 
         Task {
             // Upload attachments first
@@ -622,12 +700,14 @@ struct ChatView: View {
                 message: currentMessage,
                 modelId: model.modelId,
                 conversationId: conversation.id,
-                webSearchEnabled: webSearchEnabled,
-                webSearchMode: webSearchModeString,
-                webSearchProvider: webSearchProviderString,
-                providerId: viewModel.selectedProviderId,
+                webSearchEnabled: isImageModel || isVideoModel ? false : webSearchEnabled, // Disable search for gen models
+                webSearchMode: isImageModel || isVideoModel ? nil : webSearchModeString,
+                webSearchProvider: isImageModel || isVideoModel ? nil : webSearchProviderString,
+                providerId: isImageModel || isVideoModel ? nil : viewModel.selectedProviderId, // Disable provider check if desired, or keep it
                 images: uploadedImages.isEmpty ? nil : uploadedImages,
-                documents: uploadedDocuments.isEmpty ? nil : uploadedDocuments
+                documents: uploadedDocuments.isEmpty ? nil : uploadedDocuments,
+                imageParams: isImageModel ? viewModel.imageParams : nil,
+                videoParams: isVideoModel ? viewModel.videoParams : nil
             )
 
             onMessageSent?()

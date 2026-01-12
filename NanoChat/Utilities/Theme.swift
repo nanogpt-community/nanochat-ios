@@ -45,6 +45,22 @@ struct Theme {
         static let success = Color(red: 0.2, green: 0.9, blue: 0.6)
         static let warning = Color(red: 1.0, green: 0.8, blue: 0.3)
         static let error = Color(red: 1.0, green: 0.3, blue: 0.4)
+        
+        // Aliases for compatibility
+        static let textPrimary = text
+        static let cardBackground = glassBackground
+        static let border = glassBorder
+    }
+    
+    typealias Radius = CornerRadius
+
+    // MARK: - Typography
+    struct Typography {
+        static let title = Font.system(size: 24, weight: .bold, design: .rounded)
+        static let headline = Font.system(size: 18, weight: .semibold, design: .rounded)
+        static let body = Font.system(size: 16, weight: .regular, design: .rounded)
+        static let caption = Font.system(size: 14, weight: .medium, design: .rounded)
+        static let caption2 = Font.system(size: 12, weight: .regular, design: .rounded)
     }
 
     // MARK: - Gradients

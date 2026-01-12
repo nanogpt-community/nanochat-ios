@@ -196,7 +196,9 @@ final class NanoChatAPI: Sendable {
         webSearchProvider: String? = nil,
         providerId: String? = nil,
         images: [ImageAttachment]? = nil,
-        documents: [DocumentAttachment]? = nil
+        documents: [DocumentAttachment]? = nil,
+        imageParams: [String: AnyCodable]? = nil,
+        videoParams: [String: AnyCodable]? = nil
     ) async throws -> GenerateMessageResponse {
         let request = GenerateMessageRequest(
             message: message,
@@ -209,10 +211,13 @@ final class NanoChatAPI: Sendable {
             web_search_provider: webSearchProvider,
             provider_id: providerId,
             images: images,
-            documents: documents
+            documents: documents,
+            image_params: imageParams,
+            video_params: videoParams
         )
         return try await self.request(endpoint: "/api/generate-message", method: .post, body: request)
     }
+
 
     // MARK: - Assistants
 
@@ -286,7 +291,31 @@ final class NanoChatAPI: Sendable {
                 description: model.description,
                 capabilities: model.capabilities,
                 costEstimate: model.pricing?.prompt.flatMap { Double($0) },
-                subscriptionIncluded: model.subscription?.included
+                subscriptionIncluded: model.subscription?.included,
+                resolutions: model.resolutions,
+                additionalParams: {
+                    guard let rawParams = model.additionalParams else { return nil }
+                    var cleanParams: [String: ModelParamDefinition] = [:]
+                    
+                    for (key, value) in rawParams {
+                        // Skip if the value is a boolean (like requiresSwapImage)
+                        if value.value is Bool { continue }
+                        
+                        // Try to convert dictionary to ModelParamDefinition
+                        if let dict = value.value as? [String: Any] {
+                            do {
+                                let jsonData = try JSONSerialization.data(withJSONObject: dict)
+                                let paramDef = try JSONDecoder().decode(ModelParamDefinition.self, from: jsonData)
+                                cleanParams[key] = paramDef
+                            } catch {
+                                print("Failed to decode param \(key) for model \(model.id): \(error)")
+                            }
+                        }
+                    }
+                    return cleanParams.isEmpty ? nil : cleanParams
+                }(),
+                maxImages: model.maxImages,
+                defaultSettings: model.defaultSettings
             )
         }
     }
@@ -694,6 +723,8 @@ struct GenerateMessageRequest: Codable {
     let provider_id: String?
     let images: [ImageAttachment]?
     let documents: [DocumentAttachment]?
+    let image_params: [String: AnyCodable]?
+    let video_params: [String: AnyCodable]?
 }
 
 struct BranchConversationRequest: Codable {
@@ -756,6 +787,10 @@ struct NanoGPTModelResponse: Codable {
     let capabilities: ModelCapabilities?
     let pricing: NanoGPTPricing?
     let subscription: NanoGPTSubscription?
+    let resolutions: [ModelResolution]?
+    let additionalParams: [String: AnyCodable]?
+    let maxImages: Int?
+    let defaultSettings: ModelDefaultSettings?
 }
 
 struct NanoGPTPricing: Codable {

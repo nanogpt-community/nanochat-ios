@@ -49,6 +49,21 @@ final class ModelManager: ObservableObject {
                 print("Using first enabled model: \(firstModel.modelId)")
             }
         } catch {
+            print("CRITICAL ERROR loading models: \(error)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    print("Type mismatch: \(type), context: \(context)")
+                case .valueNotFound(let type, let context):
+                    print("Value not found: \(type), context: \(context)")
+                case .keyNotFound(let key, let context):
+                    print("Key not found: \(key), context: \(context)")
+                case .dataCorrupted(let context):
+                    print("Data corrupted: \(context)")
+                @unknown default:
+                    print("Unknown decoding error")
+                }
+            }
             errorMessage = error.localizedDescription
         }
     }

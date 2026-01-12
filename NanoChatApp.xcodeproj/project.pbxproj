@@ -11,6 +11,7 @@
 		09872F3BA84782EE033D3E84 /* AvailableModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166905377217DEE8CC10FC77 /* AvailableModelsView.swift */; };
 		0DC367BB5B5494E5E61E0E34 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */; };
 		0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */; };
+		113213119A83A749874915B3 /* GlassSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */; };
 		1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1664515944F9D6C7344EB03 /* ModelPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
 		2903745958E926B21CE907B9 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E548298D554723BE7D2CB6 /* GlassCard.swift */; };
@@ -31,6 +32,7 @@
 		89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6975A1504331B1D93C0EADC1 /* Theme.swift */; };
 		8C0C9F201724C3DB51550685 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A084B76231E63D08DD25C34 /* AuthenticationView.swift */; };
 		8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB219170DF3996FD2078F014 /* GlassList.swift */; };
+		920D6E88807C520C20915F8D /* GenerationSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */; };
 		93B1F3ABBD120E8E38F1C20B /* ModelCapabilityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */; };
 		9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */; };
 		A0B623515F5C63D1B5DEAC5E /* WebSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1372DF6B14CE974C656CC6 /* WebSearchProvider.swift */; };
@@ -40,6 +42,7 @@
 		B3F6899B2F92D2C4F6F242F6 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5020AAC501DDB1A540C4CDEE /* UserSettings.swift */; };
 		C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */; };
 		C71A6ED30E7AA0C7EFE4EF4E /* AttachmentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */; };
+		D333F9A999949486663BA2E1 /* AnyCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209D980F7091ED76C874D66 /* AnyCodable.swift */; };
 		D5C5A81FCBB0A5371E511830 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = F525CE460E1FE06B29624306 /* Entitlements.plist */; };
 		D994A73562BE85CAD662BC5B /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF5795352F6BCA8014DCA33 /* ThemeManager.swift */; };
 		DBA553F6A52D9D3B47E1ACE6 /* ServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */; };
@@ -52,6 +55,7 @@
 
 /* Begin PBXFileReference section */
 		00DD15764A26719B43912716 /* AssistantsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantsListView.swift; sourceTree = "<group>"; };
+		0209D980F7091ED76C874D66 /* AnyCodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyCodable.swift; sourceTree = "<group>"; };
 		025014189CB03650FFDD2E8C /* Conversation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Conversation.swift; sourceTree = "<group>"; };
 		0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchToggle.swift; sourceTree = "<group>"; };
 		12E4B5EEDBBC429FCA2687D8 /* AccountSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsView.swift; sourceTree = "<group>"; };
@@ -81,8 +85,10 @@
 		AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentButton.swift; sourceTree = "<group>"; };
 		AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPicker.swift; sourceTree = "<group>"; };
 		BD93C9CDA2EFBB4F93A3B35D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassSheet.swift; sourceTree = "<group>"; };
 		C1664515944F9D6C7344EB03 /* ModelPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelPicker.swift; sourceTree = "<group>"; };
 		C7F093E2C2BB581A8E156E4D /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationSettingsViews.swift; sourceTree = "<group>"; };
 		D76F6D30C2E95E614927E80D /* ModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManager.swift; sourceTree = "<group>"; };
 		DB2AC5A2231AC533627F6732 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
 		E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatAPI.swift; sourceTree = "<group>"; };
@@ -100,9 +106,11 @@
 		2036CEDDAE2BAA0F4D1C241F /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */,
 				33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */,
 				F4E548298D554723BE7D2CB6 /* GlassCard.swift */,
 				FB219170DF3996FD2078F014 /* GlassList.swift */,
+				BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -165,6 +173,7 @@
 		C766342C608A9E01B5C623F2 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				0209D980F7091ED76C874D66 /* AnyCodable.swift */,
 				97F8CD0478EEB7EC20F2910F /* Extensions.swift */,
 				35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */,
 				6975A1504331B1D93C0EADC1 /* Theme.swift */,
@@ -238,7 +247,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					A561CCBB52A6DE0FD91B1DA9 = {
 						ProvisioningStyle = Automatic;
@@ -283,6 +292,7 @@
 				B2E2276FEB100229C322B8A4 /* APIConfiguration.swift in Sources */,
 				53B72E4291690FF60510AD54 /* AccountSettingsView.swift in Sources */,
 				F277AEA68C9E7C1CFE9ECCDA /* AccountSettingsViewModel.swift in Sources */,
+				D333F9A999949486663BA2E1 /* AnyCodable.swift in Sources */,
 				5EEE81464BCD2D36BFA184A4 /* Assistant.swift in Sources */,
 				DBEF50500951CD5A3556947F /* AssistantManager.swift in Sources */,
 				48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */,
@@ -296,9 +306,11 @@
 				6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */,
 				A5C8AFDF9283CB5EEA7AF702 /* ConversationsListView.swift in Sources */,
 				EF0D9567E675B7B660421641 /* Extensions.swift in Sources */,
+				920D6E88807C520C20915F8D /* GenerationSettingsViews.swift in Sources */,
 				C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */,
 				2903745958E926B21CE907B9 /* GlassCard.swift in Sources */,
 				8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */,
+				113213119A83A749874915B3 /* GlassSheet.swift in Sources */,
 				9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */,
 				71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */,
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,
@@ -379,7 +391,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -413,7 +424,6 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -427,7 +437,6 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -438,7 +447,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -472,7 +480,6 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -493,7 +500,6 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

@@ -16,6 +16,9 @@ final class ChatViewModel: ObservableObject {
     @Published var availableProviders: [ProviderInfo] = []
     @Published var supportsProviderSelection = false
 
+    @Published var imageParams: [String: AnyCodable] = [:]
+    @Published var videoParams: [String: AnyCodable] = [:]
+
     private let api = NanoChatAPI.shared
 
     func loadConversations() async {
@@ -33,8 +36,8 @@ final class ChatViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
-
-    func loadMessages(conversationId: String) async {
+    
+   func loadMessages(conversationId: String) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -81,7 +84,9 @@ final class ChatViewModel: ObservableObject {
         webSearchProvider: String? = nil,
         providerId: String? = nil,
         images: [ImageAttachment]? = nil,
-        documents: [DocumentAttachment]? = nil
+        documents: [DocumentAttachment]? = nil,
+        imageParams: [String: AnyCodable]? = nil,
+        videoParams: [String: AnyCodable]? = nil
     ) async {
         guard !message.isEmpty || images?.isEmpty == false || documents?.isEmpty == false else { return }
 
@@ -98,7 +103,9 @@ final class ChatViewModel: ObservableObject {
                 webSearchProvider: webSearchProvider,
                 providerId: providerId,
                 images: images,
-                documents: documents
+                documents: documents,
+                imageParams: imageParams,
+                videoParams: videoParams
             )
 
             print("Generate message response: \(response)")

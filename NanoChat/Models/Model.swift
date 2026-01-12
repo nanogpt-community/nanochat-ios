@@ -13,6 +13,12 @@ struct UserModel: Codable, Identifiable, Hashable {
     let capabilities: ModelCapabilities?
     let costEstimate: Double?
     let subscriptionIncluded: Bool?
+    
+    // New fields for Generation Settings
+    let resolutions: [ModelResolution]?
+    let additionalParams: [String: ModelParamDefinition]?
+    let maxImages: Int?
+    let defaultSettings: ModelDefaultSettings?
 
     // Use modelId as the id for Identifiable
     var id: String { modelId }
@@ -27,6 +33,10 @@ struct UserModel: Codable, Identifiable, Hashable {
         case capabilities
         case costEstimate
         case subscriptionIncluded
+        case resolutions
+        case additionalParams
+        case maxImages
+        case defaultSettings
     }
 }
 
@@ -36,6 +46,44 @@ struct ModelCapabilities: Codable, Hashable {
     let images: Bool?
     let video: Bool?
 }
+
+struct ModelResolution: Codable, Hashable {
+    let value: String
+    let comment: String?
+}
+
+struct ModelParamDefinition: Codable, Hashable {
+    let type: String? // "select", "boolean", "number", "text", "switch"
+    let label: String?
+    let description: String?
+    let `default`: AnyCodable?
+    let options: [ModelParamOption]?
+    let min: Double?
+    let max: Double?
+    let step: Double?
+    
+    // Hashable conformance for AnyCodable wrapper
+    static func == (lhs: ModelParamDefinition, rhs: ModelParamDefinition) -> Bool {
+        return lhs.label == rhs.label && lhs.type == rhs.type
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(label)
+        hasher.combine(type)
+    }
+}
+
+struct ModelParamOption: Codable, Hashable {
+    let label: String?
+    let value: AnyCodable
+}
+
+struct ModelDefaultSettings: Codable, Hashable {
+    let resolution: String?
+    let nImages: Int?
+}
+
+
 
 struct ProviderInfo: Codable, Identifiable, Hashable {
     let provider: String
