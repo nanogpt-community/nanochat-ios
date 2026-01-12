@@ -4,63 +4,104 @@ struct ProviderPicker: View {
     let availableProviders: [ProviderInfo]
     let selectedProviderId: String?
     let onSelect: (String?) -> Void
+    
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Button(action: {
-                        onSelect(nil)
-                    }) {
-                        HStack {
-                            Image(systemName: "server.rack")
-                                .foregroundColor(Theme.Colors.primary)
-                            Text("Auto")
-                                .foregroundColor(Theme.Colors.text)
-                            Spacer()
-                            if selectedProviderId == nil {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(Theme.Colors.primary)
+            ZStack {
+                Theme.Gradients.background
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                        
+                        Text("Select Provider")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                            .padding(.horizontal, Theme.Spacing.sm)
+                        
+                        VStack(spacing: Theme.Spacing.sm) {
+                            // Auto Option
+                            Button {
+                                onSelect(nil)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "server.rack")
+                                        .foregroundStyle(Theme.Colors.primary)
+                                    Text("Auto")
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.text)
+                                    Spacer()
+                                    if selectedProviderId == nil {
+                                        Image(systemName: "checkmark")
+                                            .font(.subheadline)
+                                            .foregroundStyle(Theme.Colors.primary)
+                                    }
+                                }
+                                .padding(Theme.Spacing.md)
+                                .glassCard()
+                            }
+                            .buttonStyle(.plain)
+                            
+                            // Providers
+                            ForEach(availableProviders) { provider in
+                                Button {
+                                    onSelect(provider.provider)
+                                    dismiss()
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "server.rack")
+                                            .foregroundStyle(Theme.Colors.primary)
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(provider.provider.capitalized)
+                                                .font(.subheadline)
+                                                .foregroundStyle(Theme.Colors.text)
+                                            Text("\(formatPrice(provider.pricing.inputPer1kTokens)) input / \(formatPrice(provider.pricing.outputPer1kTokens)) output")
+                                                .font(.caption2)
+                                                .foregroundStyle(Theme.Colors.textSecondary)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        if selectedProviderId == provider.provider {
+                                            Image(systemName: "checkmark")
+                                                .font(.subheadline)
+                                                .foregroundStyle(Theme.Colors.primary)
+                                        }
+                                    }
+                                    .padding(Theme.Spacing.md)
+                                    .glassCard()
+                                }
+                                .buttonStyle(.plain)
                             }
                         }
+                        
+                        Text("5% markup on provider pricing")
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .padding(.horizontal, Theme.Spacing.sm)
                     }
-
-                    ForEach(availableProviders) { provider in
-                        Button(action: {
-                            onSelect(provider.provider)
-                        }) {
-                            HStack {
-                                Image(systemName: "server.rack")
-                                    .foregroundColor(Theme.Colors.primary)
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(provider.provider.capitalized)
-                                        .foregroundColor(Theme.Colors.text)
-                                    Text("\(formatPrice(provider.pricing.inputPer1kTokens)) input / \(formatPrice(provider.pricing.outputPer1kTokens)) output")
-                                        .font(.caption)
-                                        .foregroundColor(Theme.Colors.textSecondary)
-                                }
-                                Spacer()
-                                if selectedProviderId == provider.provider {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(Theme.Colors.primary)
-                                }
-                            }
-                        }
-                    }
-                } header: {
-                    Text("Select Provider")
-                } footer: {
-                    Text("5% markup on provider pricing")
-                        .font(.caption)
-                        .foregroundColor(Theme.Colors.textSecondary)
+                    .padding(Theme.Spacing.lg)
                 }
             }
-            .listStyle(.insetGrouped)
             .navigationTitle("Model Provider")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.Colors.text)
+                }
+            }
         }
     }
-
+    
     private func formatPrice(_ price: Double) -> String {
         String(format: "$%.4f", price)
     }
