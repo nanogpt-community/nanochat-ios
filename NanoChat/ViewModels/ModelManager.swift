@@ -67,6 +67,17 @@ final class ModelManager: ObservableObject {
         UserDefaults.standard.set(Array(hiddenModelIds), forKey: "hiddenModelIds")
         updateGroupedModels()
     }
+
+    func saveLastProvider(for modelId: String, providerId: String) {
+        var lastProviders = UserDefaults.standard.dictionary(forKey: "lastProvidersForModel") as? [String: String] ?? [:]
+        lastProviders[modelId] = providerId
+        UserDefaults.standard.set(lastProviders, forKey: "lastProvidersForModel")
+    }
+
+    func getLastProvider(for modelId: String) -> String? {
+        let lastProviders = UserDefaults.standard.dictionary(forKey: "lastProvidersForModel") as? [String: String]
+        return lastProviders?[modelId]
+    }
     
     private func updateGroupedModels() {
         groupedModels = allModels
