@@ -552,7 +552,6 @@ struct ChatView: View {
                 availableProviders: viewModel.availableProviders,
                 selectedProviderId: viewModel.selectedProviderId
             ) { providerId in
-            ) { providerId in
                 viewModel.selectProvider(providerId: providerId)
                 
                 // Save this choice if a model is selected
