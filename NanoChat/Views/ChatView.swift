@@ -44,6 +44,13 @@ struct ChatView: View {
                     if let modelId = newValue {
                         Task {
                             await viewModel.fetchModelProviders(modelId: modelId)
+                            // Restore last used provider for this model
+                            if let lastProvider = modelManager.getLastProvider(for: modelId) {
+                                // Verify this provider is still available for this model
+                                if viewModel.availableProviders.contains(where: { $0.provider == lastProvider }) {
+                                    viewModel.selectProvider(providerId: lastProvider)
+                                }
+                            }
                         }
                     }
                 }
@@ -545,7 +552,14 @@ struct ChatView: View {
                 availableProviders: viewModel.availableProviders,
                 selectedProviderId: viewModel.selectedProviderId
             ) { providerId in
+            ) { providerId in
                 viewModel.selectProvider(providerId: providerId)
+                
+                // Save this choice if a model is selected
+                if let modelId = modelManager.selectedModel?.modelId, let providerId = providerId {
+                    modelManager.saveLastProvider(for: modelId, providerId: providerId)
+                }
+                
                 showProviderPicker = false
             }
             .presentationDetents([.medium])
