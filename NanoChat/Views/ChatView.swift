@@ -13,6 +13,7 @@ struct ChatView: View {
     @State private var selectedImages: [Data] = []
     @State private var selectedDocuments: [URL] = []
     @State private var isUploading = false
+    @State private var showProviderPicker = false
 
     var body: some View {
         ZStack {
@@ -37,6 +38,13 @@ struct ChatView: View {
                 }
                 .onChange(of: viewModel.messages.count) { _, _ in
                     scrollToLastMessage(proxy: proxy)
+                }
+                .onChange(of: modelManager.selectedModel?.modelId) { _, newValue in
+                    if let modelId = newValue {
+                        Task {
+                            await viewModel.fetchModelProviders(modelId: modelId)
+                        }
+                    }
                 }
             }
         }
@@ -186,7 +194,8 @@ struct ChatView: View {
                         conversationId: conversation.id,
                         webSearchEnabled: viewModel.webSearchEnabled,
                         webSearchMode: viewModel.webSearchEnabled ? viewModel.webSearchMode.rawValue : nil,
-                        webSearchProvider: viewModel.webSearchEnabled ? viewModel.webSearchProvider.rawValue : nil
+                        webSearchProvider: viewModel.webSearchEnabled ? viewModel.webSearchProvider.rawValue : nil,
+                        providerId: viewModel.selectedProviderId
                     )
                 }
             }
@@ -276,6 +285,11 @@ struct ChatView: View {
                     webSearchEnabled: $viewModel.webSearchEnabled,
                     webSearchProvider: $webSearchProvider
                 )
+
+                // Provider Selection Button (only show if model supports provider selection)
+                if viewModel.supportsProviderSelection {
+                    providerSelectorButton
+                }
             }
 
             // Attachment previews
@@ -484,6 +498,52 @@ struct ChatView: View {
         .animation(.easeOut(duration: 0.2), value: isUploading)
     }
 
+    @ViewBuilder
+    private var providerSelectorButton: some View {
+        Button {
+            showProviderPicker = true
+        } label: {
+            HStack(spacing: 6) {
+                ZStack {
+                    Circle()
+                        .fill(Theme.Colors.glassBackground)
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Circle()
+                                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                        )
+
+                    Image(systemName: "server.rack")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.Colors.primary)
+                }
+
+                Text(viewModel.selectedProviderId ?? "Auto")
+                    .font(.subheadline)
+                    .foregroundStyle(Theme.Colors.text)
+                    .lineLimit(1)
+
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
+            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, Theme.Spacing.sm)
+            .glassCard()
+        }
+        .sheet(isPresented: $showProviderPicker) {
+            ProviderPicker(
+                availableProviders: viewModel.availableProviders,
+                selectedProviderId: viewModel.selectedProviderId
+            ) { providerId in
+                viewModel.selectProvider(providerId: providerId)
+                showProviderPicker = false
+            }
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
+    }
+
     private func sendMessage() {
         guard let model = modelManager.selectedModel,
               !messageText.isEmpty || !selectedImages.isEmpty || !selectedDocuments.isEmpty else { return }
@@ -543,6 +603,7 @@ struct ChatView: View {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchModeString,
                 webSearchProvider: webSearchProviderString,
+                providerId: viewModel.selectedProviderId,
                 images: uploadedImages.isEmpty ? nil : uploadedImages,
                 documents: uploadedDocuments.isEmpty ? nil : uploadedDocuments
             )

@@ -194,6 +194,7 @@ final class NanoChatAPI: Sendable {
         webSearchEnabled: Bool = false,
         webSearchMode: String? = nil,
         webSearchProvider: String? = nil,
+        providerId: String? = nil,
         images: [ImageAttachment]? = nil,
         documents: [DocumentAttachment]? = nil
     ) async throws -> GenerateMessageResponse {
@@ -206,6 +207,7 @@ final class NanoChatAPI: Sendable {
             web_search_enabled: webSearchEnabled,
             web_search_mode: webSearchMode,
             web_search_provider: webSearchProvider,
+            provider_id: providerId,
             images: images,
             documents: documents
         )
@@ -281,6 +283,10 @@ final class NanoChatAPI: Sendable {
 
         // Fallback: try decoding as array directly
         return try decoder.decode([UserModel].self, from: data)
+    }
+
+    func fetchModelProviders(modelId: String) async throws -> ModelProvidersResponse {
+        return try await request(endpoint: "/api/model-providers", queryParams: ["modelId": modelId])
     }
 
     // Helper struct for decoding the raw API response
@@ -600,6 +606,7 @@ struct GenerateMessageRequest: Codable {
     let web_search_enabled: Bool
     let web_search_mode: String?
     let web_search_provider: String?
+    let provider_id: String?
     let images: [ImageAttachment]?
     let documents: [DocumentAttachment]?
 }

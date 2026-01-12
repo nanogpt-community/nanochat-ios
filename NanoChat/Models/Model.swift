@@ -35,6 +35,33 @@ struct ModelCapabilities: Codable, Hashable {
     let video: Bool?
 }
 
+struct ProviderInfo: Codable, Identifiable, Hashable {
+    let provider: String
+    let pricing: ProviderPricing
+    let available: Bool
+
+    var id: String { provider }
+
+    struct ProviderPricing: Codable, Hashable {
+        let inputPer1kTokens: Double
+        let outputPer1kTokens: Double
+    }
+}
+
+struct ModelProvidersResponse: Codable {
+    let canonicalId: String
+    let displayName: String
+    let supportsProviderSelection: Bool
+    let defaultPrice: ProviderPricing?
+    let providers: [ProviderInfo]
+    let error: String?
+
+    struct ProviderPricing: Codable {
+        let inputPer1kTokens: Double
+        let outputPer1kTokens: Double
+    }
+}
+
 struct ModelGroup: Identifiable, Hashable {
     let id = UUID()
     let name: String

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0291417DACA517BF404CB77E /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34B27628A1A114A2708F2887 /* ChatView.swift */; };
 		0DC367BB5B5494E5E61E0E34 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */; };
+		0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
 		42138CD514B77EFF1A88EA72 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CF1B3A9B46FB65CBD0460F /* Message.swift */; };
 		48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD15764A26719B43912716 /* AssistantsListView.swift */; };
@@ -65,6 +66,7 @@
 		9D88E40B7C7F78BA5DB11E5D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		9DF5795352F6BCA8014DCA33 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttachmentButton.swift; sourceTree = "<group>"; };
+		AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProviderPicker.swift; sourceTree = "<group>"; };
 		BD93C9CDA2EFBB4F93A3B35D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C7F093E2C2BB581A8E156E4D /* Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		D76F6D30C2E95E614927E80D /* ModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManager.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				2F6A945714279F60A1DBD6C1 /* MainTabView.swift */,
 				92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */,
 				F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */,
+				AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */,
 				41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */,
 				E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */,
 				0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */,
@@ -268,6 +271,7 @@
 				6724EB484F57DB985EA35281 /* NanoChatApp.swift in Sources */,
 				7EA0EC6545C172E36474D3A7 /* Project.swift in Sources */,
 				0DC367BB5B5494E5E61E0E34 /* ProjectsListView.swift in Sources */,
+				0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */,
 				DBA553F6A52D9D3B47E1ACE6 /* ServerSettingsView.swift in Sources */,
 				A8F670966FA1B5AAF158D597 /* SettingsView.swift in Sources */,
 				89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */,
