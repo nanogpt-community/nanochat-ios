@@ -66,11 +66,12 @@ struct AvailableModelsView: View {
                         }
                     }
                     .padding(Theme.Spacing.md)
-                    .background(Theme.Colors.glassBackground)
+                    .padding(Theme.Spacing.md)
+                    .background(Theme.Colors.glassPane)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
                     )
                     
                     // Filter Toggles
@@ -100,7 +101,8 @@ struct AvailableModelsView: View {
                     }
                 }
                 .padding()
-                .background(.ultraThinMaterial)
+                .padding()
+                .background(Theme.Colors.glassPane)
                 
                 // List
                 ScrollView {
@@ -158,7 +160,7 @@ struct AvailableModelsView: View {
         }
         .navigationTitle("Available Models")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+        .liquidGlassNavigationBar()
     }
 }
 

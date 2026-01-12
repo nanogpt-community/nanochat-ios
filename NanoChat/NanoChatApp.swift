@@ -18,10 +18,12 @@ struct NanoChatApp: App {
     }
 
     private func setupAppearance() {
-        // Configure Navigation Bar with dark purple theme
+        // Configure Navigation Bar
         let navAppearance = UINavigationBarAppearance()
-        navAppearance.configureWithOpaqueBackground()
-        navAppearance.backgroundColor = UIColor(Theme.Colors.backgroundStart).withAlphaComponent(0.95)
+        navAppearance.configureWithTransparentBackground()
+        navAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        navAppearance.backgroundColor = UIColor(Theme.Colors.glassBackground)
+        
         navAppearance.titleTextAttributes = [
             .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
@@ -34,18 +36,19 @@ struct NanoChatApp: App {
         UINavigationBar.appearance().standardAppearance = navAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
         UINavigationBar.appearance().compactAppearance = navAppearance
-        UINavigationBar.appearance().tintColor = UIColor(Theme.Colors.secondary)
+        UINavigationBar.appearance().tintColor = UIColor(Theme.Colors.accent)
         
-        // Configure Tab Bar with dark purple theme
+        // Configure Tab Bar
         let tabAppearance = UITabBarAppearance()
-        tabAppearance.configureWithOpaqueBackground()
-        tabAppearance.backgroundColor = UIColor(Theme.Colors.backgroundStart).withAlphaComponent(0.95)
+        tabAppearance.configureWithTransparentBackground()
+        tabAppearance.backgroundEffect = UIBlurEffect(style: .systemUltraThinMaterialDark)
+        tabAppearance.backgroundColor = UIColor(Theme.Colors.glassBackground)
         
         let itemAppearance = UITabBarItemAppearance()
         itemAppearance.normal.iconColor = UIColor(Theme.Colors.textTertiary)
         itemAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(Theme.Colors.textTertiary)]
-        itemAppearance.selected.iconColor = UIColor(Theme.Colors.secondary)
-        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Theme.Colors.secondary)]
+        itemAppearance.selected.iconColor = UIColor(Theme.Colors.accent)
+        itemAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(Theme.Colors.accent)]
         
         tabAppearance.stackedLayoutAppearance = itemAppearance
         tabAppearance.inlineLayoutAppearance = itemAppearance
@@ -55,7 +58,9 @@ struct NanoChatApp: App {
         UITabBar.appearance().scrollEdgeAppearance = tabAppearance
         
         // Configure other UI elements
-        UITextField.appearance().tintColor = UIColor(Theme.Colors.secondary)
-        UITextView.appearance().tintColor = UIColor(Theme.Colors.secondary)
+        UITextField.appearance().keyboardAppearance = .dark
+        UITextField.appearance().tintColor = UIColor(Theme.Colors.accent)
+        UITextView.appearance().tintColor = UIColor(Theme.Colors.accent)
+        UITableView.appearance().backgroundColor = .clear
     }
 }

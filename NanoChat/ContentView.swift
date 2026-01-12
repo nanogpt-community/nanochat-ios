@@ -4,14 +4,19 @@ struct ContentView: View {
     @EnvironmentObject var authManager: AuthenticationManager
 
     var body: some View {
-        Group {
-            if authManager.isAuthenticated {
-                MainTabView()
-            } else {
-                AuthenticationView()
+        ZStack {
+            Theme.Gradients.background
+                .ignoresSafeArea()
+            
+            Group {
+                if authManager.isAuthenticated {
+                    MainTabView()
+                } else {
+                    AuthenticationView()
+                }
             }
+            .animation(.easeInOut(duration: 0.3), value: authManager.isAuthenticated)
         }
-        .animation(.easeInOut(duration: 0.3), value: authManager.isAuthenticated)
     }
 }
 

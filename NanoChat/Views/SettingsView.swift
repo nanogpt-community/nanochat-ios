@@ -29,21 +29,21 @@ struct SettingsView: View {
                 .ignoresSafeArea()
 
             NavigationStack {
-                ScrollView {
-                    VStack(spacing: Theme.Spacing.xl) {
-                        // Account Section
-                        SettingsSection(title: "Account") {
+                GlassList {
+                    // Account Section
+                    GlassListSection("Account") {
+                        GlassListRow(showDivider: false) {
                             HStack(spacing: Theme.Spacing.md) {
                                 ZStack {
                                     Circle()
                                         .fill(Theme.Gradients.primary)
                                         .frame(width: 50, height: 50)
+                                        .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
 
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 22))
                                         .foregroundStyle(.white)
                                 }
-                                .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
 
                                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                                     Text("Authenticated")
@@ -61,10 +61,10 @@ struct SettingsView: View {
                                     .font(.title2)
                                     .foregroundStyle(Theme.Colors.success)
                             }
+                            .padding(.vertical, Theme.Spacing.xs)
+                        }
 
-                            Divider()
-                                .background(Theme.Colors.glassBorder)
-
+                        GlassListRow(showDivider: false) {
                             Button {
                                 HapticManager.shared.tap()
                                 showingAccountSettings = true
@@ -89,118 +89,117 @@ struct SettingsView: View {
                             }
                             .buttonStyle(.plain)
                         }
+                    }
 
-                        // Configuration Section
-                        SettingsSection(title: "Configuration") {
-                            VStack(spacing: Theme.Spacing.md) {
-                                SettingsRow(
-                                    icon: "server.rack",
-                                    iconColor: Theme.Colors.primary,
-                                    title: "Server URL",
-                                    value: authManager.baseURL
-                                )
-
-                                Divider()
-                                    .background(Theme.Colors.glassBorder)
-
-                                SettingsRow(
-                                    icon: "key.fill",
-                                    iconColor: Theme.Colors.secondary,
-                                    title: "API Key",
-                                    value: String(authManager.apiKey.prefix(16)) + "..."
-                                )
-
-                                Divider()
-                                    .background(Theme.Colors.glassBorder)
-
-                                Button {
-                                    HapticManager.shared.tap()
-                                    authManager.isAuthenticated = false
-                                } label: {
-                                    HStack {
-                                        Image(systemName: "arrow.triangle.2.circlepath")
-                                            .font(.system(size: 14))
-                                            .foregroundStyle(Theme.Colors.secondary)
-                                            .frame(width: 28)
-
-                                        Text("Update Credentials")
-                                            .font(.subheadline)
-                                            .foregroundStyle(Theme.Colors.text)
-
-                                        Spacer()
-
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption)
-                                            .foregroundStyle(Theme.Colors.textTertiary)
-                                    }
-                                    .contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain)
-                            }
+                    // Configuration Section
+                    GlassListSection("Configuration") {
+                        GlassListRow {
+                            SettingsRow(
+                                icon: "server.rack",
+                                iconColor: Theme.Colors.primary,
+                                title: "Server URL",
+                                value: authManager.baseURL
+                            )
                         }
 
-                        // Appearance Section
-                        SettingsSection(title: "Appearance") {
-                            VStack(spacing: Theme.Spacing.md) {
+                        GlassListRow {
+                            SettingsRow(
+                                icon: "key.fill",
+                                iconColor: Theme.Colors.secondary,
+                                title: "API Key",
+                                value: String(authManager.apiKey.prefix(16)) + "..."
+                            )
+                        }
+
+                        GlassListRow(showDivider: false) {
+                            Button {
+                                HapticManager.shared.tap()
+                                authManager.isAuthenticated = false
+                            } label: {
                                 HStack {
-                                    Image(systemName: "paintbrush.fill")
+                                    Image(systemName: "arrow.triangle.2.circlepath")
                                         .font(.system(size: 14))
-                                        .foregroundStyle(Theme.Colors.accent)
+                                        .foregroundStyle(Theme.Colors.secondary)
                                         .frame(width: 28)
 
-                                    Text("Theme")
+                                    Text("Update Credentials")
                                         .font(.subheadline)
                                         .foregroundStyle(Theme.Colors.text)
 
                                     Spacer()
 
-                                    Picker("", selection: $themeManager.currentTheme) {
-                                        Text("System").tag(ThemeManager.Theme.system)
-                                        Text("Light").tag(ThemeManager.Theme.light)
-                                        Text("Dark").tag(ThemeManager.Theme.dark)
-                                    }
-                                    .pickerStyle(.menu)
-                                    .tint(Theme.Colors.secondary)
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    // Appearance Section
+                    GlassListSection("Appearance") {
+                        GlassListRow(showDivider: false) {
+                            HStack {
+                                Image(systemName: "paintbrush.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Theme.Colors.accent)
+                                    .frame(width: 28)
+
+                                Text("Theme")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.Colors.text)
+
+                                Spacer()
+
+                                Picker("", selection: $themeManager.currentTheme) {
+                                    Text("System").tag(ThemeManager.Theme.system)
+                                    Text("Light").tag(ThemeManager.Theme.light)
+                                    Text("Dark").tag(ThemeManager.Theme.dark)
+                                }
+                                .pickerStyle(.menu)
+                                .tint(Theme.Colors.secondary)
+                            }
+                        }
+                    }
+
+                    // About Section
+                    GlassListSection("About") {
+                        GlassListRow {
+                            SettingsRow(
+                                icon: "info.circle.fill",
+                                iconColor: Theme.Colors.textSecondary,
+                                title: "Version",
+                                value: Bundle.main.fullVersion
+                            )
+                        }
+
+                        GlassListRow(showDivider: false) {
+                            Link(destination: URL(string: "https://github.com/nicholasgriffintn/nanochat")!) {
+                                HStack {
+                                    Image(systemName: "book.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.Colors.primary)
+                                        .frame(width: 28)
+
+                                    Text("Documentation")
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
                                 }
                             }
                         }
+                    }
 
-                        // About Section
-                        SettingsSection(title: "About") {
-                            VStack(spacing: Theme.Spacing.md) {
-                                SettingsRow(
-                                    icon: "info.circle.fill",
-                                    iconColor: Theme.Colors.textSecondary,
-                                    title: "Version",
-                                    value: Bundle.main.fullVersion
-                                )
-
-                                Divider()
-                                    .background(Theme.Colors.glassBorder)
-
-                                Link(destination: URL(string: "https://github.com/nicholasgriffintn/nanochat")!) {
-                                    HStack {
-                                        Image(systemName: "book.fill")
-                                            .font(.system(size: 14))
-                                            .foregroundStyle(Theme.Colors.primary)
-                                            .frame(width: 28)
-
-                                        Text("Documentation")
-                                            .font(.subheadline)
-                                            .foregroundStyle(Theme.Colors.text)
-
-                                        Spacer()
-
-                                        Image(systemName: "arrow.up.right")
-                                            .font(.caption)
-                                            .foregroundStyle(Theme.Colors.textTertiary)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Actions Section
-                        SettingsSection(title: "Actions") {
+                    // Actions Section
+                    GlassListSection("Actions") {
+                        GlassListRow(showDivider: false) {
                             Button {
                                 HapticManager.shared.warning()
                                 showingLogoutAlert = true
@@ -220,16 +219,13 @@ struct SettingsView: View {
                             }
                             .buttonStyle(.plain)
                         }
-
-                        Spacer(minLength: Theme.Spacing.xxl)
                     }
-                    .padding(.horizontal, Theme.Spacing.lg)
-                    .padding(.top, Theme.Spacing.md)
+
+                    Spacer(minLength: Theme.Spacing.xxl)
                 }
                 .navigationTitle("Settings")
                 .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .liquidGlassNavigationBar()
                 .alert("Sign Out", isPresented: $showingLogoutAlert) {
                     Button("Cancel", role: .cancel) { }
                     Button("Sign Out", role: .destructive) {
@@ -248,32 +244,6 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Settings Section Component
-
-struct SettingsSection<Content: View>: View {
-    let title: String
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-            Text(title.uppercased())
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(Theme.Colors.textTertiary)
-                .padding(.horizontal, Theme.Spacing.sm)
-
-            content
-                .padding(Theme.Spacing.md)
-                .background(.ultraThinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg))
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
-                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                )
-        }
-    }
-}
-
 // MARK: - Settings Row Component
 
 struct SettingsRow: View {
@@ -285,26 +255,26 @@ struct SettingsRow: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundStyle(iconColor)
-                .frame(width: 28)
+            .font(.system(size: 14))
+            .foregroundStyle(iconColor)
+            .frame(width: 28)
 
             Text(title)
-                .font(.subheadline)
-                .foregroundStyle(Theme.Colors.text)
+            .font(.subheadline)
+            .foregroundStyle(Theme.Colors.text)
 
             Spacer()
 
             Text(value)
-                .font(.subheadline)
-                .foregroundStyle(Theme.Colors.textSecondary)
-                .lineLimit(1)
+            .font(.subheadline)
+            .foregroundStyle(Theme.Colors.textSecondary)
+            .lineLimit(1)
         }
     }
 }
 
 #Preview {
-    SettingsView()
-        .environmentObject(AuthenticationManager())
-        .environmentObject(ThemeManager())
+SettingsView()
+.environmentObject(AuthenticationManager())
+.environmentObject(ThemeManager())
 }

@@ -13,6 +13,7 @@
 		0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */; };
 		1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1664515944F9D6C7344EB03 /* ModelPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
+		2903745958E926B21CE907B9 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E548298D554723BE7D2CB6 /* GlassCard.swift */; };
 		42138CD514B77EFF1A88EA72 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CF1B3A9B46FB65CBD0460F /* Message.swift */; };
 		48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD15764A26719B43912716 /* AssistantsListView.swift */; };
 		5215DCDD9B453CF24AF9486F /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */; };
@@ -29,6 +30,7 @@
 		7EA0EC6545C172E36474D3A7 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DCFB7224956F60543DB857 /* Project.swift */; };
 		89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6975A1504331B1D93C0EADC1 /* Theme.swift */; };
 		8C0C9F201724C3DB51550685 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A084B76231E63D08DD25C34 /* AuthenticationView.swift */; };
+		8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB219170DF3996FD2078F014 /* GlassList.swift */; };
 		93B1F3ABBD120E8E38F1C20B /* ModelCapabilityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */; };
 		9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */; };
 		A0B623515F5C63D1B5DEAC5E /* WebSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1372DF6B14CE974C656CC6 /* WebSearchProvider.swift */; };
@@ -36,6 +38,7 @@
 		A8F670966FA1B5AAF158D597 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */; };
 		B2E2276FEB100229C322B8A4 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2CFA93868A7C29188DA494 /* APIConfiguration.swift */; };
 		B3F6899B2F92D2C4F6F242F6 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5020AAC501DDB1A540C4CDEE /* UserSettings.swift */; };
+		C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */; };
 		C71A6ED30E7AA0C7EFE4EF4E /* AttachmentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */; };
 		D5C5A81FCBB0A5371E511830 /* Entitlements.plist in Resources */ = {isa = PBXBuildFile; fileRef = F525CE460E1FE06B29624306 /* Entitlements.plist */; };
 		D994A73562BE85CAD662BC5B /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF5795352F6BCA8014DCA33 /* ThemeManager.swift */; };
@@ -55,6 +58,7 @@
 		166905377217DEE8CC10FC77 /* AvailableModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableModelsView.swift; sourceTree = "<group>"; };
 		1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchMode.swift; sourceTree = "<group>"; };
 		2F6A945714279F60A1DBD6C1 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassButton.swift; sourceTree = "<group>"; };
 		34B27628A1A114A2708F2887 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassModifiers.swift; sourceTree = "<group>"; };
 		41936341BC22F3B70EA5CBFF /* NanoChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatApp.swift; sourceTree = "<group>"; };
@@ -87,10 +91,22 @@
 		EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		F2325251CBC4D1C43ED4C8A0 /* NanoChatApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NanoChatApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		F4E548298D554723BE7D2CB6 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		F525CE460E1FE06B29624306 /* Entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Entitlements.plist; sourceTree = "<group>"; };
+		FB219170DF3996FD2078F014 /* GlassList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		2036CEDDAE2BAA0F4D1C241F /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */,
+				F4E548298D554723BE7D2CB6 /* GlassCard.swift */,
+				FB219170DF3996FD2078F014 /* GlassList.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		44FC120166FD2CB9DAF80394 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -141,6 +157,7 @@
 				41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */,
 				E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */,
 				0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */,
+				2036CEDDAE2BAA0F4D1C241F /* Components */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -279,6 +296,9 @@
 				6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */,
 				A5C8AFDF9283CB5EEA7AF702 /* ConversationsListView.swift in Sources */,
 				EF0D9567E675B7B660421641 /* Extensions.swift in Sources */,
+				C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */,
+				2903745958E926B21CE907B9 /* GlassCard.swift in Sources */,
+				8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */,
 				9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */,
 				71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */,
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,

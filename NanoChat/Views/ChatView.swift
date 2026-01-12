@@ -372,12 +372,12 @@ struct ChatView: View {
                     .focused($isInputFocused)
                     .foregroundStyle(Theme.Colors.text)
                     .padding(Theme.Spacing.md)
-                    .background(.ultraThinMaterial)
+                    .background(Theme.Colors.glassPane)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
                             .stroke(
-                                isInputFocused ? Theme.Colors.secondary.opacity(0.6) : Theme.Colors.glassBorder,
+                                isInputFocused ? Theme.Gradients.primary : Theme.Gradients.glass,
                                 lineWidth: isInputFocused ? 1.5 : 1
                             )
                     )
@@ -394,7 +394,8 @@ struct ChatView: View {
             }
         }
         .padding(Theme.Spacing.lg)
-        .background(.ultraThinMaterial)
+        .background(Theme.Colors.glassPane)
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 
     @ViewBuilder
@@ -735,11 +736,11 @@ struct MessageBubble: View {
                                 Spacer()
                             }
                             .padding(Theme.Spacing.sm)
-                            .background(.ultraThinMaterial)
+                            .background(Theme.Colors.glassPane)
                             .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
                             .overlay(
                                 RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                    .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                    .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
                             )
                         }
                     }
@@ -786,11 +787,11 @@ struct MessageBubble: View {
                                 .font(.body)
                                 .foregroundStyle(Theme.Colors.text)
                                 .padding(Theme.Spacing.md)
-                                .background(.ultraThinMaterial)
+                                .background(Theme.Colors.glassPane)
                                 .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
                                 )
                                 .frame(minHeight: 100)
 
@@ -1109,11 +1110,11 @@ struct TypingIndicator: View {
                 }
                 .padding(.horizontal, Theme.Spacing.md)
                 .padding(.vertical, Theme.Spacing.sm)
-                .background(.ultraThinMaterial)
+                .background(Theme.Colors.glassPane)
                 .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
-                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
                 )
             }
 

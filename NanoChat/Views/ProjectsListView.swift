@@ -27,28 +27,26 @@ struct ProjectsListView: View {
                             Button("Create Project") {
                                 showingNewProject = true
                             }
-                            .buttonStyle(PrimaryButtonStyle())
+                            .buttonStyle(LiquidGlassButtonStyle())
                         }
                     } else {
-                        List {
+                        GlassList {
                             ForEach(projects, id: \.id) { project in
-                                NavigationLink {
-                                    ProjectDetailView(project: project)
-                                } label: {
-                                    ProjectRow(project: project)
+                                GlassListRow {
+                                    NavigationLink {
+                                        ProjectDetailView(project: project)
+                                    } label: {
+                                        ProjectRow(project: project)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: Theme.Spacing.xs, leading: Theme.Spacing.lg, bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg))
                             }
                         }
-                        .listStyle(.plain)
                     }
                 }
                 .navigationTitle("Projects")
                 .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .liquidGlassNavigationBar()
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button(action: { showingNewProject = true }) {
@@ -71,8 +69,6 @@ struct ProjectsListView: View {
                             await createProject(project)
                         }
                     }
-                    .presentationDetents([.large])
-                    .presentationBackground(.ultraThinMaterial)
                 }
                 .task {
                     await loadProjects()
@@ -169,8 +165,6 @@ struct ProjectRow: View {
                 }
             }
         }
-        .padding(Theme.Spacing.md)
-        .glassCard()
     }
 }
 
@@ -182,59 +176,57 @@ struct ProjectDetailView: View {
             Theme.Gradients.background
                 .ignoresSafeArea()
             
-            ScrollView {
-                VStack(spacing: Theme.Spacing.xl) {
+            NavigationStack {
+                GlassList {
                     // Header card
-                    VStack(spacing: Theme.Spacing.md) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: project.color ?? "#007AFF").opacity(0.3))
-                                .frame(width: 90, height: 90)
-                                .blur(radius: 15)
-                            
-                            Circle()
-                                .fill(Color(hex: project.color ?? "#007AFF"))
-                                .frame(width: 70, height: 70)
-                                .overlay(
-                                    Image(systemName: "folder.fill")
-                                        .font(.system(size: 28))
-                                        .foregroundStyle(.white)
-                                )
-                        }
-                        
-                        Text(project.name)
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .foregroundStyle(Theme.Colors.text)
-                        
-                        if let description = project.description {
-                            Text(description)
-                                .font(.subheadline)
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                                .multilineTextAlignment(.center)
+                    GlassListSection {
+                        GlassListRow(showDivider: false) {
+                            VStack(spacing: Theme.Spacing.md) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(hex: project.color ?? "#007AFF").opacity(0.3))
+                                        .frame(width: 90, height: 90)
+                                        .blur(radius: 15)
+                                    
+                                    Circle()
+                                        .fill(Color(hex: project.color ?? "#007AFF"))
+                                        .frame(width: 70, height: 70)
+                                        .overlay(
+                                            Image(systemName: "folder.fill")
+                                                .font(.system(size: 28))
+                                                .foregroundStyle(.white)
+                                        )
+                                }
+                                
+                                Text(project.name)
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Theme.Colors.text)
+                                
+                                if let description = project.description {
+                                    Text(description)
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.textSecondary)
+                                        .multilineTextAlignment(.center)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, Theme.Spacing.md)
                         }
                     }
-                    .padding(Theme.Spacing.xl)
-                    .frame(maxWidth: .infinity)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.xl))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.CornerRadius.xl)
-                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                    )
                     
                     // Details section
-                    SettingsSection(title: "Details") {
-                        VStack(spacing: Theme.Spacing.md) {
+                    GlassListSection("Details") {
+                        GlassListRow {
                             SettingsRow(
                                 icon: "person.fill",
                                 iconColor: Theme.Colors.primary,
                                 title: "Role",
                                 value: project.role.capitalized
                             )
+                        }
                             
-                            Divider().background(Theme.Colors.glassBorder)
-                            
+                        GlassListRow(showDivider: false) {
                             SettingsRow(
                                 icon: "person.2.fill",
                                 iconColor: Theme.Colors.secondary,
@@ -246,27 +238,30 @@ struct ProjectDetailView: View {
                     
                     // System Prompt section
                     if let systemPrompt = project.systemPrompt, !systemPrompt.isEmpty {
-                        SettingsSection(title: "System Prompt") {
-                            Text(systemPrompt)
-                                .font(.body)
-                                .foregroundStyle(Theme.Colors.text)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                        GlassListSection("System Prompt") {
+                            GlassListRow(showDivider: false) {
+                                Text(systemPrompt)
+                                    .font(.body)
+                                    .foregroundStyle(Theme.Colors.text)
+                                    .textSelection(.enabled)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.vertical, Theme.Spacing.xs)
+                            }
                         }
                     }
                     
                     // Metadata section
-                    SettingsSection(title: "Metadata") {
-                        VStack(spacing: Theme.Spacing.md) {
+                    GlassListSection("Metadata") {
+                        GlassListRow {
                             SettingsRow(
                                 icon: "calendar.badge.plus",
                                 iconColor: Theme.Colors.textSecondary,
                                 title: "Created",
                                 value: project.createdAt.formatted(date: .abbreviated, time: .shortened)
                             )
+                        }
                             
-                            Divider().background(Theme.Colors.glassBorder)
-                            
+                        GlassListRow(showDivider: false) {
                             SettingsRow(
                                 icon: "calendar.badge.clock",
                                 iconColor: Theme.Colors.textSecondary,
@@ -278,14 +273,11 @@ struct ProjectDetailView: View {
                     
                     Spacer(minLength: Theme.Spacing.xxl)
                 }
-                .padding(.horizontal, Theme.Spacing.lg)
-                .padding(.top, Theme.Spacing.md)
             }
         }
         .navigationTitle(project.name)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
+        .liquidGlassNavigationBar()
     }
 }
 
@@ -306,29 +298,30 @@ struct NewProjectView: View {
                 Theme.Gradients.background
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(spacing: Theme.Spacing.xl) {
-                        // Details section
-                        SettingsSection(title: "Details") {
-                            VStack(spacing: Theme.Spacing.md) {
-                                TextField("Project name", text: $name)
-                                    .textFieldStyle(.plain)
-                                    .foregroundStyle(Theme.Colors.text)
-                                
-                                Divider().background(Theme.Colors.glassBorder)
-                                
-                                TextField("Description (optional)", text: $description)
-                                    .textFieldStyle(.plain)
-                                    .foregroundStyle(Theme.Colors.text)
-                            }
+                GlassList {
+                    // Details section
+                    GlassListSection("Details") {
+                        GlassListRow {
+                            TextField("Project name", text: $name)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(Theme.Colors.text)
                         }
                         
-                        // System Prompt section
-                        SettingsSection(title: "System Prompt (Optional)") {
+                        GlassListRow(showDivider: false) {
+                            TextField("Description (optional)", text: $description)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+                    }
+                    
+                    // System Prompt section
+                    GlassListSection("System Prompt (Optional)") {
+                        GlassListRow(showDivider: false) {
                             VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                                 TextEditor(text: $systemPrompt)
                                     .frame(minHeight: 100)
                                     .foregroundStyle(Theme.Colors.text)
+                                    
                                     .scrollContentBackground(.hidden)
                                     .background(Color.clear)
                                 
@@ -336,10 +329,13 @@ struct NewProjectView: View {
                                     .font(.caption)
                                     .foregroundStyle(Theme.Colors.textTertiary)
                             }
+                            .padding(.vertical, Theme.Spacing.xs)
                         }
-                        
-                        // Color section
-                        SettingsSection(title: "Color") {
+                    }
+                    
+                    // Color section
+                    GlassListSection("Color") {
+                        GlassListRow(showDivider: false) {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: Theme.Spacing.md) {
                                 ForEach(colors, id: \.self) { color in
                                     ZStack {
@@ -366,18 +362,16 @@ struct NewProjectView: View {
                                     }
                                 }
                             }
+                            .padding(.vertical, Theme.Spacing.sm)
                         }
-                        
-                        Spacer(minLength: Theme.Spacing.xxl)
                     }
-                    .padding(.horizontal, Theme.Spacing.lg)
-                    .padding(.top, Theme.Spacing.md)
+                    
+                    Spacer(minLength: Theme.Spacing.xxl)
                 }
             }
             .navigationTitle("New Project")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .liquidGlassNavigationBar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

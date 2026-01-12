@@ -13,17 +13,10 @@ struct ProviderPicker: View {
                 Theme.Gradients.background
                     .ignoresSafeArea()
                 
-                ScrollView {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                        
-                        Text("Select Provider")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                            .padding(.horizontal, Theme.Spacing.sm)
-                        
-                        VStack(spacing: Theme.Spacing.sm) {
-                            // Auto Option
+                GlassList {
+                    GlassListSection("Select Provider") {
+                        // Auto Option
+                        GlassListRow {
                             Button {
                                 onSelect(nil)
                                 dismiss()
@@ -41,13 +34,14 @@ struct ProviderPicker: View {
                                             .foregroundStyle(Theme.Colors.primary)
                                     }
                                 }
-                                .padding(Theme.Spacing.md)
-                                .glassCard()
+                                .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
-                            
-                            // Providers
-                            ForEach(availableProviders) { provider in
+                        }
+                        
+                        // Providers
+                        ForEach(availableProviders) { provider in
+                            GlassListRow {
                                 Button {
                                     onSelect(provider.provider)
                                     dismiss()
@@ -73,24 +67,23 @@ struct ProviderPicker: View {
                                                 .foregroundStyle(Theme.Colors.primary)
                                         }
                                     }
-                                    .padding(Theme.Spacing.md)
-                                    .glassCard()
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        
-                        Text("5% markup on provider pricing")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                            .padding(.horizontal, Theme.Spacing.sm)
                     }
-                    .padding(Theme.Spacing.lg)
+                    
+                    Text("5% markup on provider pricing")
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .padding(.top, Theme.Spacing.md)
                 }
             }
             .navigationTitle("Model Provider")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .liquidGlassNavigationBar()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {

@@ -26,30 +26,27 @@ struct AccountSettingsView: View {
                 .ignoresSafeArea()
 
             NavigationStack {
-                ScrollView {
-                    VStack(spacing: Theme.Spacing.xl) {
-                        if viewModel.isLoading {
-                            ProgressView()
-                                .tint(Theme.Colors.primary)
-                        } else if let error = viewModel.error {
-                            ErrorView(message: error) {
-                                Task { await viewModel.loadSettings() }
-                            }
-                        } else {
+                VStack {
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(Theme.Colors.primary)
+                    } else if let error = viewModel.error {
+                        ErrorView(message: error) {
+                            Task { await viewModel.loadSettings() }
+                        }
+                    } else {
+                        GlassList {
                             generalSettingsSection
                             modelPreferencesSection
                             karakeepSection
+                            
+                            Spacer(minLength: Theme.Spacing.xxl)
                         }
-
-                        Spacer(minLength: Theme.Spacing.xxl)
                     }
-                    .padding(.horizontal, Theme.Spacing.lg)
-                    .padding(.top, Theme.Spacing.md)
                 }
                 .navigationTitle("Account Settings")
                 .navigationBarTitleDisplayMode(.large)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .liquidGlassNavigationBar()
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("Done") {
@@ -67,8 +64,8 @@ struct AccountSettingsView: View {
     }
 
     private var generalSettingsSection: some View {
-        SettingsSection(title: "General") {
-            VStack(spacing: Theme.Spacing.md) {
+        GlassListSection("General") {
+            GlassListRow {
                 SettingsToggle(
                     title: "Hide Personal Information",
                     description: "Blur your name and avatar in the sidebar",
@@ -80,10 +77,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 SettingsToggle(
                     title: "Context Memory",
                     description: "Compress long conversations for better context retention",
@@ -95,10 +91,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 SettingsToggle(
                     title: "Persistent Memory",
                     description: "Remember facts about you across different conversations",
@@ -110,10 +105,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 SettingsToggle(
                     title: "YouTube Transcripts",
                     description: "Automatically fetch YouTube video transcripts ($0.01 each)",
@@ -125,10 +119,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 SettingsToggle(
                     title: "Web Scraping",
                     description: "Automatically scrape web page content when URLs are detected",
@@ -140,10 +133,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 SettingsToggle(
                     title: "Nano-GPT MCP",
                     description: "Supports Vision, YouTube Transcripts, Web Scraping, Nano-GPT Balance, Image Generation, and Model Lists",
@@ -155,10 +147,9 @@ struct AccountSettingsView: View {
                         }
                     )
                 )
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow(showDivider: false) {
                 SettingsToggle(
                     title: "Follow-up Questions",
                     description: "Show suggested follow-up questions after each response",
@@ -175,34 +166,35 @@ struct AccountSettingsView: View {
     }
 
     private var modelPreferencesSection: some View {
-        SettingsSection(title: "Model Preferences") {
-            VStack(spacing: Theme.Spacing.md) {
-                // Manage Available Models
+        GlassListSection("Model Preferences") {
+            // Manage Available Models
+            GlassListRow {
                 NavigationLink {
                     AvailableModelsView(modelManager: modelManager)
                 } label: {
-                    SettingsRow(
-                        icon: "list.bullet.rectangle.portrait.fill",
-                        iconColor: Theme.Colors.accent,
-                        title: "Available Models",
-                        value: ""
-                    )
+                    HStack {
+                        Image(systemName: "list.bullet.rectangle.portrait.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.Colors.accent)
+                            .frame(width: 28)
+                        
+                        Text("Available Models")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.Colors.text)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                    }
                     .contentShape(Rectangle())
-                    .overlay(
-                        HStack {
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    )
                 }
                 .buttonStyle(.plain)
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
-                // Title Generation Model
+            // Title Generation Model
+            GlassListRow {
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                     Text("Chat Title Generation Model")
                         .font(.subheadline)
@@ -217,7 +209,7 @@ struct AccountSettingsView: View {
                             }
                             return viewModel.titleModelId
                         },
-                        set: { newValue in
+                        set: { (newValue: String) in
                             HapticManager.shared.tap()
                             Task { await viewModel.updateTitleModelId(newValue) }
                         }
@@ -229,17 +221,17 @@ struct AccountSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(Theme.Colors.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .labelsHidden()
 
                     Text("Select the model used to generate chat titles")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                .padding(.vertical, Theme.Spacing.xs)
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
-                // Follow-up Questions Model
+            // Follow-up Questions Model
+            GlassListRow(showDivider: false) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                     Text("Follow-up Questions Model")
                         .font(.subheadline)
@@ -254,7 +246,7 @@ struct AccountSettingsView: View {
                             }
                             return viewModel.followUpModelId
                         },
-                        set: { newValue in
+                        set: { (newValue: String) in
                             HapticManager.shared.tap()
                             Task { await viewModel.updateFollowUpModelId(newValue) }
                         }
@@ -266,62 +258,52 @@ struct AccountSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(Theme.Colors.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .labelsHidden()
 
                     Text("Select the model used to generate follow-up questions")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                .padding(.vertical, Theme.Spacing.xs)
             }
         }
     }
 
     private var karakeepSection: some View {
-        SettingsSection(title: "Karakeep Integration") {
-            VStack(spacing: Theme.Spacing.md) {
+        GlassListSection("Karakeep Integration") {
+            GlassListRow {
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                     Text("Karakeep URL")
                         .font(.subheadline)
                         .foregroundStyle(Theme.Colors.text)
 
                     TextField("https://karakeep.example.com", text: $viewModel.karakeepUrl)
-                        .textFieldStyle(.plain)
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                        )
+                        .textFieldStyle(.liquidGlass)
 
                     Text("The URL of your Karakeep instance")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                .padding(.vertical, Theme.Spacing.xs)
+            }
 
-                Divider()
-                    .background(Theme.Colors.glassBorder)
-
+            GlassListRow {
                 VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                     Text("API Key")
                         .font(.subheadline)
                         .foregroundStyle(Theme.Colors.text)
 
                     TextField("Enter your Karakeep API key", text: $viewModel.karakeepApiKey)
-                        .textFieldStyle(.plain)
-                        .padding()
-                        .background(.ultraThinMaterial)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                        )
+                        .textFieldStyle(.liquidGlass)
 
                     Text("Your Karakeep API authentication key")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
+                .padding(.vertical, Theme.Spacing.xs)
+            }
 
+            GlassListRow(showDivider: false) {
                 Button {
                     HapticManager.shared.tap()
                     Task {
@@ -340,12 +322,10 @@ struct AccountSettingsView: View {
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Theme.Gradients.primary)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                 }
+                .buttonStyle(LiquidGlassButtonStyle())
                 .disabled(viewModel.isUpdating)
+                .padding(.vertical, Theme.Spacing.xs)
             }
         }
     }
@@ -374,6 +354,7 @@ struct SettingsToggle: View {
 
             Toggle("", isOn: $isOn)
                 .tint(Theme.Colors.primary)
+                .labelsHidden()
         }
     }
 }
@@ -399,13 +380,10 @@ struct ErrorView: View {
                 HapticManager.shared.tap()
                 retry()
             }
-            .padding(.horizontal, Theme.Spacing.xl)
-            .padding(.vertical, Theme.Spacing.sm)
-            .background(Theme.Colors.error.opacity(0.2))
-            .foregroundStyle(Theme.Colors.error)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+            .buttonStyle(LiquidGlassButtonStyle(style: .destructive))
         }
         .padding()
+        .glassCard()
     }
 }
 

@@ -3,44 +3,48 @@ import SwiftUI
 struct Theme {
     // MARK: - Colors
     struct Colors {
-        // Background gradient (dark purple to black)
-        static let backgroundStart = Color(red: 0.11, green: 0.05, blue: 0.2)
-        static let backgroundEnd = Color(red: 0.02, green: 0.02, blue: 0.05)
+        // Background (Pure Black)
+        static let backgroundStart = Color.black
+        static let backgroundEnd = Color.black
 
-        // Primary accents (purple/pink)
-        static let primary = Color(red: 0.6, green: 0.2, blue: 0.8)
-        static let secondary = Color(red: 0.9, green: 0.3, blue: 0.6)
-        static let accent = Color(red: 0.7, green: 0.25, blue: 0.95)
+        // Primary accents (Neon Pink/Purple)
+        static let primary = Color(red: 0.85, green: 0.2, blue: 0.65)   // Neon Pink
+        static let secondary = Color(red: 0.6, green: 0.1, blue: 0.9)   // Deep Neon Purple
+        static let accent = Color(red: 1.0, green: 0.4, blue: 0.8)      // Hot Pink for accents
 
         // Gradient colors
-        static let gradientStart = Color(red: 0.4, green: 0.15, blue: 0.7)
-        static let gradientEnd = Color(red: 0.8, green: 0.2, blue: 0.6)
+        static let gradientStart = Color(red: 0.9, green: 0.2, blue: 0.7) // Pink
+        static let gradientEnd = Color(red: 0.6, green: 0.1, blue: 0.9)   // Purple
 
         // Text colors
         static let text = Color.white
-        static let textSecondary = Color(white: 0.7)
-        static let textTertiary = Color(white: 0.5)
+        static let textSecondary = Color.white.opacity(0.7)
+        static let textTertiary = Color.white.opacity(0.4)
 
         // Glass effect
-        static let glassBackground = Color.white.opacity(0.08)
-        static let glassBorder = Color.white.opacity(0.12)
-        static let glassShadow = Color.black.opacity(0.3)
+        static let glassBackground = Color.white.opacity(0.05)
+        static let glassBorder = Color.white.opacity(0.15)
+        static let glassShadow = Color.black.opacity(0.4)
+        
+        // Specific Glass Elements
+        static let glassPane = Material.ultraThin
+        static let glassSurface = Color.white.opacity(0.03)
 
         // User message
-        static let userBubble = Color(red: 0.5, green: 0.2, blue: 0.7)
+        static let userBubble = Color(red: 0.7, green: 0.2, blue: 0.6)
         static let userBubbleGradient = LinearGradient(
-            colors: [Color(red: 0.6, green: 0.25, blue: 0.85), Color(red: 0.8, green: 0.3, blue: 0.6)],
+            colors: [Color(red: 0.8, green: 0.2, blue: 0.7), Color(red: 0.6, green: 0.1, blue: 0.8)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
 
         // Assistant message
-        static let assistantBubble = Color.white.opacity(0.08)
+        static let assistantBubble = Color.white.opacity(0.05)
         
         // Status colors
-        static let success = Color(red: 0.3, green: 0.85, blue: 0.5)
-        static let warning = Color(red: 1.0, green: 0.75, blue: 0.3)
-        static let error = Color(red: 1.0, green: 0.35, blue: 0.35)
+        static let success = Color(red: 0.2, green: 0.9, blue: 0.6)
+        static let warning = Color(red: 1.0, green: 0.8, blue: 0.3)
+        static let error = Color(red: 1.0, green: 0.3, blue: 0.4)
     }
 
     // MARK: - Gradients
@@ -63,15 +67,25 @@ struct Theme {
             endPoint: .bottomTrailing
         )
         
-        static let shimmer = LinearGradient(
-            colors: [
-                Colors.glassBackground,
-                Colors.glassBorder,
-                Colors.glassBackground
-            ],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
+        static let glass = LinearGradient(
+             colors: [
+                 Colors.glassBorder.opacity(0.6),
+                 Colors.glassBorder.opacity(0.1),
+                 Colors.glassBorder.opacity(0.3)
+             ],
+             startPoint: .topLeading,
+             endPoint: .bottomTrailing
+         )
+         
+         static let shimmer = LinearGradient(
+             colors: [
+                 Color.white.opacity(0.0),
+                 Color.white.opacity(0.1),
+                 Color.white.opacity(0.0)
+             ],
+             startPoint: .leading,
+             endPoint: .trailing
+         )
     }
 
     // MARK: - Spacing
@@ -177,26 +191,16 @@ extension View {
         self.background(
             ZStack {
                 if isPressed {
-                    Theme.Colors.primary.opacity(0.2)
+                    Theme.Colors.glassBackground.opacity(0.5)
                 } else {
                     Theme.Colors.glassBackground
                 }
             }
-            .background(.ultraThinMaterial)
+            .background(Theme.Colors.glassPane)
         )
         .overlay(
             RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Theme.Colors.glassBorder,
-                            Theme.Colors.glassBorder.opacity(0.5)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ),
-                    lineWidth: 1
-                )
+                .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
         )
         .shadow(color: Theme.Colors.glassShadow, radius: 10, x: 0, y: 4)
         .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
