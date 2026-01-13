@@ -32,13 +32,15 @@ struct SettingsView: View {
                 GlassList {
                     // Account Section
                     GlassListSection("Account") {
-                        GlassListRow(showDivider: false) {
+                        GlassListRow {
                             HStack(spacing: Theme.Spacing.md) {
                                 ZStack {
                                     Circle()
                                         .fill(Theme.Gradients.primary)
                                         .frame(width: 50, height: 50)
-                                        .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
+                                        .shadow(
+                                            color: Theme.Colors.primary.opacity(0.4), radius: 8,
+                                            x: 0, y: 4)
 
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 22))
@@ -64,7 +66,7 @@ struct SettingsView: View {
                             .padding(.vertical, Theme.Spacing.xs)
                         }
 
-                        GlassListRow(showDivider: false) {
+                        GlassListRow {
                             Button {
                                 HapticManager.shared.tap()
                                 showingAccountSettings = true
@@ -76,6 +78,31 @@ struct SettingsView: View {
                                         .frame(width: 28)
 
                                     Text("Account Settings")
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+
+                        GlassListRow(showDivider: false) {
+                            NavigationLink {
+                                AnalyticsView()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "chart.bar.xaxis")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.Colors.secondary)
+                                        .frame(width: 28)
+
+                                    Text("Analytics")
                                         .font(.subheadline)
                                         .foregroundStyle(Theme.Colors.text)
 
@@ -176,7 +203,10 @@ struct SettingsView: View {
                         }
 
                         GlassListRow(showDivider: false) {
-                            Link(destination: URL(string: "https://github.com/nicholasgriffintn/nanochat")!) {
+                            Link(
+                                destination: URL(
+                                    string: "https://github.com/nicholasgriffintn/nanochat")!
+                            ) {
                                 HStack {
                                     Image(systemName: "book.fill")
                                         .font(.system(size: 14))
@@ -227,7 +257,7 @@ struct SettingsView: View {
                 .navigationBarTitleDisplayMode(.large)
                 .liquidGlassNavigationBar()
                 .alert("Sign Out", isPresented: $showingLogoutAlert) {
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {}
                     Button("Sign Out", role: .destructive) {
                         HapticManager.shared.success()
                         authManager.clearCredentials()
@@ -255,26 +285,26 @@ struct SettingsRow: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-            .font(.system(size: 14))
-            .foregroundStyle(iconColor)
-            .frame(width: 28)
+                .font(.system(size: 14))
+                .foregroundStyle(iconColor)
+                .frame(width: 28)
 
             Text(title)
-            .font(.subheadline)
-            .foregroundStyle(Theme.Colors.text)
+                .font(.subheadline)
+                .foregroundStyle(Theme.Colors.text)
 
             Spacer()
 
             Text(value)
-            .font(.subheadline)
-            .foregroundStyle(Theme.Colors.textSecondary)
-            .lineLimit(1)
+                .font(.subheadline)
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .lineLimit(1)
         }
     }
 }
 
 #Preview {
-SettingsView()
-.environmentObject(AuthenticationManager())
-.environmentObject(ThemeManager())
+    SettingsView()
+        .environmentObject(AuthenticationManager())
+        .environmentObject(ThemeManager())
 }

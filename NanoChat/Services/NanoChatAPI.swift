@@ -630,6 +630,13 @@ final class NanoChatAPI: Sendable {
         return try await self.request(endpoint: "/api/projects", method: .post, body: request)
     }
 
+    // MARK: - Analytics
+
+    func getAnalytics(recalculate: Bool = true) async throws -> AnalyticsResponse {
+        let params = ["recalculate": recalculate ? "true" : "false"]
+        return try await request(endpoint: "/api/analytics", queryParams: params)
+    }
+
     // MARK: - User Settings
 
     func getUserSettings() async throws -> UserSettings {
