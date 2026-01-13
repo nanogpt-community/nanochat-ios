@@ -12,6 +12,7 @@ final class Message {
     var reasoning: String?
     var createdAt: Date
     var updatedAt: Date?
+    var followUpSuggestions: [String]?
 
     var conversation: Conversation?
 
@@ -30,7 +31,8 @@ final class Message {
         modelId: String? = nil,
         reasoning: String? = nil,
         createdAt: Date = .now,
-        updatedAt: Date? = nil
+        updatedAt: Date? = nil,
+        followUpSuggestions: [String]? = nil
     ) {
         self.id = id
         self.conversationId = conversationId
@@ -41,6 +43,7 @@ final class Message {
         self.reasoning = reasoning
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.followUpSuggestions = followUpSuggestions
     }
 }
 
@@ -88,6 +91,7 @@ struct MessageResponse: Codable {
     let documents: [MessageDocumentResponse]?
     let createdAt: Date
     let updatedAt: Date?
+    let followUpSuggestions: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -101,6 +105,7 @@ struct MessageResponse: Codable {
         case documents
         case createdAt
         case updatedAt
+        case followUpSuggestions
     }
 
     init(from decoder: Decoder) throws {
@@ -144,6 +149,8 @@ struct MessageResponse: Codable {
         } else {
             updatedAt = nil
         }
+
+        followUpSuggestions = try container.decodeIfPresent([String].self, forKey: .followUpSuggestions)
     }
 
     init(
@@ -157,7 +164,8 @@ struct MessageResponse: Codable {
         images: [MessageImageResponse]? = nil,
         documents: [MessageDocumentResponse]? = nil,
         createdAt: Date = .now,
-        updatedAt: Date? = nil
+        updatedAt: Date? = nil,
+        followUpSuggestions: [String]? = nil
     ) {
         self.id = id
         self.conversationId = conversationId
@@ -170,6 +178,7 @@ struct MessageResponse: Codable {
         self.documents = documents
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.followUpSuggestions = followUpSuggestions
     }
 }
 

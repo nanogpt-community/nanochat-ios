@@ -19,6 +19,9 @@ final class ChatViewModel: ObservableObject {
     @Published var imageParams: [String: AnyCodable] = [:]
     @Published var videoParams: [String: AnyCodable] = [:]
 
+    @Published var followUpSuggestions: [String] = []
+    @Published var isLoadingFollowUps = false
+
     private let api = NanoChatAPI.shared
 
     func loadConversations() async {
@@ -182,5 +185,28 @@ final class ChatViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    // MARK: - Follow-Up Questions
+
+    func fetchFollowUpQuestions(conversationId: String, messageId: String) async {
+        isLoadingFollowUps = true
+        defer { isLoadingFollowUps = false }
+
+        do {
+            let suggestions = try await api.generateFollowUpQuestions(
+                conversationId: conversationId,
+                messageId: messageId
+            )
+            followUpSuggestions = suggestions
+            print("Loaded \(suggestions.count) follow-up suggestions")
+        } catch {
+            print("Failed to fetch follow-up questions: \(error)")
+            followUpSuggestions = []
+        }
+    }
+
+    func clearFollowUpSuggestions() {
+        followUpSuggestions = []
     }
 }

@@ -1,3 +1,4 @@
+import AVKit
 import SwiftUI
 
 struct ChatView: View {
@@ -119,11 +120,25 @@ struct ChatView: View {
                         TypingIndicator()
                             .id("typing-indicator")
                     }
+
+                    // Follow-up questions after generation completes
+                    if !viewModel.isGenerating,
+                       !viewModel.followUpSuggestions.isEmpty,
+                       let lastMessage = viewModel.messages.last,
+                       lastMessage.role == "assistant" {
+                        FollowUpQuestionsView(suggestions: viewModel.followUpSuggestions) { suggestion in
+                            messageText = suggestion
+                            isInputFocused = true
+                        }
+                        .id("follow-up-questions")
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
                 }
                 .padding(.horizontal, Theme.Spacing.lg)
                 .padding(.vertical, Theme.Spacing.md)
                 .animation(Theme.Animation.smooth, value: viewModel.messages.count)
                 .animation(Theme.Animation.smooth, value: viewModel.isGenerating)
+                .animation(Theme.Animation.smooth, value: viewModel.followUpSuggestions)
             }
             .scrollDismissesKeyboard(.interactively)
             .onChange(of: viewModel.isGenerating) { _, isGenerating in
@@ -367,7 +382,7 @@ struct ChatView: View {
                         webSearchEnabled: $viewModel.webSearchEnabled,
                         webSearchProvider: $webSearchProvider
                     )
-                    
+
                     // Provider Selection Button (only show if model supports provider selection)
                     if viewModel.supportsProviderSelection {
                         providerSelectorButton
@@ -628,12 +643,12 @@ struct ChatView: View {
                 selectedProviderId: viewModel.selectedProviderId
             ) { providerId in
                 viewModel.selectProvider(providerId: providerId)
-                
+
                 // Save this choice if a model is selected
                 if let modelId = modelManager.selectedModel?.modelId, let providerId = providerId {
                     modelManager.saveLastProvider(for: modelId, providerId: providerId)
                 }
-                
+
                 showProviderPicker = false
             }
             .presentationDetents([.medium])
@@ -648,6 +663,9 @@ struct ChatView: View {
         // Haptic feedback on send
         HapticManager.shared.tap()
 
+        // Clear follow-up suggestions when sending a new message
+        viewModel.clearFollowUpSuggestions()
+
         isInputFocused = false
         let currentMessage = messageText.isEmpty ? "Generated Image" : messageText
         let currentImages = selectedImages
@@ -660,7 +678,7 @@ struct ChatView: View {
         let webSearchEnabled = viewModel.webSearchEnabled
         let webSearchModeString = webSearchEnabled ? webSearchMode.rawValue : nil
         let webSearchProviderString = webSearchEnabled ? webSearchProvider.rawValue : nil
-        
+
         let isImageModel = model.capabilities?.images == true
         let isVideoModel = model.capabilities?.video == true
 
@@ -710,6 +728,18 @@ struct ChatView: View {
                 videoParams: isVideoModel ? viewModel.videoParams : nil
             )
 
+            // Generate follow-up questions after message generation completes
+            // Only for text models (not image/video generation)
+            if !isImageModel && !isVideoModel,
+               let lastMessage = viewModel.messages.last,
+               lastMessage.role == "assistant",
+               lastMessage.content.count > 100 {
+                await viewModel.fetchFollowUpQuestions(
+                    conversationId: conversation.id,
+                    messageId: lastMessage.id
+                )
+            }
+
             onMessageSent?()
         }
     }
@@ -728,6 +758,7 @@ struct MessageBubble: View {
     @State private var editedContent = ""
     @State private var isSaving = false
     @State private var isBranching = false
+    @State private var videoPlayers: [String: AVPlayer] = [:]
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.sm) {
@@ -766,12 +797,12 @@ struct MessageBubble: View {
                     }
                 }
 
-                // Display attached images
-                if let images = message.images, !images.isEmpty {
+                // Display attached and inline-detected images
+                if !allImageURLs.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: Theme.Spacing.sm) {
-                            ForEach(images, id: \.storageId) { image in
-                                AsyncImage(url: URL(string: resolveStorageURL(image.url))) { phase in
+                            ForEach(allImageURLs, id: \.absoluteString) { imageURL in
+                                AsyncImage(url: imageURL) { phase in
                                     switch phase {
                                     case .empty:
                                         RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
@@ -801,6 +832,30 @@ struct MessageBubble: View {
                                         .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                                 )
                             }
+                        }
+                    }
+                    .padding(.vertical, Theme.Spacing.xs)
+                }
+
+                // Display inline-detected videos (generated content URLs)
+                if !inlineVideoURLs.isEmpty {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                        ForEach(inlineVideoURLs, id: \.absoluteString) { videoURL in
+                            let player = player(for: videoURL)
+                            VideoPlayer(player: player)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 220)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                )
+                                .onAppear {
+                                    cachePlayer(player, for: videoURL)
+                                }
+                                .onDisappear {
+                                    player.pause()
+                                }
                         }
                     }
                     .padding(.vertical, Theme.Spacing.xs)
@@ -1077,6 +1132,61 @@ struct MessageBubble: View {
         }
     }
 
+    // Inline media helpers
+    private var inlineImageURLs: [URL] {
+        detectedURLs.filter { imageExtensions.contains($0.pathExtension.lowercased()) }
+    }
+
+    private var inlineVideoURLs: [URL] {
+        detectedURLs.filter { videoExtensions.contains($0.pathExtension.lowercased()) }
+    }
+
+    private var allImageURLs: [URL] {
+        var urls: [URL] = []
+
+        if let images = message.images {
+            for image in images {
+                if let url = URL(string: resolveStorageURL(image.url)) {
+                    urls.append(url)
+                }
+            }
+        }
+
+        urls.append(contentsOf: inlineImageURLs)
+
+        var seen: Set<String> = []
+        return urls.filter { url in
+            let key = url.absoluteString
+            if seen.contains(key) { return false }
+            seen.insert(key)
+            return true
+        }
+    }
+
+    private var detectedURLs: [URL] {
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let matches = detector?.matches(
+            in: message.content,
+            options: [],
+            range: NSRange(location: 0, length: message.content.utf16.count)
+        ) ?? []
+
+        return matches.compactMap { match in
+            guard let range = Range(match.range, in: message.content) else { return nil }
+            let raw = String(message.content[range])
+            let resolved = resolveStorageURL(raw)
+            return URL(string: resolved)
+        }
+    }
+
+    private func player(for url: URL) -> AVPlayer {
+        videoPlayers[url.absoluteString] ?? AVPlayer(url: url)
+    }
+
+    private func cachePlayer(_ player: AVPlayer, for url: URL) {
+        videoPlayers[url.absoluteString] = player
+    }
+
     private func resolveStorageURL(_ url: String) -> String {
         // If URL is relative (starts with /), prepend the base URL
         if url.hasPrefix("/") {
@@ -1096,6 +1206,14 @@ struct MessageBubble: View {
         default:
             return "doc.plaintext.fill"
         }
+    }
+
+    private var imageExtensions: Set<String> {
+        ["png", "jpg", "jpeg", "gif", "webp", "heic", "heif"]
+    }
+
+    private var videoExtensions: Set<String> {
+        ["mp4", "mov", "m4v", "webm"]
     }
 }
 

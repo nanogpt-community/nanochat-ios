@@ -183,6 +183,21 @@ final class NanoChatAPI: Sendable {
         return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
     }
 
+    // MARK: - Follow-Up Questions
+
+    func generateFollowUpQuestions(conversationId: String, messageId: String) async throws -> [String] {
+        let request = GenerateFollowUpQuestionsRequest(
+            conversationId: conversationId,
+            messageId: messageId
+        )
+        let response: GenerateFollowUpQuestionsResponse = try await self.request(
+            endpoint: "/api/generate-follow-up-questions",
+            method: .post,
+            body: request
+        )
+        return response.suggestions
+    }
+
     // MARK: - Generate Message
 
     func generateMessage(
@@ -910,4 +925,16 @@ struct UpdateUserSettingsRequest: Codable {
             try container.encode(followUpModelId, forKey: .followUpModelId)
         }
     }
+}
+
+// MARK: - Follow-Up Questions Types
+
+struct GenerateFollowUpQuestionsRequest: Codable {
+    let conversationId: String
+    let messageId: String
+}
+
+struct GenerateFollowUpQuestionsResponse: Codable {
+    let ok: Bool
+    let suggestions: [String]
 }

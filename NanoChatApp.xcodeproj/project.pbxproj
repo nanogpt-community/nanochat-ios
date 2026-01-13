@@ -47,6 +47,7 @@
 		D994A73562BE85CAD662BC5B /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DF5795352F6BCA8014DCA33 /* ThemeManager.swift */; };
 		DBA553F6A52D9D3B47E1ACE6 /* ServerSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */; };
 		DBEF50500951CD5A3556947F /* AssistantManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68B2C669943B9C99D6E96BED /* AssistantManager.swift */; };
+		DDF8CA7B4AF4DD53855DBCCE /* FollowUpQuestionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */; };
 		EB546CEFD873FBCBAAF008C1 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2AC5A2231AC533627F6732 /* ChatViewModel.swift */; };
 		EB7CE8EEFFD68E3C2D37489A /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F093E2C2BB581A8E156E4D /* Model.swift */; };
 		EF0D9567E675B7B660421641 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F8CD0478EEB7EC20F2910F /* Extensions.swift */; };
@@ -99,6 +100,7 @@
 		F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		F4E548298D554723BE7D2CB6 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		F525CE460E1FE06B29624306 /* Entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Entitlements.plist; sourceTree = "<group>"; };
+		F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpQuestionsView.swift; sourceTree = "<group>"; };
 		FB219170DF3996FD2078F014 /* GlassList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -106,6 +108,7 @@
 		2036CEDDAE2BAA0F4D1C241F /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */,
 				D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */,
 				33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */,
 				F4E548298D554723BE7D2CB6 /* GlassCard.swift */,
@@ -306,6 +309,7 @@
 				6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */,
 				A5C8AFDF9283CB5EEA7AF702 /* ConversationsListView.swift in Sources */,
 				EF0D9567E675B7B660421641 /* Extensions.swift in Sources */,
+				DDF8CA7B4AF4DD53855DBCCE /* FollowUpQuestionsView.swift in Sources */,
 				920D6E88807C520C20915F8D /* GenerationSettingsViews.swift in Sources */,
 				C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */,
 				2903745958E926B21CE907B9 /* GlassCard.swift in Sources */,
