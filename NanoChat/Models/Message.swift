@@ -10,6 +10,7 @@ final class Message {
     var contentHtml: String?
     var modelId: String?
     var reasoning: String?
+    var starred: Bool
     var createdAt: Date
     var updatedAt: Date?
     var followUpSuggestions: [String]?
@@ -30,6 +31,7 @@ final class Message {
         contentHtml: String? = nil,
         modelId: String? = nil,
         reasoning: String? = nil,
+        starred: Bool = false,
         createdAt: Date = .now,
         updatedAt: Date? = nil,
         followUpSuggestions: [String]? = nil
@@ -41,6 +43,7 @@ final class Message {
         self.contentHtml = contentHtml
         self.modelId = modelId
         self.reasoning = reasoning
+        self.starred = starred
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.followUpSuggestions = followUpSuggestions
@@ -87,6 +90,7 @@ struct MessageResponse: Codable {
     let contentHtml: String?
     let modelId: String?
     let reasoning: String?
+    let starred: Bool?
     let images: [MessageImageResponse]?
     let documents: [MessageDocumentResponse]?
     let createdAt: Date
@@ -101,6 +105,7 @@ struct MessageResponse: Codable {
         case contentHtml
         case modelId
         case reasoning
+        case starred
         case images
         case documents
         case createdAt
@@ -117,8 +122,10 @@ struct MessageResponse: Codable {
         contentHtml = try container.decodeIfPresent(String.self, forKey: .contentHtml)
         modelId = try container.decodeIfPresent(String.self, forKey: .modelId)
         reasoning = try container.decodeIfPresent(String.self, forKey: .reasoning)
+        starred = try container.decodeIfPresent(Bool.self, forKey: .starred)
         images = try container.decodeIfPresent([MessageImageResponse].self, forKey: .images)
-        documents = try container.decodeIfPresent([MessageDocumentResponse].self, forKey: .documents)
+        documents = try container.decodeIfPresent(
+            [MessageDocumentResponse].self, forKey: .documents)
 
         // Decode ISO 8601 date strings
         let createdAtString = try container.decode(String.self, forKey: .createdAt)
@@ -150,7 +157,8 @@ struct MessageResponse: Codable {
             updatedAt = nil
         }
 
-        followUpSuggestions = try container.decodeIfPresent([String].self, forKey: .followUpSuggestions)
+        followUpSuggestions = try container.decodeIfPresent(
+            [String].self, forKey: .followUpSuggestions)
     }
 
     init(
@@ -161,6 +169,7 @@ struct MessageResponse: Codable {
         contentHtml: String? = nil,
         modelId: String? = nil,
         reasoning: String? = nil,
+        starred: Bool? = nil,
         images: [MessageImageResponse]? = nil,
         documents: [MessageDocumentResponse]? = nil,
         createdAt: Date = .now,
@@ -174,6 +183,7 @@ struct MessageResponse: Codable {
         self.contentHtml = contentHtml
         self.modelId = modelId
         self.reasoning = reasoning
+        self.starred = starred
         self.images = images
         self.documents = documents
         self.createdAt = createdAt

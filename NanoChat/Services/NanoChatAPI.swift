@@ -165,6 +165,10 @@ final class NanoChatAPI: Sendable {
         return try await request(endpoint: "/api/db/messages?conversationId=\(conversationId)")
     }
 
+    func getStarredMessages() async throws -> [MessageResponse] {
+        return try await request(endpoint: "/api/starred-messages")
+    }
+
     func createMessage(
         conversationId: String,
         role: String,
@@ -193,6 +197,15 @@ final class NanoChatAPI: Sendable {
             content: content,
             contentHtml: contentHtml,
             reasoning: reasoning
+        )
+        return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
+    }
+
+    func setMessageStarred(messageId: String, starred: Bool) async throws -> [String: Bool] {
+        let request = SetMessageStarredRequest(
+            action: "setStarred",
+            messageId: messageId,
+            starred: starred
         )
         return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
     }
@@ -760,6 +773,18 @@ struct UpdateMessageContentRequest: Codable {
         case content
         case contentHtml
         case reasoning
+    }
+}
+
+struct SetMessageStarredRequest: Codable {
+    let action: String
+    let messageId: String
+    let starred: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case action
+        case messageId = "messageId"
+        case starred
     }
 }
 

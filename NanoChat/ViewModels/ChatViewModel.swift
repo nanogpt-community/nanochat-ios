@@ -19,6 +19,9 @@ final class ChatViewModel: ObservableObject {
     @Published var imageParams: [String: AnyCodable] = [:]
     @Published var videoParams: [String: AnyCodable] = [:]
 
+    @Published var starredMessages: [MessageResponse] = []
+    @Published var isLoadingStarred = false
+
     @Published var followUpSuggestions: [String] = []
     @Published var isLoadingFollowUps = false
 
@@ -39,8 +42,8 @@ final class ChatViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
     }
-    
-   func loadMessages(conversationId: String) async {
+
+    func loadMessages(conversationId: String) async {
         isLoading = true
         defer { isLoading = false }
 
@@ -58,6 +61,19 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
+    func loadStarredMessages() async {
+        isLoadingStarred = true
+        defer { isLoadingStarred = false }
+
+        do {
+            let loadedMessages = try await api.getStarredMessages()
+            starredMessages = loadedMessages
+        } catch {
+            print("Error loading starred messages: \(error)")
+            errorMessage = error.localizedDescription
+        }
+    }
+
     func createConversation(title: String? = nil, projectId: String? = nil) async {
         isLoading = true
         defer { isLoading = false }
@@ -65,9 +81,11 @@ final class ChatViewModel: ObservableObject {
         do {
             let newConversation: ConversationResponse
             if let title = title {
-                newConversation = try await api.createConversation(title: title, projectId: projectId)
+                newConversation = try await api.createConversation(
+                    title: title, projectId: projectId)
             } else {
-                newConversation = try await api.createConversation(title: "New Chat", projectId: projectId)
+                newConversation = try await api.createConversation(
+                    title: "New Chat", projectId: projectId)
             }
 
             conversations.insert(newConversation, at: 0)
@@ -91,7 +109,9 @@ final class ChatViewModel: ObservableObject {
         imageParams: [String: AnyCodable]? = nil,
         videoParams: [String: AnyCodable]? = nil
     ) async {
-        guard !message.isEmpty || images?.isEmpty == false || documents?.isEmpty == false else { return }
+        guard !message.isEmpty || images?.isEmpty == false || documents?.isEmpty == false else {
+            return
+        }
 
         isGenerating = true
 
@@ -113,7 +133,8 @@ final class ChatViewModel: ObservableObject {
 
             print("Generate message response: \(response)")
 
-            let targetConversationId = conversationId ?? currentConversation?.id ?? response.conversationId
+            let targetConversationId =
+                conversationId ?? currentConversation?.id ?? response.conversationId
 
             for i in 0..<120 {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -128,17 +149,21 @@ final class ChatViewModel: ObservableObject {
                 let isStillGenerating = conversation?.generating ?? false
 
                 if let lastMessage = messages.last,
-                   lastMessage.role == "assistant",
-                   !lastMessage.content.isEmpty,
-                   !isStillGenerating {
+                    lastMessage.role == "assistant",
+                    !lastMessage.content.isEmpty,
+                    !isStillGenerating
+                {
                     print("Assistant response completed, stopping poll")
                     break
                 }
 
                 if let lastMessage = messages.last,
-                   lastMessage.role == "assistant",
-                   !lastMessage.content.isEmpty {
-                    print("Still generating... (current content length: \(lastMessage.content.count))")
+                    lastMessage.role == "assistant",
+                    !lastMessage.content.isEmpty
+                {
+                    print(
+                        "Still generating... (current content length: \(lastMessage.content.count))"
+                    )
                 }
             }
 
@@ -159,7 +184,8 @@ final class ChatViewModel: ObservableObject {
             if !supportsProviderSelection {
                 selectedProviderId = nil
             } else if let currentProvider = selectedProviderId,
-                      !availableProviders.contains(where: { $0.provider == currentProvider }) {
+                !availableProviders.contains(where: { $0.provider == currentProvider })
+            {
                 selectedProviderId = nil
             }
         } catch {
@@ -208,5 +234,9 @@ final class ChatViewModel: ObservableObject {
 
     func clearFollowUpSuggestions() {
         followUpSuggestions = []
+    }
+
+    func removeStarredMessage(messageId: String) {
+        starredMessages.removeAll { $0.id == messageId }
     }
 }

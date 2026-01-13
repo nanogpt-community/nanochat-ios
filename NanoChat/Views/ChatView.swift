@@ -51,7 +51,9 @@ struct ChatView: View {
                             // Restore last used provider for this model
                             if let lastProvider = modelManager.getLastProvider(for: modelId) {
                                 // Verify this provider is still available for this model
-                                if viewModel.availableProviders.contains(where: { $0.provider == lastProvider }) {
+                                if viewModel.availableProviders.contains(where: {
+                                    $0.provider == lastProvider
+                                }) {
                                     viewModel.selectProvider(providerId: lastProvider)
                                 }
                             }
@@ -91,7 +93,8 @@ struct ChatView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: Theme.Spacing.lg) {
-                    ForEach(Array(viewModel.messages.enumerated()), id: \.element.id) { index, message in
+                    ForEach(Array(viewModel.messages.enumerated()), id: \.element.id) {
+                        index, message in
                         MessageBubble(
                             message: message,
                             conversationId: conversation.id,
@@ -109,10 +112,11 @@ struct ChatView: View {
                             }
                         )
                         .id(message.id)
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .move(edge: .bottom)),
-                            removal: .opacity
-                        ))
+                        .transition(
+                            .asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .bottom)),
+                                removal: .opacity
+                            ))
                     }
 
                     // Typing indicator when generating
@@ -123,10 +127,12 @@ struct ChatView: View {
 
                     // Follow-up questions after generation completes
                     if !viewModel.isGenerating,
-                       !viewModel.followUpSuggestions.isEmpty,
-                       let lastMessage = viewModel.messages.last,
-                       lastMessage.role == "assistant" {
-                        FollowUpQuestionsView(suggestions: viewModel.followUpSuggestions) { suggestion in
+                        !viewModel.followUpSuggestions.isEmpty,
+                        let lastMessage = viewModel.messages.last,
+                        lastMessage.role == "assistant"
+                    {
+                        FollowUpQuestionsView(suggestions: viewModel.followUpSuggestions) {
+                            suggestion in
                             messageText = suggestion
                             isInputFocused = true
                         }
@@ -183,23 +189,32 @@ struct ChatView: View {
             }
 
             // Suggestion chips
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: Theme.Spacing.sm) {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible()),
+                    GridItem(.flexible()),
+                ], spacing: Theme.Spacing.sm
+            ) {
                 SuggestionChip(icon: "lightbulb.fill", text: "Brainstorm ideas", color: .yellow) {
                     messageText = "Help me brainstorm ideas for "
                     isInputFocused = true
                 }
-                SuggestionChip(icon: "pencil.line", text: "Help me write", color: Theme.Colors.secondary) {
+                SuggestionChip(
+                    icon: "pencil.line", text: "Help me write", color: Theme.Colors.secondary
+                ) {
                     messageText = "Help me write "
                     isInputFocused = true
                 }
-                SuggestionChip(icon: "book.fill", text: "Explain a topic", color: Theme.Colors.primary) {
+                SuggestionChip(
+                    icon: "book.fill", text: "Explain a topic", color: Theme.Colors.primary
+                ) {
                     messageText = "Explain how "
                     isInputFocused = true
                 }
-                SuggestionChip(icon: "chevron.left.forwardslash.chevron.right", text: "Write code", color: .green) {
+                SuggestionChip(
+                    icon: "chevron.left.forwardslash.chevron.right", text: "Write code",
+                    color: .green
+                ) {
                     messageText = "Write code that "
                     isInputFocused = true
                 }
@@ -212,15 +227,19 @@ struct ChatView: View {
     private var regenerateHandler: () -> Void {
         return {
             if let lastUserMessage = viewModel.messages.last(where: { $0.role == "user" }),
-               let model = modelManager.selectedModel {
+                let model = modelManager.selectedModel
+            {
                 Task {
                     await viewModel.sendMessage(
-                        message: lastUserMessage.content.isEmpty ? "Generated Image" : lastUserMessage.content,
+                        message: lastUserMessage.content.isEmpty
+                            ? "Generated Image" : lastUserMessage.content,
                         modelId: model.modelId,
                         conversationId: conversation.id,
                         webSearchEnabled: viewModel.webSearchEnabled,
-                        webSearchMode: viewModel.webSearchEnabled ? viewModel.webSearchMode.rawValue : nil,
-                        webSearchProvider: viewModel.webSearchEnabled ? viewModel.webSearchProvider.rawValue : nil,
+                        webSearchMode: viewModel.webSearchEnabled
+                            ? viewModel.webSearchMode.rawValue : nil,
+                        webSearchProvider: viewModel.webSearchEnabled
+                            ? viewModel.webSearchProvider.rawValue : nil,
                         providerId: viewModel.selectedProviderId
                     )
                 }
@@ -241,7 +260,8 @@ struct ChatView: View {
 
         ToolbarItem(placement: .primaryAction) {
             if !assistantManager.assistants.isEmpty {
-                assistantMenu(assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
+                assistantMenu(
+                    assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
             }
         }
     }
@@ -337,9 +357,11 @@ struct ChatView: View {
                     }
                     .sheet(isPresented: $showImageSettings) {
                         if let model = modelManager.selectedModel {
-                            ImageGenerationSettingsView(model: model, params: $viewModel.imageParams)
-                                .presentationDetents([.medium, .large])
-                                .presentationDragIndicator(.visible)
+                            ImageGenerationSettingsView(
+                                model: model, params: $viewModel.imageParams
+                            )
+                            .presentationDetents([.medium, .large])
+                            .presentationDragIndicator(.visible)
                         }
                     }
                 } else if isVideoModel {
@@ -370,9 +392,11 @@ struct ChatView: View {
                     }
                     .sheet(isPresented: $showVideoSettings) {
                         if let model = modelManager.selectedModel {
-                            VideoGenerationSettingsView(model: model, params: $viewModel.videoParams)
-                                .presentationDetents([.medium, .large])
-                                .presentationDragIndicator(.visible)
+                            VideoGenerationSettingsView(
+                                model: model, params: $viewModel.videoParams
+                            )
+                            .presentationDetents([.medium, .large])
+                            .presentationDragIndicator(.visible)
                         }
                     }
                 } else {
@@ -401,7 +425,9 @@ struct ChatView: View {
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width: 80, height: 80)
-                                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                                        .clipShape(
+                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                        )
                                         .overlay(
                                             RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                                 .stroke(Theme.Colors.glassBorder, lineWidth: 1)
@@ -419,7 +445,8 @@ struct ChatView: View {
                             }
                         }
 
-                        ForEach(Array(selectedDocuments.enumerated()), id: \.offset) { _, documentURL in
+                        ForEach(Array(selectedDocuments.enumerated()), id: \.offset) {
+                            _, documentURL in
                             ZStack(alignment: .topTrailing) {
                                 VStack(spacing: 4) {
                                     Image(systemName: "doc.fill")
@@ -553,8 +580,10 @@ struct ChatView: View {
 
             Spacer()
 
-            ModelCapabilityBadges(capabilities: model.capabilities, subscriptionIncluded: model.subscriptionIncluded)
-                .font(.caption)
+            ModelCapabilityBadges(
+                capabilities: model.capabilities, subscriptionIncluded: model.subscriptionIncluded
+            )
+            .font(.caption)
 
             if modelManager.selectedModel?.id == model.id {
                 Image(systemName: "checkmark")
@@ -567,7 +596,9 @@ struct ChatView: View {
     private var sendButton: some View {
         Button(action: sendMessage) {
             ZStack {
-                if (messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty) || viewModel.isGenerating || isUploading || modelManager.selectedModel == nil {
+                if (messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty)
+                    || viewModel.isGenerating || isUploading || modelManager.selectedModel == nil
+                {
                     Circle()
                         .fill(Theme.Colors.glassBackground)
                         .frame(width: 44, height: 44)
@@ -598,7 +629,10 @@ struct ChatView: View {
             }
         }
         .buttonStyle(.plain)
-        .disabled((messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty) || viewModel.isGenerating || isUploading || modelManager.selectedModel == nil)
+        .disabled(
+            (messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty)
+                || viewModel.isGenerating || isUploading || modelManager.selectedModel == nil
+        )
         .scaleEffect((viewModel.isGenerating || isUploading) ? 0.95 : 1.0)
         .animation(.easeOut(duration: 0.2), value: viewModel.isGenerating)
         .animation(.easeOut(duration: 0.2), value: isUploading)
@@ -658,7 +692,8 @@ struct ChatView: View {
 
     private func sendMessage() {
         guard let model = modelManager.selectedModel,
-              !messageText.isEmpty || !selectedImages.isEmpty || !selectedDocuments.isEmpty else { return }
+            !messageText.isEmpty || !selectedImages.isEmpty || !selectedDocuments.isEmpty
+        else { return }
 
         // Haptic feedback on send
         HapticManager.shared.tap()
@@ -705,7 +740,8 @@ struct ChatView: View {
                 // Upload documents
                 for documentURL in currentDocuments {
                     do {
-                        let attachment = try await NanoChatAPI.shared.uploadDocument(url: documentURL)
+                        let attachment = try await NanoChatAPI.shared.uploadDocument(
+                            url: documentURL)
                         uploadedDocuments.append(attachment)
                         print("Uploaded document: \(attachment.storageId)")
                     } catch {
@@ -718,10 +754,10 @@ struct ChatView: View {
                 message: currentMessage,
                 modelId: model.modelId,
                 conversationId: conversation.id,
-                webSearchEnabled: isImageModel || isVideoModel ? false : webSearchEnabled, // Disable search for gen models
+                webSearchEnabled: isImageModel || isVideoModel ? false : webSearchEnabled,  // Disable search for gen models
                 webSearchMode: isImageModel || isVideoModel ? nil : webSearchModeString,
                 webSearchProvider: isImageModel || isVideoModel ? nil : webSearchProviderString,
-                providerId: isImageModel || isVideoModel ? nil : viewModel.selectedProviderId, // Disable provider check if desired, or keep it
+                providerId: isImageModel || isVideoModel ? nil : viewModel.selectedProviderId,  // Disable provider check if desired, or keep it
                 images: uploadedImages.isEmpty ? nil : uploadedImages,
                 documents: uploadedDocuments.isEmpty ? nil : uploadedDocuments,
                 imageParams: isImageModel ? viewModel.imageParams : nil,
@@ -731,9 +767,10 @@ struct ChatView: View {
             // Generate follow-up questions after message generation completes
             // Only for text models (not image/video generation)
             if !isImageModel && !isVideoModel,
-               let lastMessage = viewModel.messages.last,
-               lastMessage.role == "assistant",
-               lastMessage.content.count > 100 {
+                let lastMessage = viewModel.messages.last,
+                lastMessage.role == "assistant",
+                lastMessage.content.count > 100
+            {
                 await viewModel.fetchFollowUpQuestions(
                     conversationId: conversation.id,
                     messageId: lastMessage.id
@@ -758,6 +795,8 @@ struct MessageBubble: View {
     @State private var editedContent = ""
     @State private var isSaving = false
     @State private var isBranching = false
+    @State private var isStarred = false
+    @State private var isStarring = false
     @State private var videoPlayers: [String: AVPlayer] = [:]
 
     var body: some View {
@@ -790,6 +829,23 @@ struct MessageBubble: View {
 
                     Spacer()
 
+                    Button {
+                        toggleStarred()
+                    } label: {
+                        if isStarring {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .tint(Theme.Colors.secondary)
+                        } else {
+                            Image(systemName: isStarred ? "star.fill" : "star")
+                                .font(.caption2)
+                                .foregroundStyle(
+                                    isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isStarring)
+
                     if let model = message.modelId {
                         Text(model)
                             .font(.caption2)
@@ -814,7 +870,9 @@ struct MessageBubble: View {
                                             .resizable()
                                             .scaledToFill()
                                             .frame(width: 120, height: 120)
-                                            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                                            .clipShape(
+                                                RoundedRectangle(
+                                                    cornerRadius: Theme.CornerRadius.sm))
                                     case .failure:
                                         RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                             .fill(Theme.Colors.glassBackground)
@@ -909,9 +967,11 @@ struct MessageBubble: View {
                                 Text("Reasoning")
                                     .font(.caption)
                                     .foregroundStyle(Theme.Colors.textSecondary)
-                                Image(systemName: isReasoningExpanded ? "chevron.up" : "chevron.down")
-                                    .font(.caption2)
-                                    .foregroundStyle(Theme.Colors.textTertiary)
+                                Image(
+                                    systemName: isReasoningExpanded ? "chevron.up" : "chevron.down"
+                                )
+                                .font(.caption2)
+                                .foregroundStyle(Theme.Colors.textTertiary)
                             }
                         }
                         .buttonStyle(.plain)
@@ -1003,7 +1063,9 @@ struct MessageBubble: View {
                                         }
                                     }
                                 } label: {
-                                    Label(showCopyFeedback ? "Copied!" : "Copy", systemImage: showCopyFeedback ? "checkmark" : "doc.on.doc")
+                                    Label(
+                                        showCopyFeedback ? "Copied!" : "Copy",
+                                        systemImage: showCopyFeedback ? "checkmark" : "doc.on.doc")
                                 }
                             }
                     }
@@ -1017,9 +1079,14 @@ struct MessageBubble: View {
                                 userRating = userRating == .thumbsUp ? nil : .thumbsUp
                             }
                         } label: {
-                            Image(systemName: userRating == .thumbsUp ? "hand.thumbsup.fill" : "hand.thumbsup")
-                                .font(.caption)
-                                .foregroundStyle(userRating == .thumbsUp ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                            Image(
+                                systemName: userRating == .thumbsUp
+                                    ? "hand.thumbsup.fill" : "hand.thumbsup"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(
+                                userRating == .thumbsUp
+                                    ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                         }
                         .buttonStyle(.plain)
 
@@ -1028,9 +1095,14 @@ struct MessageBubble: View {
                                 userRating = userRating == .thumbsDown ? nil : .thumbsDown
                             }
                         } label: {
-                            Image(systemName: userRating == .thumbsDown ? "hand.thumbsdown.fill" : "hand.thumbsdown")
-                                .font(.caption)
-                                .foregroundStyle(userRating == .thumbsDown ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                            Image(
+                                systemName: userRating == .thumbsDown
+                                    ? "hand.thumbsdown.fill" : "hand.thumbsdown"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(
+                                userRating == .thumbsDown
+                                    ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                         }
                         .buttonStyle(.plain)
 
@@ -1057,6 +1129,12 @@ struct MessageBubble: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, Theme.Spacing.xs)
+        .onAppear {
+            isStarred = message.starred ?? false
+        }
+        .onChange(of: message.starred) { _, newValue in
+            isStarred = newValue ?? false
+        }
     }
 
     private var attributedString: AttributedString {
@@ -1132,6 +1210,35 @@ struct MessageBubble: View {
         }
     }
 
+    private func toggleStarred() {
+        guard !isStarring else { return }
+        let nextValue = !isStarred
+        isStarred = nextValue
+        isStarring = true
+        HapticManager.shared.selection()
+
+        Task {
+            do {
+                _ = try await NanoChatAPI.shared.setMessageStarred(
+                    messageId: message.id,
+                    starred: nextValue
+                )
+                await MainActor.run {
+                    HapticManager.shared.success()
+                    isStarring = false
+                    onMessageUpdated?(message)
+                }
+            } catch {
+                print("Error updating starred state: \(error)")
+                await MainActor.run {
+                    HapticManager.shared.error()
+                    isStarred.toggle()
+                    isStarring = false
+                }
+            }
+        }
+    }
+
     // Inline media helpers
     private var inlineImageURLs: [URL] {
         detectedURLs.filter { imageExtensions.contains($0.pathExtension.lowercased()) }
@@ -1165,11 +1272,12 @@ struct MessageBubble: View {
 
     private var detectedURLs: [URL] {
         let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-        let matches = detector?.matches(
-            in: message.content,
-            options: [],
-            range: NSRange(location: 0, length: message.content.utf16.count)
-        ) ?? []
+        let matches =
+            detector?.matches(
+                in: message.content,
+                options: [],
+                range: NSRange(location: 0, length: message.content.utf16.count)
+            ) ?? []
 
         return matches.compactMap { match in
             guard let range = Range(match.range, in: message.content) else { return nil }
@@ -1340,30 +1448,30 @@ struct TypingIndicator: View {
     private func startAnimation() {
         withAnimation(
             .easeInOut(duration: animationDuration)
-            .repeatForever(autoreverses: true)
+                .repeatForever(autoreverses: true)
         ) {
             animatingDot1 = true
         }
 
         withAnimation(
             .easeInOut(duration: animationDuration)
-            .repeatForever(autoreverses: true)
-            .delay(0.15)
+                .repeatForever(autoreverses: true)
+                .delay(0.15)
         ) {
             animatingDot2 = true
         }
 
         withAnimation(
             .easeInOut(duration: animationDuration)
-            .repeatForever(autoreverses: true)
-            .delay(0.3)
+                .repeatForever(autoreverses: true)
+                .delay(0.3)
         ) {
             animatingDot3 = true
         }
 
         withAnimation(
             .easeInOut(duration: 1.2)
-            .repeatForever(autoreverses: true)
+                .repeatForever(autoreverses: true)
         ) {
             glowOpacity = 0.6
         }
@@ -1391,18 +1499,19 @@ struct TypingDot: View {
 
 #Preview {
     NavigationStack {
-        ChatView(conversation: ConversationResponse(
-            id: "1",
-            title: "Test Chat",
-            userId: "user1",
-            projectId: nil,
-            pinned: false,
-            generating: false,
-            costUsd: nil,
-            createdAt: .now,
-            updatedAt: .now,
-            isPublic: false
-        ), onMessageSent: nil)
+        ChatView(
+            conversation: ConversationResponse(
+                id: "1",
+                title: "Test Chat",
+                userId: "user1",
+                projectId: nil,
+                pinned: false,
+                generating: false,
+                costUsd: nil,
+                createdAt: .now,
+                updatedAt: .now,
+                isPublic: false
+            ), onMessageSent: nil)
     }
     .preferredColorScheme(.dark)
 }

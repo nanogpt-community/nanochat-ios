@@ -41,6 +41,7 @@
 		A8F670966FA1B5AAF158D597 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */; };
 		B2E2276FEB100229C322B8A4 /* APIConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C2CFA93868A7C29188DA494 /* APIConfiguration.swift */; };
 		B3F6899B2F92D2C4F6F242F6 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5020AAC501DDB1A540C4CDEE /* UserSettings.swift */; };
+		B4446105961D7DC66826951C /* StarredMessagesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5B235F804536C49A57CE1FE /* StarredMessagesView.swift */; };
 		C54DD6D8B10CC9099406757C /* GlassButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */; };
 		C71A6ED30E7AA0C7EFE4EF4E /* AttachmentButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD642B1A1DB7A6DB444A0152 /* AttachmentButton.swift */; };
 		D333F9A999949486663BA2E1 /* AnyCodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0209D980F7091ED76C874D66 /* AnyCodable.swift */; };
@@ -104,6 +105,7 @@
 		F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		F4E548298D554723BE7D2CB6 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		F525CE460E1FE06B29624306 /* Entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Entitlements.plist; sourceTree = "<group>"; };
+		F5B235F804536C49A57CE1FE /* StarredMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarredMessagesView.swift; sourceTree = "<group>"; };
 		F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpQuestionsView.swift; sourceTree = "<group>"; };
 		FB219170DF3996FD2078F014 /* GlassList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -173,6 +175,7 @@
 				AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */,
 				41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */,
 				E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */,
+				F5B235F804536C49A57CE1FE /* StarredMessagesView.swift */,
 				0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */,
 				2036CEDDAE2BAA0F4D1C241F /* Components */,
 			);
@@ -337,6 +340,7 @@
 				0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */,
 				DBA553F6A52D9D3B47E1ACE6 /* ServerSettingsView.swift in Sources */,
 				A8F670966FA1B5AAF158D597 /* SettingsView.swift in Sources */,
+				B4446105961D7DC66826951C /* StarredMessagesView.swift in Sources */,
 				89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */,
 				D994A73562BE85CAD662BC5B /* ThemeManager.swift in Sources */,
 				B3F6899B2F92D2C4F6F242F6 /* UserSettings.swift in Sources */,

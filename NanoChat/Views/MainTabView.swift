@@ -11,23 +11,31 @@ struct MainTabView: View {
                 }
                 .tag(0)
 
-            AssistantsListView()
+            StarredMessagesView()
                 .tabItem {
-                    Label("Assistants", systemImage: selectedTab == 1 ? "person.2.fill" : "person.2")
+                    Label("Starred", systemImage: selectedTab == 1 ? "star.fill" : "star")
                 }
                 .tag(1)
 
-            ProjectsListView()
+            AssistantsListView()
                 .tabItem {
-                    Label("Projects", systemImage: selectedTab == 2 ? "folder.fill" : "folder")
+                    Label(
+                        "Assistants", systemImage: selectedTab == 2 ? "person.2.fill" : "person.2")
                 }
                 .tag(2)
 
-            SettingsView()
+            ProjectsListView()
                 .tabItem {
-                    Label("Settings", systemImage: selectedTab == 3 ? "gearshape.fill" : "gearshape")
+                    Label("Projects", systemImage: selectedTab == 3 ? "folder.fill" : "folder")
                 }
                 .tag(3)
+
+            SettingsView()
+                .tabItem {
+                    Label(
+                        "Settings", systemImage: selectedTab == 4 ? "gearshape.fill" : "gearshape")
+                }
+                .tag(4)
         }
         .tint(Theme.Colors.accent)
     }
