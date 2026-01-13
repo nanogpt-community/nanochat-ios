@@ -6,14 +6,15 @@ struct AvailableModelsView: View {
     @State private var showSubscriptionOnly = false
     @State private var showImageOnly = false
     @State private var showVideoOnly = false
-    
+    @State private var infoModel: UserModel?
+
     @Environment(\.dismiss) private var dismiss
-    
+
     var filteredModels: [UserModel] {
         modelManager.allModels.filter { model in
             // Filter disabled models first
             // if !model.enabled { return false }
-            
+
             // Search filter
             if !searchText.isEmpty {
                 let name = model.name ?? model.modelId
@@ -21,20 +22,20 @@ struct AvailableModelsView: View {
                     return false
                 }
             }
-            
+
             // Capability filters
             if showSubscriptionOnly {
                 if !(model.subscriptionIncluded ?? false) { return false }
             }
-            
+
             if showImageOnly {
                 if !(model.capabilities?.images ?? false) { return false }
             }
-            
+
             if showVideoOnly {
                 if !(model.capabilities?.video ?? false) { return false }
             }
-            
+
             return true
         }
     }
@@ -43,7 +44,7 @@ struct AvailableModelsView: View {
         ZStack {
             Theme.Gradients.background
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
                 // Search and Filter Header
                 VStack(spacing: Theme.Spacing.md) {
@@ -51,11 +52,11 @@ struct AvailableModelsView: View {
                     HStack {
                         Image(systemName: "magnifyingglass")
                             .foregroundStyle(Theme.Colors.textTertiary)
-                        
+
                         TextField("Search models", text: $searchText)
                             .textFieldStyle(.plain)
                             .foregroundStyle(Theme.Colors.text)
-                        
+
                         if !searchText.isEmpty {
                             Button {
                                 searchText = ""
@@ -73,7 +74,7 @@ struct AvailableModelsView: View {
                         RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
                             .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
                     )
-                    
+
                     // Filter Toggles
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: Theme.Spacing.sm) {
@@ -83,14 +84,14 @@ struct AvailableModelsView: View {
                                 color: Color.yellow,
                                 isOn: $showSubscriptionOnly
                             )
-                            
+
                             FilterToggle(
                                 title: "Image",
                                 icon: "photo",
                                 color: Theme.Colors.success,
                                 isOn: $showImageOnly
                             )
-                            
+
                             FilterToggle(
                                 title: "Video",
                                 icon: "video.fill",
@@ -103,55 +104,72 @@ struct AvailableModelsView: View {
                 .padding()
                 .padding()
                 .background(Theme.Colors.glassPane)
-                
+
                 // List
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                        
+
                         // Header info
-                        Text("Select which models appear in your picker. This won't affect existing conversations.")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                            .padding(.horizontal, Theme.Spacing.lg)
+                        Text(
+                            "Select which models appear in your picker. This won't affect existing conversations."
+                        )
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .padding(.horizontal, Theme.Spacing.lg)
 
                         LazyVStack(spacing: Theme.Spacing.sm) {
                             ForEach(filteredModels) { model in
-                                Button {
-                                    modelManager.toggleModelVisibility(id: model.modelId)
-                                } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(model.name ?? model.modelId)
-                                                .font(.subheadline)
-                                                .foregroundStyle(Theme.Colors.text)
-                                            
-                                            ModelCapabilityBadges(
-                                                capabilities: model.capabilities,
-                                                subscriptionIncluded: model.subscriptionIncluded
-                                            )
-                                            .font(.caption2)
+                                HStack(spacing: Theme.Spacing.sm) {
+                                    Button {
+                                        modelManager.toggleModelVisibility(id: model.modelId)
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(model.name ?? model.modelId)
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(Theme.Colors.text)
+
+                                                ModelCapabilityBadges(
+                                                    capabilities: model.capabilities,
+                                                    subscriptionIncluded: model.subscriptionIncluded
+                                                )
+                                                .font(.caption2)
+                                            }
+
+                                            Spacer()
+
+                                            if !modelManager.hiddenModelIds.contains(model.modelId)
+                                            {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .font(.title3)
+                                                    .foregroundStyle(Theme.Colors.secondary)
+                                            } else {
+                                                Image(systemName: "circle")
+                                                    .font(.title3)
+                                                    .foregroundStyle(Theme.Colors.glassBorder)
+                                            }
                                         }
-                                        
-                                        Spacer()
-                                        
-                                        if !modelManager.hiddenModelIds.contains(model.modelId) {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .font(.title3)
-                                                .foregroundStyle(Theme.Colors.secondary)
-                                        } else {
-                                            Image(systemName: "circle")
-                                                .font(.title3)
-                                                .foregroundStyle(Theme.Colors.glassBorder)
-                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .contentShape(Rectangle())
                                     }
-                                    .padding(Theme.Spacing.md)
-                                    .glassCard()
+                                    .buttonStyle(.plain)
+
+                                    Button {
+                                        infoModel = model
+                                    } label: {
+                                        Image(systemName: "info.circle")
+                                            .font(.title3)
+                                            .foregroundStyle(Theme.Colors.textSecondary)
+                                            .padding(.horizontal, Theme.Spacing.xs)
+                                    }
+                                    .buttonStyle(.plain)
                                 }
-                                .buttonStyle(.plain)
+                                .padding(Theme.Spacing.md)
+                                .glassCard()
                             }
                         }
                         .padding(.horizontal, Theme.Spacing.lg)
-                        
+
                         Spacer(minLength: Theme.Spacing.xxl)
                     }
                     .padding(.top, Theme.Spacing.md)
@@ -161,6 +179,11 @@ struct AvailableModelsView: View {
         .navigationTitle("Available Models")
         .navigationBarTitleDisplayMode(.inline)
         .liquidGlassNavigationBar()
+        .sheet(item: $infoModel) { model in
+            ModelInfoView(model: model)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
     }
 }
 
@@ -170,7 +193,7 @@ struct FilterToggle: View {
     let icon: String
     let color: Color
     @Binding var isOn: Bool
-    
+
     var body: some View {
         Button {
             withAnimation {

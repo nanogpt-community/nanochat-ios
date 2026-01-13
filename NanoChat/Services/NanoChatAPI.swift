@@ -24,7 +24,9 @@ final class NanoChatAPI: Sendable {
         var urlComponents = URLComponents(string: "\(config.baseURL)\(endpoint)")
 
         if let queryParams = queryParams {
-            urlComponents?.queryItems = queryParams.map { URLQueryItem(name: $0.key, value: $0.value) }
+            urlComponents?.queryItems = queryParams.map {
+                URLQueryItem(name: $0.key, value: $0.value)
+            }
         }
 
         guard let url = urlComponents?.url else {
@@ -84,7 +86,9 @@ final class NanoChatAPI: Sendable {
         var urlComponents = URLComponents(string: "\(config.baseURL)\(endpoint)")
 
         if let queryParams = queryParams {
-            urlComponents?.queryItems = queryParams.map { URLQueryItem(name: $0.key, value: $0.value) }
+            urlComponents?.queryItems = queryParams.map {
+                URLQueryItem(name: $0.key, value: $0.value)
+            }
         }
 
         guard let url = urlComponents?.url else {
@@ -116,7 +120,9 @@ final class NanoChatAPI: Sendable {
 
     // MARK: - Conversations
 
-    func getConversations(projectId: String? = nil, search: String? = nil) async throws -> [ConversationResponse] {
+    func getConversations(projectId: String? = nil, search: String? = nil) async throws
+        -> [ConversationResponse]
+    {
         var params: [String: String] = [:]
         if let projectId = projectId {
             params["projectId"] = projectId
@@ -127,22 +133,30 @@ final class NanoChatAPI: Sendable {
         return try await request(endpoint: "/api/db/conversations", queryParams: params)
     }
 
-    func createConversation(title: String, projectId: String? = nil) async throws -> ConversationResponse {
-        let request = CreateConversationRequest(action: "create", title: title, projectId: projectId)
-        return try await self.request(endpoint: "/api/db/conversations", method: .post, body: request)
+    func createConversation(title: String, projectId: String? = nil) async throws
+        -> ConversationResponse
+    {
+        let request = CreateConversationRequest(
+            action: "create", title: title, projectId: projectId)
+        return try await self.request(
+            endpoint: "/api/db/conversations", method: .post, body: request)
     }
 
-    func branchConversation(conversationId: String, fromMessageId: String) async throws -> BranchConversationResponse {
+    func branchConversation(conversationId: String, fromMessageId: String) async throws
+        -> BranchConversationResponse
+    {
         let request = BranchConversationRequest(
             action: "branch",
             conversationId: conversationId,
             fromMessageId: fromMessageId
         )
-        return try await self.request(endpoint: "/api/db/conversations", method: .post, body: request)
+        return try await self.request(
+            endpoint: "/api/db/conversations", method: .post, body: request)
     }
 
     func deleteConversation(id: String) async throws {
-        try await requestWithoutResponse(endpoint: "/api/db/conversations?id=\(id)", method: .delete)
+        try await requestWithoutResponse(
+            endpoint: "/api/db/conversations?id=\(id)", method: .delete)
     }
 
     // MARK: - Messages
@@ -185,7 +199,9 @@ final class NanoChatAPI: Sendable {
 
     // MARK: - Follow-Up Questions
 
-    func generateFollowUpQuestions(conversationId: String, messageId: String) async throws -> [String] {
+    func generateFollowUpQuestions(conversationId: String, messageId: String) async throws
+        -> [String]
+    {
         let request = GenerateFollowUpQuestionsRequest(
             conversationId: conversationId,
             messageId: messageId
@@ -230,9 +246,9 @@ final class NanoChatAPI: Sendable {
             image_params: imageParams,
             video_params: videoParams
         )
-        return try await self.request(endpoint: "/api/generate-message", method: .post, body: request)
+        return try await self.request(
+            endpoint: "/api/generate-message", method: .post, body: request)
     }
-
 
     // MARK: - Assistants
 
@@ -289,7 +305,9 @@ final class NanoChatAPI: Sendable {
         // Debug: print capabilities
         for model in models {
             if let caps = model.capabilities {
-                print("Model: \(model.name), Vision: \(caps.vision ?? false), Reasoning: \(caps.reasoning ?? false), Images: \(caps.images ?? false), Video: \(caps.video ?? false)")
+                print(
+                    "Model: \(model.name), Vision: \(caps.vision ?? false), Reasoning: \(caps.reasoning ?? false), Images: \(caps.images ?? false), Video: \(caps.video ?? false)"
+                )
             } else {
                 print("Model: \(model.name), Capabilities: nil")
             }
@@ -311,19 +329,21 @@ final class NanoChatAPI: Sendable {
                 additionalParams: {
                     guard let rawParams = model.additionalParams else { return nil }
                     var cleanParams: [String: ModelParamDefinition] = [:]
-                    
+
                     for (key, value) in rawParams {
                         // Skip if the value is a boolean (like requiresSwapImage)
                         if value.value is Bool { continue }
-                        
+
                         // Try to convert dictionary to ModelParamDefinition
                         if let dict = value.value as? [String: Any] {
                             do {
                                 let jsonData = try JSONSerialization.data(withJSONObject: dict)
-                                let paramDef = try JSONDecoder().decode(ModelParamDefinition.self, from: jsonData)
+                                let paramDef = try JSONDecoder().decode(
+                                    ModelParamDefinition.self, from: jsonData)
                                 cleanParams[key] = paramDef
                             } catch {
-                                print("Failed to decode param \(key) for model \(model.id): \(error)")
+                                print(
+                                    "Failed to decode param \(key) for model \(model.id): \(error)")
                             }
                         }
                     }
@@ -336,7 +356,17 @@ final class NanoChatAPI: Sendable {
     }
 
     func fetchModelProviders(modelId: String) async throws -> ModelProvidersResponse {
-        return try await request(endpoint: "/api/model-providers", queryParams: ["modelId": modelId])
+        return try await request(
+            endpoint: "/api/model-providers", queryParams: ["modelId": modelId])
+    }
+
+    func fetchModelInfo(modelId: String) async throws -> ModelInfoResponse {
+        var allowed = CharacterSet.urlPathAllowed
+        allowed.remove(charactersIn: "/")
+        guard let encodedId = modelId.addingPercentEncoding(withAllowedCharacters: allowed) else {
+            throw APIError.invalidURL
+        }
+        return try await request(endpoint: "/api/models/\(encodedId)/info")
     }
 
     // Helper struct for decoding the raw API response
@@ -356,7 +386,8 @@ final class NanoChatAPI: Sendable {
         let costEstimate: Double?
 
         enum CodingKeys: String, CodingKey {
-            case id, modelId, provider, enabled, pinned, userId, name, description, capabilities, costEstimate
+            case id, modelId, provider, enabled, pinned, userId, name, description, capabilities,
+                costEstimate
             case createdAt, updatedAt
         }
 
@@ -382,7 +413,8 @@ final class NanoChatAPI: Sendable {
             userId = try container.decode(String.self, forKey: .userId)
             name = try container.decodeIfPresent(String.self, forKey: .name)
             description = try container.decodeIfPresent(String.self, forKey: .description)
-            capabilities = try container.decodeIfPresent(ModelCapabilities.self, forKey: .capabilities)
+            capabilities = try container.decodeIfPresent(
+                ModelCapabilities.self, forKey: .capabilities)
             costEstimate = try container.decodeIfPresent(Double.self, forKey: .costEstimate)
 
             let createdAtString = try container.decode(String.self, forKey: .createdAt)
@@ -425,7 +457,9 @@ final class NanoChatAPI: Sendable {
     ///   - filename: The original filename
     ///   - mimeType: The MIME type of the file (e.g., "image/jpeg", "application/pdf")
     /// - Returns: The storage response containing storageId and url
-    func uploadFile(data: Data, filename: String, mimeType: String) async throws -> StorageUploadResponse {
+    func uploadFile(data: Data, filename: String, mimeType: String) async throws
+        -> StorageUploadResponse
+    {
         guard let url = URL(string: "\(config.baseURL)/api/storage") else {
             throw APIError.invalidURL
         }
@@ -552,7 +586,9 @@ final class NanoChatAPI: Sendable {
         // HEIC/HEIF: Check for ftyp box
         if data.count >= 12 {
             let ftypBytes = [UInt8](data[4..<8])
-            if ftypBytes[0] == 0x66 && ftypBytes[1] == 0x74 && ftypBytes[2] == 0x79 && ftypBytes[3] == 0x70 {
+            if ftypBytes[0] == 0x66 && ftypBytes[1] == 0x74 && ftypBytes[2] == 0x79
+                && ftypBytes[3] == 0x70
+            {
                 return "image/heic"
             }
         }
@@ -657,7 +693,8 @@ final class NanoChatAPI: Sendable {
             titleModelId: titleModelId,
             followUpModelId: followUpModelId
         )
-        return try await self.request(endpoint: "/api/db/user-settings", method: .post, body: request)
+        return try await self.request(
+            endpoint: "/api/db/user-settings", method: .post, body: request)
     }
 }
 

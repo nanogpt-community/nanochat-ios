@@ -34,6 +34,7 @@
 		8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB219170DF3996FD2078F014 /* GlassList.swift */; };
 		920D6E88807C520C20915F8D /* GenerationSettingsViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */; };
 		93B1F3ABBD120E8E38F1C20B /* ModelCapabilityBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */; };
+		9D0F5E54C121CC0DA1C94C6F /* ModelInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5615E88163B35595CF9E6F21 /* ModelInfoView.swift */; };
 		9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */; };
 		A0B623515F5C63D1B5DEAC5E /* WebSearchProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A1372DF6B14CE974C656CC6 /* WebSearchProvider.swift */; };
 		A5C8AFDF9283CB5EEA7AF702 /* ConversationsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E1E8D6FB041CE9A0E34235B /* ConversationsListView.swift */; };
@@ -51,6 +52,7 @@
 		EB546CEFD873FBCBAAF008C1 /* ChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB2AC5A2231AC533627F6732 /* ChatViewModel.swift */; };
 		EB7CE8EEFFD68E3C2D37489A /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7F093E2C2BB581A8E156E4D /* Model.swift */; };
 		EF0D9567E675B7B660421641 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F8CD0478EEB7EC20F2910F /* Extensions.swift */; };
+		F027BA33F14047D36E27C36F /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E43858C06B14987EE90A13 /* ModelInfo.swift */; };
 		F277AEA68C9E7C1CFE9ECCDA /* AccountSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -68,10 +70,12 @@
 		35897E4CEC090CFFEF8F6723 /* LiquidGlassModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiquidGlassModifiers.swift; sourceTree = "<group>"; };
 		41936341BC22F3B70EA5CBFF /* NanoChatApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatApp.swift; sourceTree = "<group>"; };
 		41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerSettingsView.swift; sourceTree = "<group>"; };
+		44E43858C06B14987EE90A13 /* ModelInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfo.swift; sourceTree = "<group>"; };
 		4A084B76231E63D08DD25C34 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
 		4A1372DF6B14CE974C656CC6 /* WebSearchProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchProvider.swift; sourceTree = "<group>"; };
 		4C2CFA93868A7C29188DA494 /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
 		5020AAC501DDB1A540C4CDEE /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
+		5615E88163B35595CF9E6F21 /* ModelInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfoView.swift; sourceTree = "<group>"; };
 		5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsViewModel.swift; sourceTree = "<group>"; };
 		68B2C669943B9C99D6E96BED /* AssistantManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantManager.swift; sourceTree = "<group>"; };
 		6975A1504331B1D93C0EADC1 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -125,6 +129,7 @@
 				025014189CB03650FFDD2E8C /* Conversation.swift */,
 				E1CF1B3A9B46FB65CBD0460F /* Message.swift */,
 				C7F093E2C2BB581A8E156E4D /* Model.swift */,
+				44E43858C06B14987EE90A13 /* ModelInfo.swift */,
 				82DCFB7224956F60543DB857 /* Project.swift */,
 				5020AAC501DDB1A540C4CDEE /* UserSettings.swift */,
 				1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */,
@@ -162,6 +167,7 @@
 				8E1E8D6FB041CE9A0E34235B /* ConversationsListView.swift */,
 				2F6A945714279F60A1DBD6C1 /* MainTabView.swift */,
 				92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */,
+				5615E88163B35595CF9E6F21 /* ModelInfoView.swift */,
 				C1664515944F9D6C7344EB03 /* ModelPicker.swift */,
 				F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */,
 				AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */,
@@ -320,6 +326,8 @@
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,
 				EB7CE8EEFFD68E3C2D37489A /* Model.swift in Sources */,
 				93B1F3ABBD120E8E38F1C20B /* ModelCapabilityBadge.swift in Sources */,
+				F027BA33F14047D36E27C36F /* ModelInfo.swift in Sources */,
+				9D0F5E54C121CC0DA1C94C6F /* ModelInfoView.swift in Sources */,
 				54DA164D31C8050F27623042 /* ModelManager.swift in Sources */,
 				1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */,
 				1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */,
