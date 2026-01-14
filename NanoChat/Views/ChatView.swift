@@ -6,8 +6,11 @@ struct ChatView: View {
     let onMessageSent: (() -> Void)?
     @StateObject private var viewModel = ChatViewModel()
     @StateObject private var modelManager = ModelManager()
+    @StateObject private var audioPreferences = AudioPreferences.shared
     @State private var assistantManager = AssistantManager()
     @State private var messageText = ""
+    @State private var showVoiceRecorder = false
+    @State private var voiceErrorMessage: String?
     @FocusState private var isInputFocused: Bool
     @State private var webSearchMode: WebSearchMode = .off
     @State private var webSearchProvider: WebSearchProvider = .linkup
@@ -61,6 +64,26 @@ struct ChatView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showVoiceRecorder) {
+            VoiceRecorderSheet(audioPreferences: audioPreferences) { transcription in
+                handleTranscription(transcription)
+            } onError: { message in
+                voiceErrorMessage = message
+            }
+        }
+        .alert(
+            "Audio Error",
+            isPresented: Binding(
+                get: { voiceErrorMessage != nil },
+                set: { if !$0 { voiceErrorMessage = nil } }
+            )
+        ) {
+            Button("OK") {
+                voiceErrorMessage = nil
+            }
+        } message: {
+            Text(voiceErrorMessage ?? "")
         }
     }
 
@@ -488,6 +511,8 @@ struct ChatView: View {
                     selectedImages.append(imageData)
                 } onDocumentSelected: { documentURL in
                     selectedDocuments.append(documentURL)
+                } onVoiceInput: {
+                    showVoiceRecorder = true
                 }
 
                 // Input field with focus glow
@@ -780,6 +805,15 @@ struct ChatView: View {
             onMessageSent?()
         }
     }
+
+    private func handleTranscription(_ transcription: String) {
+        messageText = transcription
+        if audioPreferences.autoSendTranscription {
+            sendMessage()
+        } else {
+            isInputFocused = true
+        }
+    }
 }
 
 struct MessageBubble: View {
@@ -797,6 +831,10 @@ struct MessageBubble: View {
     @State private var isBranching = false
     @State private var isStarred = false
     @State private var isStarring = false
+    @StateObject private var audioPreferences = AudioPreferences.shared
+    @StateObject private var audioPlayback = AudioPlaybackManager.shared
+    @State private var isSynthesizingSpeech = false
+    @State private var speechErrorMessage: String?
     @State private var videoPlayers: [String: AVPlayer] = [:]
 
     var body: some View {
@@ -845,6 +883,31 @@ struct MessageBubble: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isStarring)
+
+                    if message.role == "assistant" {
+                        Button {
+                            Task {
+                                await toggleSpeechPlayback()
+                            }
+                        } label: {
+                            if isSynthesizingSpeech
+                                || audioPlayback.isLoadingMessageId == message.id
+                            {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .tint(Theme.Colors.secondary)
+                            } else {
+                                Image(
+                                    systemName: audioPlayback.currentlyPlayingMessageId
+                                        == message.id
+                                        ? "stop.fill" : "speaker.wave.2"
+                                )
+                                .font(.caption2)
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
 
                     if let model = message.modelId {
                         Text(model)
@@ -916,6 +979,7 @@ struct MessageBubble: View {
                                 }
                         }
                     }
+
                     .padding(.vertical, Theme.Spacing.xs)
                 }
 
@@ -1135,6 +1199,19 @@ struct MessageBubble: View {
         .onChange(of: message.starred) { _, newValue in
             isStarred = newValue ?? false
         }
+        .alert(
+            "Audio Error",
+            isPresented: Binding(
+                get: { speechErrorMessage != nil },
+                set: { if !$0 { speechErrorMessage = nil } }
+            )
+        ) {
+            Button("OK") {
+                speechErrorMessage = nil
+            }
+        } message: {
+            Text(speechErrorMessage ?? "")
+        }
     }
 
     private var attributedString: AttributedString {
@@ -1147,6 +1224,73 @@ struct MessageBubble: View {
         } catch {
             return AttributedString(message.content)
         }
+    }
+
+    private func toggleSpeechPlayback() async {
+        guard message.role == "assistant" else { return }
+
+        if audioPlayback.currentlyPlayingMessageId == message.id {
+            audioPlayback.stop()
+            return
+        }
+
+        let text = message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+
+        isSynthesizingSpeech = true
+        audioPlayback.isLoadingMessageId = message.id
+
+        defer {
+            isSynthesizingSpeech = false
+            audioPlayback.isLoadingMessageId = nil
+        }
+
+        do {
+            let result = try await NanoChatAPI.shared.textToSpeech(
+                text: text,
+                model: audioPreferences.ttsModel,
+                voice: audioPreferences.ttsVoice,
+                speed: audioPreferences.ttsSpeed
+            )
+            let data = try await resolveSpeechData(from: result)
+            try audioPlayback.play(data: data, messageId: message.id)
+        } catch {
+            speechErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func resolveSpeechData(from result: TTSResult) async throws -> Data {
+        switch result {
+        case .audioData(let data):
+            return data
+        case .audioUrl(let url):
+            return try await NanoChatAPI.shared.fetchAudioData(from: url)
+        case .pending(let ticket):
+            let url = try await pollTTSStatus(ticket)
+            return try await NanoChatAPI.shared.fetchAudioData(from: url)
+        }
+    }
+
+    private func pollTTSStatus(_ ticket: TTSPendingTicket) async throws -> URL {
+        let maxAttempts = 60
+        let interval: UInt64 = 3_000_000_000
+
+        for _ in 0..<maxAttempts {
+            let status = try await NanoChatAPI.shared.fetchTTSStatus(ticket: ticket)
+            if status.status == "completed", let audioUrl = status.audioUrl,
+                let url = URL(string: audioUrl)
+            {
+                return url
+            }
+
+            if status.status == "error" {
+                throw APIError.invalidResponse
+            }
+
+            try await Task.sleep(nanoseconds: interval)
+        }
+
+        throw APIError.invalidResponse
     }
 
     private func startEditing() {
@@ -1322,6 +1466,142 @@ struct MessageBubble: View {
 
     private var videoExtensions: Set<String> {
         ["mp4", "mov", "m4v", "webm"]
+    }
+}
+
+struct VoiceRecorderSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @ObservedObject var audioPreferences: AudioPreferences
+    let onTranscription: (String) -> Void
+    let onError: (String) -> Void
+
+    @StateObject private var recorder = AudioRecorder()
+    @State private var isTranscribing = false
+    @State private var hasPermission = true
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: Theme.Spacing.lg) {
+                VStack(spacing: Theme.Spacing.xs) {
+                    Text("Voice Input")
+                        .font(.title3)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Text(hasPermission ? formattedTime : "Microphone access required")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                }
+
+                Button {
+                    handleRecordToggle()
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(
+                                recorder.isRecording
+                                    ? AnyShapeStyle(Theme.Colors.error)
+                                    : AnyShapeStyle(Theme.Gradients.primary)
+                            )
+                            .frame(width: 72, height: 72)
+
+                        Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(!hasPermission || isTranscribing)
+
+                if isTranscribing {
+                    ProgressView("Transcribing...")
+                        .tint(Theme.Colors.secondary)
+                }
+
+                Spacer()
+
+                HStack(spacing: Theme.Spacing.md) {
+                    Button("Cancel") {
+                        recorder.reset()
+                        dismiss()
+                    }
+                    .buttonStyle(.bordered)
+
+                    Button("Transcribe") {
+                        Task {
+                            await transcribeRecording()
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(recorder.lastRecordingURL == nil || isTranscribing)
+                }
+            }
+            .padding(Theme.Spacing.xl)
+            .background(Theme.Gradients.background)
+            .navigationTitle("Voice Input")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .task {
+                hasPermission = await recorder.requestPermission()
+                if !hasPermission {
+                    onError("Microphone access is required to record audio.")
+                }
+            }
+        }
+    }
+
+    private var formattedTime: String {
+        let totalSeconds = Int(recorder.elapsedTime)
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private func handleRecordToggle() {
+        if recorder.isRecording {
+            Task {
+                _ = await recorder.stopRecording()
+            }
+        } else {
+            do {
+                try recorder.startRecording()
+            } catch {
+                onError("Failed to start recording: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func transcribeRecording() async {
+        guard let url = await recorder.stopRecording() else { return }
+        isTranscribing = true
+
+        defer {
+            isTranscribing = false
+        }
+
+        do {
+            let response = try await NanoChatAPI.shared.transcribeAudio(
+                fileURL: url,
+                model: audioPreferences.sttModel,
+                language: audioPreferences.sttLanguage
+            )
+
+            let transcription = response.transcription ?? response.text ?? ""
+            if transcription.isEmpty {
+                onError("Transcription returned empty text.")
+                return
+            }
+
+            onTranscription(transcription)
+            dismiss()
+        } catch {
+            onError("Transcription failed: \(error.localizedDescription)")
+        }
     }
 }
 

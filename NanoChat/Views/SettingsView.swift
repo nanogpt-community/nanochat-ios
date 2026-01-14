@@ -7,6 +7,7 @@ struct SettingsView: View {
     @State private var showingLogoutAlert = false
     @State private var showingAccountSettings = false
     @StateObject private var modelManager = ModelManager()
+    @StateObject private var audioPreferences = AudioPreferences.shared
 
     var body: some View {
         ZStack {
@@ -136,6 +137,31 @@ struct SettingsView: View {
                                 title: "API Key",
                                 value: String(authManager.apiKey.prefix(16)) + "..."
                             )
+                        }
+
+                        GlassListRow {
+                            NavigationLink {
+                                AudioSettingsView(audioPreferences: audioPreferences)
+                            } label: {
+                                HStack {
+                                    Image(systemName: "waveform")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.Colors.accent)
+                                        .frame(width: 28)
+
+                                    Text("Audio Settings")
+                                        .font(.subheadline)
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         GlassListRow(showDivider: false) {
@@ -269,6 +295,153 @@ struct SettingsView: View {
                 .sheet(isPresented: $showingAccountSettings) {
                     AccountSettingsView(modelManager: modelManager)
                 }
+            }
+        }
+    }
+}
+
+// MARK: - Audio Settings View
+
+struct AudioSettingsView: View {
+    @Environment(\.dismiss) var dismiss
+    @ObservedObject var audioPreferences: AudioPreferences
+
+    var body: some View {
+        ZStack {
+            Theme.Gradients.background
+                .ignoresSafeArea()
+
+            NavigationStack {
+                GlassList {
+                    ttsSection
+                    sttSection
+                    behaviorSection
+
+                    Spacer(minLength: Theme.Spacing.xxl)
+                }
+                .navigationTitle("Audio Settings")
+                .navigationBarTitleDisplayMode(.large)
+                .liquidGlassNavigationBar()
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") {
+                            HapticManager.shared.tap()
+                            dismiss()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var ttsSection: some View {
+        GlassListSection("Text to Speech") {
+            GlassListRow {
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Model")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Picker("Model", selection: Binding(
+                        get: { audioPreferences.ttsModel },
+                        set: { audioPreferences.updateTtsModel($0) }
+                    )) {
+                        ForEach(AudioPreferences.ttsModels, id: \.id) { model in
+                            Text(model.label).tag(model.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+
+            GlassListRow {
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Voice")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Picker("Voice", selection: Binding(
+                        get: { audioPreferences.ttsVoice },
+                        set: { audioPreferences.updateVoice($0) }
+                    )) {
+                        ForEach(audioPreferences.availableVoices, id: \.id) { voice in
+                            Text(voice.label).tag(voice.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+
+            GlassListRow(showDivider: false) {
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    HStack {
+                        Text("Speed")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.Colors.text)
+
+                        Spacer()
+
+                        Text(String(format: "%.2fx", audioPreferences.ttsSpeed))
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+
+                    Slider(value: $audioPreferences.ttsSpeed, in: 0.5...2.0, step: 0.05)
+                        .tint(Theme.Colors.secondary)
+                }
+            }
+        }
+    }
+
+    private var sttSection: some View {
+        GlassListSection("Speech to Text") {
+            GlassListRow {
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Model")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Picker("Model", selection: $audioPreferences.sttModel) {
+                        ForEach(AudioPreferences.sttModels, id: \.id) { model in
+                            Text(model.label).tag(model.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+
+            GlassListRow(showDivider: false) {
+                VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                    Text("Language")
+                        .font(.subheadline)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Picker("Language", selection: $audioPreferences.sttLanguage) {
+                        ForEach(AudioPreferences.sttLanguages, id: \.id) { language in
+                            Text(language.label).tag(language.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                }
+            }
+        }
+    }
+
+    private var behaviorSection: some View {
+        GlassListSection("Voice Input") {
+            GlassListRow(showDivider: false) {
+                Toggle(isOn: $audioPreferences.autoSendTranscription) {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                        Text("Auto-send transcription")
+                            .font(.subheadline)
+                            .foregroundStyle(Theme.Colors.text)
+
+                        Text("Send immediately after transcription finishes.")
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                }
+                .tint(Theme.Colors.secondary)
             }
         }
     }

@@ -8,6 +8,7 @@ struct AttachmentButton: View {
     @State private var isShowingDocumentPicker = false
     let onImageSelected: (Data) -> Void
     let onDocumentSelected: ((URL) -> Void)?
+    let onVoiceInput: (() -> Void)?
 
     var body: some View {
         Menu {
@@ -32,7 +33,7 @@ struct AttachmentButton: View {
             // Voice input (placeholder for now)
             Button {
                 HapticManager.shared.lightTap()
-                // TODO: Implement voice recording
+                onVoiceInput?()
             } label: {
                 Label("Voice Input", systemImage: "mic")
             }
@@ -101,6 +102,8 @@ struct AttachmentButton: View {
         print("Image selected: \(imageData.count) bytes")
     } onDocumentSelected: { url in
         print("Document selected: \(url)")
+    } onVoiceInput: {
+        print("Voice input")
     }
     .padding()
     .background(Theme.Gradients.background)

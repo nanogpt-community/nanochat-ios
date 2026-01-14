@@ -35,6 +35,8 @@
 	</array>
 	<key>MinimumOSVersion</key>
 	<string>26.0</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>NanoChat needs microphone access to record voice messages.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

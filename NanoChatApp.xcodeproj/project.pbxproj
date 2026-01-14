@@ -14,8 +14,11 @@
 		113213119A83A749874915B3 /* GlassSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */; };
 		1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1664515944F9D6C7344EB03 /* ModelPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
+		1F5D2B7469D2DA9C77DA0AEA /* AudioPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */; };
+		245767F4C7E23366BECD046A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */; };
 		2903745958E926B21CE907B9 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E548298D554723BE7D2CB6 /* GlassCard.swift */; };
 		42138CD514B77EFF1A88EA72 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CF1B3A9B46FB65CBD0460F /* Message.swift */; };
+		45169F7B86B51D5409665357 /* AudioPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */; };
 		48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD15764A26719B43912716 /* AssistantsListView.swift */; };
 		5215DCDD9B453CF24AF9486F /* AuthenticationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */; };
 		53B72E4291690FF60510AD54 /* AccountSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E4B5EEDBBC429FCA2687D8 /* AccountSettingsView.swift */; };
@@ -68,6 +71,7 @@
 		12E4B5EEDBBC429FCA2687D8 /* AccountSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsView.swift; sourceTree = "<group>"; };
 		166905377217DEE8CC10FC77 /* AvailableModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableModelsView.swift; sourceTree = "<group>"; };
 		1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchMode.swift; sourceTree = "<group>"; };
+		2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPreferences.swift; sourceTree = "<group>"; };
 		2DB06A61E7BCB2BAFD0ADDD5 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		2F6A945714279F60A1DBD6C1 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
 		33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassButton.swift; sourceTree = "<group>"; };
@@ -82,6 +86,7 @@
 		5020AAC501DDB1A540C4CDEE /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		5615E88163B35595CF9E6F21 /* ModelInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfoView.swift; sourceTree = "<group>"; };
 		5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsViewModel.swift; sourceTree = "<group>"; };
+		5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackManager.swift; sourceTree = "<group>"; };
 		601C29BEED0BEECB337F2ECB /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		63E1C991304BB9CF26FDAD68 /* AnalyticsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsViewModel.swift; sourceTree = "<group>"; };
 		68B2C669943B9C99D6E96BED /* AssistantManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantManager.swift; sourceTree = "<group>"; };
@@ -113,6 +118,7 @@
 		F525CE460E1FE06B29624306 /* Entitlements.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Entitlements.plist; sourceTree = "<group>"; };
 		F5B235F804536C49A57CE1FE /* StarredMessagesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarredMessagesView.swift; sourceTree = "<group>"; };
 		F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FollowUpQuestionsView.swift; sourceTree = "<group>"; };
+		F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		FB219170DF3996FD2078F014 /* GlassList.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassList.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -151,6 +157,9 @@
 			isa = PBXGroup;
 			children = (
 				4C2CFA93868A7C29188DA494 /* APIConfiguration.swift */,
+				5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */,
+				2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */,
+				F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */,
 				E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */,
 			);
 			path = Services;
@@ -321,6 +330,9 @@
 				DBEF50500951CD5A3556947F /* AssistantManager.swift in Sources */,
 				48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */,
 				C71A6ED30E7AA0C7EFE4EF4E /* AttachmentButton.swift in Sources */,
+				45169F7B86B51D5409665357 /* AudioPlaybackManager.swift in Sources */,
+				1F5D2B7469D2DA9C77DA0AEA /* AudioPreferences.swift in Sources */,
+				245767F4C7E23366BECD046A /* AudioRecorder.swift in Sources */,
 				5215DCDD9B453CF24AF9486F /* AuthenticationManager.swift in Sources */,
 				8C0C9F201724C3DB51550685 /* AuthenticationView.swift in Sources */,
 				09872F3BA84782EE033D3E84 /* AvailableModelsView.swift in Sources */,

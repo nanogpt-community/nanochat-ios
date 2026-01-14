@@ -263,6 +263,195 @@ final class NanoChatAPI: Sendable {
             endpoint: "/api/generate-message", method: .post, body: request)
     }
 
+    // MARK: - Audio
+
+    func textToSpeech(text: String, model: String, voice: String, speed: Double) async throws
+        -> TTSResult
+    {
+        guard let url = URL(string: "\(config.baseURL)/api/tts") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let payload = TTSRequest(text: text, model: model, voice: voice, speed: speed)
+        request.httpBody = try JSONEncoder().encode(payload)
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        if httpResponse.statusCode == 202 {
+            let ticket = try JSONDecoder().decode(TTSPendingTicket.self, from: data)
+            if let audioUrl = ticket.audioUrl, let url = URL(string: audioUrl) {
+                return .audioUrl(url)
+            }
+            return .pending(ticket)
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+
+        if httpResponse.value(forHTTPHeaderField: "Content-Type")?.contains("application/json")
+            == true
+        {
+            let ticket = try JSONDecoder().decode(TTSPendingTicket.self, from: data)
+            if let audioUrl = ticket.audioUrl, let url = URL(string: audioUrl) {
+                return .audioUrl(url)
+            }
+            return .pending(ticket)
+        }
+
+        return .audioData(data)
+    }
+
+    func fetchTTSStatus(ticket: TTSPendingTicket) async throws -> TTSStatusResponse {
+        guard let runId = ticket.runId, let model = ticket.model else {
+            throw APIError.invalidResponse
+        }
+
+        var params: [String: String] = [
+            "runId": runId,
+            "model": model,
+        ]
+
+        if let cost = ticket.cost {
+            params["cost"] = String(cost)
+        }
+        if let paymentSource = ticket.paymentSource {
+            params["paymentSource"] = paymentSource
+        }
+        if let isApiRequest = ticket.isApiRequest {
+            params["isApiRequest"] = String(isApiRequest)
+        }
+
+        return try await request(endpoint: "/api/tts/status", queryParams: params)
+    }
+
+    func fetchAudioData(from url: URL) async throws -> Data {
+        let (data, response) = try await session.data(from: url)
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+
+        return data
+    }
+
+    func transcribeAudio(fileURL: URL, model: String, language: String) async throws
+        -> SpeechToTextResponse
+    {
+        guard let url = URL(string: "\(config.baseURL)/api/stt") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+        request.setValue(config.baseURL, forHTTPHeaderField: "Origin")
+        request.setValue(config.baseURL, forHTTPHeaderField: "Referer")
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue(
+            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        request.httpBody = try buildTranscriptionBody(
+            fileURL: fileURL,
+            model: model,
+            language: language,
+            boundary: boundary
+        )
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            let fallbackMessage =
+                String(data: data, encoding: .utf8)
+                ?? "HTTP error: \(httpResponse.statusCode)"
+            let errorMessage: String
+            if let decoded = try? JSONDecoder().decode(APIErrorResponse.self, from: data) {
+                errorMessage =
+                    decoded.error ?? decoded.details ?? decoded.message ?? fallbackMessage
+            } else {
+                errorMessage = fallbackMessage
+            }
+            throw NSError(
+                domain: "NanoChatAPI",
+                code: httpResponse.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: errorMessage]
+            )
+        }
+
+        return try JSONDecoder().decode(SpeechToTextResponse.self, from: data)
+    }
+
+    private func buildTranscriptionBody(
+        fileURL: URL,
+        model: String,
+        language: String,
+        boundary: String
+    ) throws -> Data {
+        var body = Data()
+
+        let filename = fileURL.lastPathComponent
+        let mimeType = transcriptionMimeType(for: fileURL)
+        let fileData = try Data(contentsOf: fileURL)
+
+        body.appendString("--\(boundary)\r\n")
+        body.appendString(
+            "Content-Disposition: form-data; name=\"audio\"; filename=\"\(filename)\"\r\n")
+        body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(fileData)
+        body.appendString("\r\n")
+
+        body.appendString("--\(boundary)\r\n")
+        body.appendString("Content-Disposition: form-data; name=\"model\"\r\n\r\n")
+        body.appendString("\(model)\r\n")
+
+        body.appendString("--\(boundary)\r\n")
+        body.appendString("Content-Disposition: form-data; name=\"language\"\r\n\r\n")
+        body.appendString("\(language)\r\n")
+
+        body.appendString("--\(boundary)--\r\n")
+        return body
+    }
+
+    private func transcriptionMimeType(for fileURL: URL) -> String {
+        switch fileURL.pathExtension.lowercased() {
+        case "m4a", "mp4", "m4v":
+            return "audio/mp4"
+        case "wav":
+            return "audio/wav"
+        case "mp3":
+            return "audio/mpeg"
+        case "ogg", "oga":
+            return "audio/ogg"
+        case "aac":
+            return "audio/aac"
+        default:
+            return "application/octet-stream"
+        }
+    }
+
     // MARK: - Assistants
 
     func getAssistants() async throws -> [AssistantResponse] {
@@ -745,6 +934,64 @@ enum APIError: Error, LocalizedError {
             return "Decoding error: \(error.localizedDescription)"
         case .encodingError(let error):
             return "Encoding error: \(error.localizedDescription)"
+        }
+    }
+}
+
+enum TTSResult {
+    case audioData(Data)
+    case audioUrl(URL)
+    case pending(TTSPendingTicket)
+}
+
+struct TTSRequest: Codable {
+    let text: String
+    let model: String
+    let voice: String
+    let speed: Double
+}
+
+struct TTSPendingTicket: Codable {
+    let status: String?
+    let runId: String?
+    let model: String?
+    let cost: Double?
+    let paymentSource: String?
+    let isApiRequest: Bool?
+    let audioUrl: String?
+    let contentType: String?
+    let error: String?
+}
+
+struct TTSStatusResponse: Codable {
+    let status: String
+    let audioUrl: String?
+    let contentType: String?
+    let model: String?
+    let error: String?
+}
+
+struct APIErrorResponse: Codable {
+    let error: String?
+    let details: String?
+    let message: String?
+}
+
+struct SpeechToTextResponse: Codable {
+    let transcription: String?
+    let text: String?
+    let metadata: SpeechToTextMetadata?
+}
+
+struct SpeechToTextMetadata: Codable {
+    let cost: Double?
+    let chargedDuration: Double?
+}
+
+extension Data {
+    fileprivate mutating func appendString(_ string: String) {
+        if let data = string.data(using: .utf8) {
+            append(data)
         }
     }
 }
