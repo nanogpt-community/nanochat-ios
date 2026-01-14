@@ -686,9 +686,9 @@ struct ProjectDetailView: View {
     }
 
     private func loadAll() async {
-        async let conversationsTask = loadConversations()
-        async let membersTask = loadMembers()
-        async let filesTask = loadFiles()
+        async let conversationsTask: Void = loadConversations()
+        async let membersTask: Void = loadMembers()
+        async let filesTask: Void = loadFiles()
         _ = await (conversationsTask, membersTask, filesTask)
     }
 
