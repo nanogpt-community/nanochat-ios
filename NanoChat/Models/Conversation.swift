@@ -135,3 +135,9 @@ struct CreateConversationRequest: Codable {
     let title: String
     let projectId: String?
 }
+
+struct SetConversationProjectRequest: Codable {
+    let action: String
+    let conversationId: String
+    let projectId: String?
+}

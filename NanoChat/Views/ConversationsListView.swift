@@ -7,6 +7,11 @@ struct ConversationsListView: View {
     @State private var showingRenameDialog = false
     @State private var conversationToRename: ConversationResponse?
     @State private var newConversationTitle = ""
+    @State private var showingMoveSheet = false
+    @State private var conversationToMove: ConversationResponse?
+    @State private var projects: [ProjectResponse] = []
+    @State private var isLoadingProjects = false
+    @State private var errorMessage: String?
 
     var body: some View {
         ZStack {
@@ -56,7 +61,11 @@ struct ConversationsListView: View {
                                 }
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
-                                .listRowInsets(EdgeInsets(top: Theme.Spacing.xs, leading: Theme.Spacing.lg, bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg))
+                                .listRowInsets(
+                                    EdgeInsets(
+                                        top: Theme.Spacing.xs, leading: Theme.Spacing.lg,
+                                        bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg)
+                                )
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
                                         HapticManager.shared.warning()
@@ -77,7 +86,8 @@ struct ConversationsListView: View {
                                     } label: {
                                         Label(
                                             conversation.pinned ? "Unpin" : "Pin",
-                                            systemImage: conversation.pinned ? "pin.slash.fill" : "pin.fill"
+                                            systemImage: conversation.pinned
+                                                ? "pin.slash.fill" : "pin.fill"
                                         )
                                     }
                                     .tint(Theme.Colors.warning)
@@ -101,6 +111,16 @@ struct ConversationsListView: View {
                                         Label("Rename", systemImage: "pencil")
                                     }
 
+                                    Button {
+                                        conversationToMove = conversation
+                                        showingMoveSheet = true
+                                        Task {
+                                            await loadProjects()
+                                        }
+                                    } label: {
+                                        Label("Move to Project", systemImage: "folder")
+                                    }
+
                                     Divider()
 
                                     Button(role: .destructive) {
@@ -121,14 +141,16 @@ struct ConversationsListView: View {
                 .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
                 .navigationDestination(for: ConversationResponse.self) { conversation in
-                    ChatView(conversation: conversation, onMessageSent: {
-                        Task { @MainActor in
-                            await viewModel.loadConversations()
-                        }
-                    })
+                    ChatView(
+                        conversation: conversation,
+                        onMessageSent: {
+                            Task { @MainActor in
+                                await viewModel.loadConversations()
+                            }
+                        })
                 }
                 .searchable(text: $searchText, prompt: "Search conversations")
-                    .tint(Theme.Colors.secondary)
+                .tint(Theme.Colors.secondary)
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
                         Button(action: createNewConversation) {
@@ -136,7 +158,9 @@ struct ConversationsListView: View {
                                 Circle()
                                     .fill(Theme.Gradients.primary)
                                     .frame(width: 36, height: 36)
-                                    .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 6, x: 0, y: 3)
+                                    .shadow(
+                                        color: Theme.Colors.primary.opacity(0.4), radius: 6, x: 0,
+                                        y: 3)
 
                                 Image(systemName: "plus")
                                     .font(.system(size: 16, weight: .semibold))
@@ -154,11 +178,12 @@ struct ConversationsListView: View {
                     await viewModel.loadConversations()
                 }
                 .alert("Rename Conversation", isPresented: $showingRenameDialog) {
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {}
                     Button("Rename") {
                         if let conversation = conversationToRename, !newConversationTitle.isEmpty {
                             Task {
-                                await renameConversation(conversation, newTitle: newConversationTitle)
+                                await renameConversation(
+                                    conversation, newTitle: newConversationTitle)
                             }
                         }
                     }
@@ -167,6 +192,29 @@ struct ConversationsListView: View {
                         .onAppear {
                             newConversationTitle = conversationToRename?.title ?? ""
                         }
+                }
+                .sheet(isPresented: $showingMoveSheet) {
+                    ProjectPickerView(
+                        projects: projects,
+                        selectedProjectId: conversationToMove?.projectId,
+                        isLoading: isLoadingProjects
+                    ) { projectId in
+                        if let conversation = conversationToMove {
+                            Task {
+                                await moveConversation(conversation, to: projectId)
+                            }
+                        }
+                    }
+                    .presentationDetents([.medium, .large])
+                }
+                .alert("Error", isPresented: .constant(errorMessage != nil)) {
+                    Button("OK") {
+                        errorMessage = nil
+                    }
+                } message: {
+                    if let error = errorMessage {
+                        Text(error)
+                    }
                 }
             }
         }
@@ -199,6 +247,32 @@ struct ConversationsListView: View {
             if let createdConversation = viewModel.currentConversation {
                 navigationPath.append(createdConversation)
             }
+        }
+    }
+
+    private func loadProjects() async {
+        isLoadingProjects = true
+        defer { isLoadingProjects = false }
+
+        do {
+            projects = try await NanoChatAPI.shared.getProjects()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func moveConversation(_ conversation: ConversationResponse, to projectId: String?) async
+    {
+        HapticManager.shared.tap()
+        do {
+            try await viewModel.setConversationProject(
+                conversationId: conversation.id,
+                projectId: projectId
+            )
+            showingMoveSheet = false
+            conversationToMove = nil
+        } catch {
+            errorMessage = error.localizedDescription
         }
     }
 }
@@ -254,4 +328,96 @@ struct ConversationRow: View {
 #Preview {
     ConversationsListView()
         .preferredColorScheme(.dark)
+}
+
+struct ProjectPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    let projects: [ProjectResponse]
+    let selectedProjectId: String?
+    let isLoading: Bool
+    let onSelect: (String?) -> Void
+
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.Gradients.background
+                    .ignoresSafeArea()
+
+                GlassList {
+                    GlassListSection("Project") {
+                        GlassListRow {
+                            Button {
+                                onSelect(nil)
+                                dismiss()
+                            } label: {
+                                HStack {
+                                    Text("No Project")
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    if selectedProjectId == nil {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(Theme.Colors.secondary)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    GlassListSection("All Projects") {
+                        if isLoading {
+                            GlassListRow(showDivider: false) {
+                                ProgressView()
+                                    .tint(Theme.Colors.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                            }
+                        } else if projects.isEmpty {
+                            GlassListRow(showDivider: false) {
+                                Text("No projects available")
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                        } else {
+                            ForEach(projects, id: \.id) { project in
+                                GlassListRow {
+                                    Button {
+                                        onSelect(project.id)
+                                        dismiss()
+                                    } label: {
+                                        HStack {
+                                            Text(project.name)
+                                                .foregroundStyle(Theme.Colors.text)
+
+                                            Spacer()
+
+                                            if selectedProjectId == project.id {
+                                                Image(systemName: "checkmark")
+                                                    .foregroundStyle(Theme.Colors.secondary)
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(minLength: Theme.Spacing.xxl)
+                }
+            }
+            .navigationTitle("Move to Project")
+            .navigationBarTitleDisplayMode(.inline)
+            .liquidGlassNavigationBar()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                }
+            }
+        }
+    }
 }

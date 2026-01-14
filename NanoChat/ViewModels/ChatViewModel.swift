@@ -95,6 +95,15 @@ final class ChatViewModel: ObservableObject {
         }
     }
 
+    func setConversationProject(conversationId: String, projectId: String?) async throws {
+        isLoading = true
+        defer { isLoading = false }
+
+        try await api.setConversationProject(
+            conversationId: conversationId, projectId: projectId)
+        await loadConversations()
+    }
+
     func sendMessage(
         message: String,
         modelId: String,

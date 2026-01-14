@@ -159,6 +159,16 @@ final class NanoChatAPI: Sendable {
             endpoint: "/api/db/conversations?id=\(id)", method: .delete)
     }
 
+    func setConversationProject(conversationId: String, projectId: String?) async throws {
+        let request = SetConversationProjectRequest(
+            action: "setProject",
+            conversationId: conversationId,
+            projectId: projectId
+        )
+        try await requestWithoutResponse(
+            endpoint: "/api/db/conversations", method: .post, body: request)
+    }
+
     // MARK: - Messages
 
     func getMessages(conversationId: String) async throws -> [MessageResponse] {
@@ -350,6 +360,31 @@ final class NanoChatAPI: Sendable {
         return data
     }
 
+    func downloadStorageData(storageId: String) async throws -> Data {
+        guard let url = URL(string: "\(config.baseURL)/api/storage/\(storageId)") else {
+            throw APIError.invalidURL
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            throw APIError.httpError(statusCode: httpResponse.statusCode)
+        }
+
+        return data
+    }
+
     func transcribeAudio(fileURL: URL, model: String, language: String) async throws
         -> SpeechToTextResponse
     {
@@ -449,6 +484,21 @@ final class NanoChatAPI: Sendable {
             return "audio/aac"
         default:
             return "application/octet-stream"
+        }
+    }
+
+    private func projectFileMimeType(for fileURL: URL) -> String? {
+        switch fileURL.pathExtension.lowercased() {
+        case "pdf":
+            return "application/pdf"
+        case "md", "markdown":
+            return "text/markdown"
+        case "txt":
+            return "text/plain"
+        case "epub":
+            return "application/epub+zip"
+        default:
+            return nil
         }
     }
 
@@ -817,6 +867,133 @@ final class NanoChatAPI: Sendable {
             color: color
         )
         return try await self.request(endpoint: "/api/projects", method: .post, body: request)
+    }
+
+    func getProjectMembers(projectId: String) async throws -> [ProjectMemberResponse] {
+        return try await request(endpoint: "/api/projects/\(projectId)/members")
+    }
+
+    func addProjectMember(
+        projectId: String,
+        email: String,
+        role: String
+    ) async throws -> ProjectMemberResponse {
+        let request = AddProjectMemberRequest(email: email, role: role)
+        return try await self.request(
+            endpoint: "/api/projects/\(projectId)/members", method: .post, body: request)
+    }
+
+    func removeProjectMember(projectId: String, userId: String) async throws {
+        try await requestWithoutResponse(
+            endpoint: "/api/projects/\(projectId)/members",
+            method: .delete,
+            queryParams: ["userId": userId]
+        )
+    }
+
+    func getProjectFiles(projectId: String) async throws -> [ProjectFileResponse] {
+        return try await request(endpoint: "/api/projects/\(projectId)/files")
+    }
+
+    func uploadProjectFile(projectId: String, fileURL: URL) async throws -> ProjectFileResponse {
+        guard let url = URL(string: "\(config.baseURL)/api/projects/\(projectId)/files") else {
+            throw APIError.invalidURL
+        }
+
+        let accessing = fileURL.startAccessingSecurityScopedResource()
+        defer {
+            if accessing {
+                fileURL.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let filename = fileURL.lastPathComponent
+        guard let mimeType = projectFileMimeType(for: fileURL) else {
+            throw NSError(
+                domain: "NanoChatAPI",
+                code: 400,
+                userInfo: [NSLocalizedDescriptionKey: "Unsupported file type"]
+            )
+        }
+
+        let fileData = try Data(contentsOf: fileURL)
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+
+        if let apiKey = config.apiKey {
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        }
+
+        let boundary = "Boundary-\(UUID().uuidString)"
+        request.setValue(
+            "multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+        var body = Data()
+        body.appendString("--\(boundary)\r\n")
+        body.appendString(
+            "Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        body.appendString("Content-Type: \(mimeType)\r\n\r\n")
+        body.append(fileData)
+        body.appendString("\r\n")
+        body.appendString("--\(boundary)--\r\n")
+        request.httpBody = body
+
+        let (data, response) = try await session.data(for: request)
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+
+        guard 200...299 ~= httpResponse.statusCode else {
+            let fallbackMessage =
+                String(data: data, encoding: .utf8)
+                ?? "HTTP error: \(httpResponse.statusCode)"
+            let errorMessage: String
+            if let decoded = try? JSONDecoder().decode(APIErrorResponse.self, from: data) {
+                errorMessage =
+                    decoded.error ?? decoded.details ?? decoded.message ?? fallbackMessage
+            } else {
+                errorMessage = fallbackMessage
+            }
+            throw NSError(
+                domain: "NanoChatAPI",
+                code: httpResponse.statusCode,
+                userInfo: [NSLocalizedDescriptionKey: errorMessage]
+            )
+        }
+
+        return try JSONDecoder().decode(ProjectFileResponse.self, from: data)
+    }
+
+    func deleteProjectFile(projectId: String, fileId: String) async throws {
+        try await requestWithoutResponse(
+            endpoint: "/api/projects/\(projectId)/files",
+            method: .delete,
+            queryParams: ["fileId": fileId]
+        )
+    }
+
+    func updateProject(
+        id: String,
+        name: String,
+        description: String? = nil,
+        systemPrompt: String? = nil,
+        color: String? = nil
+    ) async throws -> ProjectResponse {
+        let request = UpdateProjectRequest(
+            name: name,
+            description: description,
+            systemPrompt: systemPrompt,
+            color: color
+        )
+        return try await self.request(
+            endpoint: "/api/projects/\(id)", method: .patch, body: request)
+    }
+
+    func deleteProject(id: String) async throws {
+        try await requestWithoutResponse(
+            endpoint: "/api/projects/\(id)", method: .delete)
     }
 
     // MARK: - Analytics
