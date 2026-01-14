@@ -836,6 +836,7 @@ struct MessageBubble: View {
     @State private var isSynthesizingSpeech = false
     @State private var speechErrorMessage: String?
     @State private var videoPlayers: [String: AVPlayer] = [:]
+    @State private var selectedImage: ImagePreviewItem?
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.sm) {
@@ -917,41 +918,50 @@ struct MessageBubble: View {
                 }
 
                 // Display attached and inline-detected images
-                if !allImageURLs.isEmpty {
+                if !allImages.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: Theme.Spacing.sm) {
-                            ForEach(allImageURLs, id: \.absoluteString) { imageURL in
-                                AsyncImage(url: imageURL) { phase in
-                                    switch phase {
-                                    case .empty:
-                                        RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                            .fill(Theme.Colors.glassBackground)
-                                            .frame(width: 120, height: 120)
-                                            .overlay(ProgressView().tint(Theme.Colors.secondary))
-                                    case .success(let loadedImage):
-                                        loadedImage
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 120, height: 120)
-                                            .clipShape(
-                                                RoundedRectangle(
-                                                    cornerRadius: Theme.CornerRadius.sm))
-                                    case .failure:
-                                        RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                            .fill(Theme.Colors.glassBackground)
-                                            .frame(width: 120, height: 120)
-                                            .overlay(
-                                                Image(systemName: "photo")
-                                                    .foregroundStyle(Theme.Colors.textTertiary)
-                                            )
-                                    @unknown default:
-                                        EmptyView()
+                            ForEach(allImages) { imageItem in
+                                Button {
+                                    selectedImage = imageItem
+                                    HapticManager.shared.selection()
+                                } label: {
+                                    AsyncImage(url: imageItem.url) { phase in
+                                        switch phase {
+                                        case .empty:
+                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                                .fill(Theme.Colors.glassBackground)
+                                                .frame(width: 120, height: 120)
+                                                .overlay(
+                                                    ProgressView()
+                                                        .tint(Theme.Colors.secondary)
+                                                )
+                                        case .success(let loadedImage):
+                                            loadedImage
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 120, height: 120)
+                                                .clipShape(
+                                                    RoundedRectangle(
+                                                        cornerRadius: Theme.CornerRadius.sm))
+                                        case .failure:
+                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                                .fill(Theme.Colors.glassBackground)
+                                                .frame(width: 120, height: 120)
+                                                .overlay(
+                                                    Image(systemName: "photo")
+                                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                                )
+                                        @unknown default:
+                                            EmptyView()
+                                        }
                                     }
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                                    )
                                 }
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                                )
+                                .buttonStyle(.plain)
                             }
                         }
                     }
@@ -1212,6 +1222,9 @@ struct MessageBubble: View {
         } message: {
             Text(speechErrorMessage ?? "")
         }
+        .fullScreenCover(item: $selectedImage) { imageItem in
+            ImagePreviewView(item: imageItem)
+        }
     }
 
     private var attributedString: AttributedString {
@@ -1392,22 +1405,33 @@ struct MessageBubble: View {
         detectedURLs.filter { videoExtensions.contains($0.pathExtension.lowercased()) }
     }
 
-    private var allImageURLs: [URL] {
-        var urls: [URL] = []
+    private var allImages: [ImagePreviewItem] {
+        var items: [ImagePreviewItem] = []
 
         if let images = message.images {
             for image in images {
                 if let url = URL(string: resolveStorageURL(image.url)) {
-                    urls.append(url)
+                    let name =
+                        image.fileName?.trimmingCharacters(in: .whitespacesAndNewlines)
+                        ?? url.lastPathComponent
+                    items.append(
+                        ImagePreviewItem(
+                            url: url,
+                            fileName: name.isEmpty ? "image" : name
+                        )
+                    )
                 }
             }
         }
 
-        urls.append(contentsOf: inlineImageURLs)
+        for url in inlineImageURLs {
+            let name = url.lastPathComponent
+            items.append(ImagePreviewItem(url: url, fileName: name.isEmpty ? "image" : name))
+        }
 
         var seen: Set<String> = []
-        return urls.filter { url in
-            let key = url.absoluteString
+        return items.filter { item in
+            let key = item.url.absoluteString
             if seen.contains(key) { return false }
             seen.insert(key)
             return true

@@ -11,6 +11,7 @@
 		09872F3BA84782EE033D3E84 /* AvailableModelsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 166905377217DEE8CC10FC77 /* AvailableModelsView.swift */; };
 		0DC367BB5B5494E5E61E0E34 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */; };
 		0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */; };
+		0F998FE136235FCFC81DC6FF /* ImagePreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB000B527C2E5966D0785AAD /* ImagePreviewView.swift */; };
 		113213119A83A749874915B3 /* GlassSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */; };
 		1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1664515944F9D6C7344EB03 /* ModelPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
@@ -111,6 +112,7 @@
 		E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatAPI.swift; sourceTree = "<group>"; };
 		E1CF1B3A9B46FB65CBD0460F /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		EB000B527C2E5966D0785AAD /* ImagePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewView.swift; sourceTree = "<group>"; };
 		EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
 		F2325251CBC4D1C43ED4C8A0 /* NanoChatApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NanoChatApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
@@ -184,6 +186,7 @@
 				166905377217DEE8CC10FC77 /* AvailableModelsView.swift */,
 				34B27628A1A114A2708F2887 /* ChatView.swift */,
 				8E1E8D6FB041CE9A0E34235B /* ConversationsListView.swift */,
+				EB000B527C2E5966D0785AAD /* ImagePreviewView.swift */,
 				2F6A945714279F60A1DBD6C1 /* MainTabView.swift */,
 				92D0843EC4FD015A4E588D32 /* ModelCapabilityBadge.swift */,
 				5615E88163B35595CF9E6F21 /* ModelInfoView.swift */,
@@ -277,7 +280,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A561CCBB52A6DE0FD91B1DA9 = {
 						ProvisioningStyle = Automatic;
@@ -348,6 +351,7 @@
 				2903745958E926B21CE907B9 /* GlassCard.swift in Sources */,
 				8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */,
 				113213119A83A749874915B3 /* GlassSheet.swift in Sources */,
+				0F998FE136235FCFC81DC6FF /* ImagePreviewView.swift in Sources */,
 				9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */,
 				71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */,
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,
@@ -431,6 +435,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -464,6 +469,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -477,6 +483,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -487,6 +494,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -520,6 +528,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -540,6 +549,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;

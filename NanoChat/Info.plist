@@ -37,6 +37,8 @@
 	<string>26.0</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>NanoChat needs microphone access to record voice messages.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>NanoChat saves images to your photo library.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
