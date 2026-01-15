@@ -6,7 +6,7 @@ struct ChatView: View {
     let onMessageSent: (() -> Void)?
     @StateObject private var viewModel = ChatViewModel()
     @StateObject private var modelManager = ModelManager()
-    @StateObject private var audioPreferences = AudioPreferences.shared
+    @ObservedObject private var audioPreferences = AudioPreferences.shared
     @State private var assistantManager = AssistantManager()
     @State private var messageText = ""
     @State private var showVoiceRecorder = false
@@ -22,6 +22,9 @@ struct ChatView: View {
 
     @State private var showImageSettings = false
     @State private var showVideoSettings = false
+    @State private var searchText = ""
+    @State private var isSearchVisible = false
+
 
     var body: some View {
         ZStack {
@@ -29,10 +32,42 @@ struct ChatView: View {
 
             ScrollViewReader { proxy in
                 VStack(spacing: 0) {
+                    if isSearchVisible {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                            TextField("Search in chat...", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .foregroundStyle(Theme.Colors.text)
+
+                            if !searchText.isEmpty {
+                                Button {
+                                    searchText = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                            }
+                        }
+                        .padding(Theme.Spacing.md)
+                        .background(Theme.Colors.glassBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                        .padding(.horizontal, Theme.Spacing.lg)
+                        .padding(.vertical, Theme.Spacing.sm)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     messagesView(proxy: proxy)
+                        .contentShape(Rectangle())
+                        .simultaneousGesture(TapGesture().onEnded {
+                            isInputFocused = false
+                        })
+                }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
                     inputArea
                 }
                 .navigationTitle(conversation.title)
+
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
@@ -106,17 +141,39 @@ struct ChatView: View {
                 .ignoresSafeArea()
         }
     }
+    
+    private var displayedMessages: [MessageResponse] {
+        if searchText.isEmpty {
+            return viewModel.messages
+        }
+        return viewModel.messages.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
+    }
 
     @ViewBuilder
     private func messagesView(proxy: ScrollViewProxy) -> some View {
-        if viewModel.messages.isEmpty && !viewModel.isGenerating {
-            Spacer()
-            emptyStateView
-            Spacer()
+        if viewModel.isLoading && viewModel.messages.isEmpty {
+            ChatSkeleton()
+                .transition(.opacity)
+        } else if viewModel.messages.isEmpty && !viewModel.isGenerating {
+            GeometryReader { geometry in
+                ScrollView {
+                    emptyStateView
+                        .frame(minHeight: geometry.size.height)
+                }
+                .scrollDismissesKeyboard(.interactively)
+            }
+        } else if displayedMessages.isEmpty && !searchText.isEmpty {
+            GeometryReader { geometry in
+                ScrollView {
+                    ContentUnavailableView.search(text: searchText)
+                        .frame(minHeight: geometry.size.height)
+                }
+                .scrollDismissesKeyboard(.interactively)
+            }
         } else {
             ScrollView {
                 LazyVStack(spacing: Theme.Spacing.lg) {
-                    ForEach(Array(viewModel.messages.enumerated()), id: \.element.id) {
+                    ForEach(Array(displayedMessages.enumerated()), id: \.element.id) {
                         index, message in
                         MessageBubble(
                             message: message,
@@ -170,6 +227,9 @@ struct ChatView: View {
                 .animation(Theme.Animation.smooth, value: viewModel.followUpSuggestions)
             }
             .scrollDismissesKeyboard(.interactively)
+            .refreshable {
+                await viewModel.loadMessages(conversationId: conversation.id)
+            }
             .onChange(of: viewModel.isGenerating) { _, isGenerating in
                 if isGenerating {
                     withAnimation {
@@ -282,9 +342,23 @@ struct ChatView: View {
         }
 
         ToolbarItem(placement: .primaryAction) {
-            if !assistantManager.assistants.isEmpty {
-                assistantMenu(
-                    assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
+            HStack(spacing: Theme.Spacing.md) {
+                Button {
+                    withAnimation {
+                        isSearchVisible.toggle()
+                        if !isSearchVisible {
+                            searchText = ""
+                        }
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(isSearchVisible ? Theme.Colors.secondary : Theme.Colors.textSecondary)
+                }
+
+                if !assistantManager.assistants.isEmpty {
+                    assistantMenu(
+                        assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
+                }
             }
         }
     }
@@ -292,13 +366,13 @@ struct ChatView: View {
     @ViewBuilder
     private func assistantMenu(assistant: AssistantResponse) -> some View {
         Menu {
-            ForEach(assistantManager.assistants) { assistant in
+            ForEach(assistantManager.assistants) { menuAssistant in
                 Button {
-                    assistantManager.selectAssistant(assistant)
+                    assistantManager.selectAssistant(menuAssistant)
                 } label: {
                     HStack {
-                        Text(assistant.name)
-                        if assistant.id == assistant.id {
+                        Text(menuAssistant.name)
+                        if menuAssistant.id == assistantManager.selectedAssistant?.id {
                             Image(systemName: "checkmark")
                                 .foregroundStyle(Theme.Colors.secondary)
                         }
@@ -327,7 +401,7 @@ struct ChatView: View {
     }
 
     private func scrollToLastMessage(proxy: ScrollViewProxy) {
-        if let lastMessage = viewModel.messages.last {
+        if let lastMessage = displayedMessages.last {
             withAnimation(.easeOut(duration: 0.3)) {
                 proxy.scrollTo(lastMessage.id, anchor: .bottom)
             }
@@ -543,8 +617,10 @@ struct ChatView: View {
             }
         }
         .padding(Theme.Spacing.lg)
-        .background(Theme.Colors.glassPane)
-        .ignoresSafeArea(.container, edges: .bottom)
+        .background {
+            Rectangle()
+                .fill(Theme.Colors.glassPane)
+        }
     }
 
     @ViewBuilder
@@ -756,7 +832,6 @@ struct ChatView: View {
                     do {
                         let attachment = try await NanoChatAPI.shared.uploadImage(data: imageData)
                         uploadedImages.append(attachment)
-                        print("Uploaded image: \(attachment.storageId)")
                     } catch {
                         print("Failed to upload image: \(error)")
                     }
@@ -831,8 +906,8 @@ struct MessageBubble: View {
     @State private var isBranching = false
     @State private var isStarred = false
     @State private var isStarring = false
-    @StateObject private var audioPreferences = AudioPreferences.shared
-    @StateObject private var audioPlayback = AudioPlaybackManager.shared
+    @ObservedObject private var audioPreferences = AudioPreferences.shared
+    @ObservedObject private var audioPlayback = AudioPlaybackManager.shared
     @State private var isSynthesizingSpeech = false
     @State private var speechErrorMessage: String?
     @State private var videoPlayers: [String: AVPlayer] = [:]
@@ -986,6 +1061,8 @@ struct MessageBubble: View {
                                 }
                                 .onDisappear {
                                     player.pause()
+                                    player.replaceCurrentItem(with: nil)
+                                    videoPlayers.removeValue(forKey: videoURL.absoluteString)
                                 }
                         }
                     }
@@ -1149,9 +1226,7 @@ struct MessageBubble: View {
                 if message.role == "assistant" {
                     HStack(spacing: Theme.Spacing.sm) {
                         Button {
-                            withAnimation {
-                                userRating = userRating == .thumbsUp ? nil : .thumbsUp
-                            }
+                            rateMessage(.thumbsUp)
                         } label: {
                             Image(
                                 systemName: userRating == .thumbsUp
@@ -1165,9 +1240,7 @@ struct MessageBubble: View {
                         .buttonStyle(.plain)
 
                         Button {
-                            withAnimation {
-                                userRating = userRating == .thumbsDown ? nil : .thumbsDown
-                            }
+                            rateMessage(.thumbsDown)
                         } label: {
                             Image(
                                 systemName: userRating == .thumbsDown
@@ -1336,7 +1409,6 @@ struct MessageBubble: View {
                     onMessageUpdated?(updatedMessage)
                 }
             } catch {
-                print("Error updating message: \(error)")
                 await MainActor.run {
                     isSaving = false
                 }
@@ -1359,7 +1431,6 @@ struct MessageBubble: View {
                     onBranch?()
                 }
             } catch {
-                print("Error branching conversation: \(error)")
                 await MainActor.run {
                     isBranching = false
                 }
@@ -1386,11 +1457,40 @@ struct MessageBubble: View {
                     onMessageUpdated?(message)
                 }
             } catch {
-                print("Error updating starred state: \(error)")
                 await MainActor.run {
                     HapticManager.shared.error()
                     isStarred.toggle()
                     isStarring = false
+                }
+            }
+        }
+    }
+
+    private func rateMessage(_ rating: MessageRating) {
+        let newRating: MessageRating? = userRating == rating ? nil : rating
+        let apiThumb: MessageThumbsRating? = switch newRating {
+        case .thumbsUp: .up
+        case .thumbsDown: .down
+        case nil: nil
+        }
+
+        withAnimation {
+            userRating = newRating
+        }
+        HapticManager.shared.selection()
+
+        Task {
+            do {
+                _ = try await NanoChatAPI.shared.rateMessage(
+                    messageId: message.id,
+                    thumbs: apiThumb
+                )
+            } catch {
+                // Revert on failure
+                await MainActor.run {
+                    withAnimation {
+                        userRating = userRating == newRating ? (rating == .thumbsUp ? .thumbsDown : .thumbsUp) : userRating
+                    }
                 }
             }
         }

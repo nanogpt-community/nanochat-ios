@@ -34,106 +34,132 @@ struct ConversationsListView: View {
                 .ignoresSafeArea()
 
             NavigationStack(path: $navigationPath) {
-                Group {
-                    if viewModel.isLoading && viewModel.conversations.isEmpty {
-                        ProgressView()
-                            .tint(Theme.Colors.secondary)
-                    } else if filteredConversations.isEmpty {
-                        ContentUnavailableView {
-                            Label("No Conversations", systemImage: "message.circle")
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                        } description: {
-                            Text("Start a new conversation to begin chatting")
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        } actions: {
-                            Button("New Chat") {
-                                createNewConversation()
+                ZStack(alignment: .top) {
+                    Group {
+                        if viewModel.isLoading && viewModel.conversations.isEmpty {
+                            ScrollView {
+                                ConversationListSkeleton()
+                                    .padding(.top, Theme.Spacing.xs)
                             }
-                            .buttonStyle(PrimaryButtonStyle())
-                        }
-                    } else {
-                        List {
-                            ForEach(filteredConversations, id: \.id) { conversation in
-                                Button {
-                                    navigationPath.append(conversation)
-                                } label: {
-                                    ConversationRow(conversation: conversation)
+                            .transition(.opacity)
+                        } else if filteredConversations.isEmpty && viewModel.errorMessage == nil {
+                            ContentUnavailableView {
+                                Label("No Conversations", systemImage: "message.circle")
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            } description: {
+                                Text("Start a new conversation to begin chatting")
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                            } actions: {
+                                Button("New Chat") {
+                                    createNewConversation()
                                 }
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .listRowInsets(
-                                    EdgeInsets(
-                                        top: Theme.Spacing.xs, leading: Theme.Spacing.lg,
-                                        bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg)
-                                )
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        HapticManager.shared.warning()
-                                        Task {
-                                            await viewModel.deleteConversation(id: conversation.id)
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash.fill")
-                                    }
-                                    .tint(Theme.Colors.error)
-                                }
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                .buttonStyle(PrimaryButtonStyle())
+                            }
+                        } else {
+                            List {
+                                ForEach(filteredConversations, id: \.id) { conversation in
                                     Button {
-                                        HapticManager.shared.tap()
-                                        Task {
-                                            await togglePin(conversation)
-                                        }
+                                        navigationPath.append(conversation)
                                     } label: {
-                                        Label(
-                                            conversation.pinned ? "Unpin" : "Pin",
-                                            systemImage: conversation.pinned
-                                                ? "pin.slash.fill" : "pin.fill"
-                                        )
+                                        ConversationRow(conversation: conversation)
                                     }
-                                    .tint(Theme.Colors.warning)
-                                }
-                                .contextMenu {
-                                    Button {
-                                        Task {
-                                            await togglePin(conversation)
+                                    .listRowBackground(Color.clear)
+                                    .listRowSeparator(.hidden)
+                                    .listRowInsets(
+                                        EdgeInsets(
+                                            top: Theme.Spacing.xs, leading: Theme.Spacing.lg,
+                                            bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg)
+                                    )
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        Button(role: .destructive) {
+                                            HapticManager.shared.warning()
+                                            Task {
+                                                await viewModel.deleteConversation(id: conversation.id)
+                                            }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash.fill")
                                         }
-                                    } label: {
-                                        Label(
-                                            conversation.pinned ? "Unpin" : "Pin",
-                                            systemImage: conversation.pinned ? "pin.slash" : "pin"
-                                        )
+                                        .tint(Theme.Colors.error)
                                     }
-
-                                    Button {
-                                        showingRenameDialog = true
-                                        conversationToRename = conversation
-                                    } label: {
-                                        Label("Rename", systemImage: "pencil")
-                                    }
-
-                                    Button {
-                                        conversationToMove = conversation
-                                        showingMoveSheet = true
-                                        Task {
-                                            await loadProjects()
+                                    .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                        Button {
+                                            HapticManager.shared.tap()
+                                            Task {
+                                                await togglePin(conversation)
+                                            }
+                                        } label: {
+                                            Label(
+                                                conversation.pinned ? "Unpin" : "Pin",
+                                                systemImage: conversation.pinned
+                                                    ? "pin.slash.fill" : "pin.fill"
+                                            )
                                         }
-                                    } label: {
-                                        Label("Move to Project", systemImage: "folder")
+                                        .tint(Theme.Colors.warning)
                                     }
-
-                                    Divider()
-
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await viewModel.deleteConversation(id: conversation.id)
+                                    .contextMenu {
+                                        Button {
+                                            Task {
+                                                await togglePin(conversation)
+                                            }
+                                        } label: {
+                                            Label(
+                                                conversation.pinned ? "Unpin" : "Pin",
+                                                systemImage: conversation.pinned ? "pin.slash" : "pin"
+                                            )
                                         }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
+
+                                        Button {
+                                            showingRenameDialog = true
+                                            conversationToRename = conversation
+                                        } label: {
+                                            Label("Rename", systemImage: "pencil")
+                                        }
+
+                                        Button {
+                                            conversationToMove = conversation
+                                            showingMoveSheet = true
+                                            Task {
+                                                await loadProjects()
+                                            }
+                                        } label: {
+                                            Label("Move to Project", systemImage: "folder")
+                                        }
+
+                                        Divider()
+
+                                        Button(role: .destructive) {
+                                            Task {
+                                                await viewModel.deleteConversation(id: conversation.id)
+                                            }
+                                        } label: {
+                                            Label("Delete", systemImage: "trash")
+                                        }
                                     }
                                 }
                             }
+                            .listStyle(.plain)
                         }
-                        .listStyle(.plain)
+                    }
+                    
+                    // Error Banner overlay
+                    if let error = viewModel.errorMessage {
+                        VStack {
+                            ErrorBanner(
+                                message: error,
+                                onRetry: {
+                                    Task {
+                                        await viewModel.loadConversations()
+                                    }
+                                },
+                                onDismiss: {
+                                    withAnimation {
+                                        viewModel.errorMessage = nil
+                                    }
+                                }
+                            )
+                            Spacer()
+                        }
+                        .padding(.top, Theme.Spacing.md)
                     }
                 }
                 .navigationTitle("Chats")
@@ -233,11 +259,26 @@ struct ConversationsListView: View {
     }
 
     private func togglePin(_ conversation: ConversationResponse) async {
-        print("Toggle pin for conversation: \(conversation.id)")
+        HapticManager.shared.tap()
+        do {
+            _ = try await NanoChatAPI.shared.toggleConversationPin(conversationId: conversation.id)
+            await viewModel.loadConversations()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func renameConversation(_ conversation: ConversationResponse, newTitle: String) async {
-        print("Rename conversation \(conversation.id) to: \(newTitle)")
+        HapticManager.shared.tap()
+        do {
+            try await NanoChatAPI.shared.updateConversationTitle(
+                conversationId: conversation.id,
+                title: newTitle
+            )
+            await viewModel.loadConversations()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
     private func createNewConversation() {

@@ -29,9 +29,11 @@
 		67073A55CB590A27D2D6B5DA /* WebSearchMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */; };
 		6724EB484F57DB985EA35281 /* NanoChatApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41936341BC22F3B70EA5CBFF /* NanoChatApp.swift */; };
 		6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 025014189CB03650FFDD2E8C /* Conversation.swift */; };
+		6D0FDBBD74292A124093EEE3 /* LoadingSkeleton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1941464E6EB8C70B9CFE8277 /* LoadingSkeleton.swift */; };
 		71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F6A945714279F60A1DBD6C1 /* MainTabView.swift */; };
 		7531510B5407E769DD71B604 /* WebSearchToggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */; };
 		798307EC1197F0CBED864234 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD93C9CDA2EFBB4F93A3B35D /* ContentView.swift */; };
+		7DFD0E02B9B1F1BC931D855D /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58F99ACB16DB3E0198AFAC29 /* KeychainManager.swift */; };
 		7EA0EC6545C172E36474D3A7 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82DCFB7224956F60543DB857 /* Project.swift */; };
 		89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6975A1504331B1D93C0EADC1 /* Theme.swift */; };
 		8C0C9F201724C3DB51550685 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A084B76231E63D08DD25C34 /* AuthenticationView.swift */; };
@@ -62,6 +64,7 @@
 		EF0D9567E675B7B660421641 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97F8CD0478EEB7EC20F2910F /* Extensions.swift */; };
 		F027BA33F14047D36E27C36F /* ModelInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44E43858C06B14987EE90A13 /* ModelInfo.swift */; };
 		F277AEA68C9E7C1CFE9ECCDA /* AccountSettingsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */; };
+		FEF8861AECD45EFBAB588D6B /* ErrorBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD4A80F625786C7D02AAED19 /* ErrorBanner.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -71,6 +74,7 @@
 		0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchToggle.swift; sourceTree = "<group>"; };
 		12E4B5EEDBBC429FCA2687D8 /* AccountSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsView.swift; sourceTree = "<group>"; };
 		166905377217DEE8CC10FC77 /* AvailableModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableModelsView.swift; sourceTree = "<group>"; };
+		1941464E6EB8C70B9CFE8277 /* LoadingSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingSkeleton.swift; sourceTree = "<group>"; };
 		1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchMode.swift; sourceTree = "<group>"; };
 		2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPreferences.swift; sourceTree = "<group>"; };
 		2DB06A61E7BCB2BAFD0ADDD5 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
@@ -86,6 +90,7 @@
 		4C2CFA93868A7C29188DA494 /* APIConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfiguration.swift; sourceTree = "<group>"; };
 		5020AAC501DDB1A540C4CDEE /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		5615E88163B35595CF9E6F21 /* ModelInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfoView.swift; sourceTree = "<group>"; };
+		58F99ACB16DB3E0198AFAC29 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsViewModel.swift; sourceTree = "<group>"; };
 		5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackManager.swift; sourceTree = "<group>"; };
 		601C29BEED0BEECB337F2ECB /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
@@ -109,6 +114,7 @@
 		D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationSettingsViews.swift; sourceTree = "<group>"; };
 		D76F6D30C2E95E614927E80D /* ModelManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelManager.swift; sourceTree = "<group>"; };
 		DB2AC5A2231AC533627F6732 /* ChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewModel.swift; sourceTree = "<group>"; };
+		DD4A80F625786C7D02AAED19 /* ErrorBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorBanner.swift; sourceTree = "<group>"; };
 		E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NanoChatAPI.swift; sourceTree = "<group>"; };
 		E1CF1B3A9B46FB65CBD0460F /* Message.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -128,12 +134,14 @@
 		2036CEDDAE2BAA0F4D1C241F /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				DD4A80F625786C7D02AAED19 /* ErrorBanner.swift */,
 				F8F21B17E69148E1D0C68373 /* FollowUpQuestionsView.swift */,
 				D6853017ACA25E398797DAB0 /* GenerationSettingsViews.swift */,
 				33D1B6BFE44B864BE2351AE2 /* GlassButton.swift */,
 				F4E548298D554723BE7D2CB6 /* GlassCard.swift */,
 				FB219170DF3996FD2078F014 /* GlassList.swift */,
 				BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */,
+				1941464E6EB8C70B9CFE8277 /* LoadingSkeleton.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -162,6 +170,7 @@
 				5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */,
 				2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */,
 				F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */,
+				58F99ACB16DB3E0198AFAC29 /* KeychainManager.swift */,
 				E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */,
 			);
 			path = Services;
@@ -344,6 +353,7 @@
 				798307EC1197F0CBED864234 /* ContentView.swift in Sources */,
 				6CABA18C3E1BBE73F0D7B50D /* Conversation.swift in Sources */,
 				A5C8AFDF9283CB5EEA7AF702 /* ConversationsListView.swift in Sources */,
+				FEF8861AECD45EFBAB588D6B /* ErrorBanner.swift in Sources */,
 				EF0D9567E675B7B660421641 /* Extensions.swift in Sources */,
 				DDF8CA7B4AF4DD53855DBCCE /* FollowUpQuestionsView.swift in Sources */,
 				920D6E88807C520C20915F8D /* GenerationSettingsViews.swift in Sources */,
@@ -352,7 +362,9 @@
 				8F2C112AFEB793DD7034EB56 /* GlassList.swift in Sources */,
 				113213119A83A749874915B3 /* GlassSheet.swift in Sources */,
 				0F998FE136235FCFC81DC6FF /* ImagePreviewView.swift in Sources */,
+				7DFD0E02B9B1F1BC931D855D /* KeychainManager.swift in Sources */,
 				9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */,
+				6D0FDBBD74292A124093EEE3 /* LoadingSkeleton.swift in Sources */,
 				71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */,
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,
 				EB7CE8EEFFD68E3C2D37489A /* Model.swift in Sources */,
@@ -390,7 +402,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YP8HMR9NR6;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = NanoChat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -415,7 +426,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = YP8HMR9NR6;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = NanoChat/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
@@ -467,6 +477,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = YP8HMR9NR6;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -526,6 +537,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = YP8HMR9NR6;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;

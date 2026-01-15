@@ -15,12 +15,23 @@ final class ThemeManager: ObservableObject {
         }
     }
 
+    var colorScheme: ColorScheme? {
+        switch currentTheme {
+        case .system:
+            return nil
+        case .light:
+            return .light
+        case .dark:
+            return .dark
+        }
+    }
+
     init() {
         if let savedTheme = UserDefaults.standard.string(forKey: "selected_theme"),
            let theme = Theme(rawValue: savedTheme) {
             self.currentTheme = theme
         } else {
-            self.currentTheme = .system
+            self.currentTheme = .dark
         }
     }
 

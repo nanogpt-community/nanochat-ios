@@ -10,7 +10,7 @@ struct NanoChatApp: App {
             ContentView()
                 .environmentObject(authManager)
                 .environmentObject(themeManager)
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(themeManager.colorScheme)
                 .onAppear {
                     setupAppearance()
                 }

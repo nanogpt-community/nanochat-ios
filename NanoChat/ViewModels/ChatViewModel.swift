@@ -28,17 +28,13 @@ final class ChatViewModel: ObservableObject {
     private let api = NanoChatAPI.shared
 
     func loadConversations() async {
-        print("ChatViewModel.loadConversations() called")
         isLoading = true
         defer { isLoading = false }
 
         do {
-            print("Fetching conversations from API...")
             let loadedConversations = try await api.getConversations()
-            print("Successfully loaded \(loadedConversations.count) conversations")
             conversations = loadedConversations
         } catch {
-            print("Error loading conversations: \(error)")
             errorMessage = error.localizedDescription
         }
     }
@@ -47,16 +43,13 @@ final class ChatViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        print("Loading messages for conversation: \(conversationId)")
         do {
             let loadedMessages = try await api.getMessages(conversationId: conversationId)
-            print("Loaded \(loadedMessages.count) messages")
             messages = loadedMessages
             if let conversation = conversations.first(where: { $0.id == conversationId }) {
                 currentConversation = conversation
             }
         } catch {
-            print("Error loading messages: \(error)")
             errorMessage = error.localizedDescription
         }
     }
@@ -69,7 +62,6 @@ final class ChatViewModel: ObservableObject {
             let loadedMessages = try await api.getStarredMessages()
             starredMessages = loadedMessages
         } catch {
-            print("Error loading starred messages: \(error)")
             errorMessage = error.localizedDescription
         }
     }
@@ -140,8 +132,6 @@ final class ChatViewModel: ObservableObject {
                 videoParams: videoParams
             )
 
-            print("Generate message response: \(response)")
-
             let targetConversationId =
                 conversationId ?? currentConversation?.id ?? response.conversationId
 
@@ -162,23 +152,12 @@ final class ChatViewModel: ObservableObject {
                     !lastMessage.content.isEmpty,
                     !isStillGenerating
                 {
-                    print("Assistant response completed, stopping poll")
                     break
-                }
-
-                if let lastMessage = messages.last,
-                    lastMessage.role == "assistant",
-                    !lastMessage.content.isEmpty
-                {
-                    print(
-                        "Still generating... (current content length: \(lastMessage.content.count))"
-                    )
                 }
             }
 
             isGenerating = false
         } catch {
-            print("Error sending message: \(error)")
             errorMessage = error.localizedDescription
             isGenerating = false
         }
@@ -198,7 +177,6 @@ final class ChatViewModel: ObservableObject {
                 selectedProviderId = nil
             }
         } catch {
-            print("Error fetching model providers: \(error)")
             errorMessage = error.localizedDescription
             supportsProviderSelection = false
             availableProviders = []
@@ -234,9 +212,7 @@ final class ChatViewModel: ObservableObject {
                 messageId: messageId
             )
             followUpSuggestions = suggestions
-            print("Loaded \(suggestions.count) follow-up suggestions")
         } catch {
-            print("Failed to fetch follow-up questions: \(error)")
             followUpSuggestions = []
         }
     }

@@ -28,8 +28,11 @@ struct AssistantsListView: View {
             NavigationStack {
                 Group {
                     if isLoading && assistants.isEmpty {
-                        ProgressView()
-                            .tint(Theme.Colors.secondary)
+                        ScrollView {
+                            ConversationListSkeleton()
+                                .padding(.top, Theme.Spacing.xs)
+                        }
+                        .transition(.opacity)
                     } else if assistants.isEmpty {
                         ContentUnavailableView {
                             Label("No Assistants", systemImage: "person.2")

@@ -34,6 +34,6 @@ final class AuthenticationManager: ObservableObject {
     func clearCredentials() {
         apiKey = ""
         isAuthenticated = false
-        UserDefaults.standard.removeObject(forKey: "api_key")
+        config.clearCredentials()
     }
 }

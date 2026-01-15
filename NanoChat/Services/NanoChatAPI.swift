@@ -58,21 +58,9 @@ final class NanoChatAPI: Sendable {
         }
 
         do {
-            // Debug: Print response for specific endpoints
-            if endpoint.contains("/api/db/messages") || endpoint.contains("/api/db/user-models") {
-                if let json = try? JSONSerialization.jsonObject(with: data) {
-                    print("API Response for \(endpoint): \(json)")
-                } else if let jsonString = String(data: data, encoding: .utf8) {
-                    print("API Response for \(endpoint): \(jsonString)")
-                }
-            }
             let decoded = try JSONDecoder().decode(T.self, from: data)
             return decoded
         } catch {
-            print("Decoding error for \(endpoint): \(error)")
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Response body: \(jsonString)")
-            }
             throw APIError.decodingError(error)
         }
     }
@@ -169,6 +157,25 @@ final class NanoChatAPI: Sendable {
             endpoint: "/api/db/conversations", method: .post, body: request)
     }
 
+    func toggleConversationPin(conversationId: String) async throws -> TogglePinResponse {
+        let request = ToggleConversationPinRequest(
+            action: "togglePin",
+            conversationId: conversationId
+        )
+        return try await self.request(
+            endpoint: "/api/db/conversations", method: .post, body: request)
+    }
+
+    func updateConversationTitle(conversationId: String, title: String) async throws {
+        let request = UpdateConversationTitleRequest(
+            action: "updateTitle",
+            conversationId: conversationId,
+            title: title
+        )
+        try await requestWithoutResponse(
+            endpoint: "/api/db/conversations", method: .post, body: request)
+    }
+
     // MARK: - Messages
 
     func getMessages(conversationId: String) async throws -> [MessageResponse] {
@@ -218,6 +225,14 @@ final class NanoChatAPI: Sendable {
             starred: starred
         )
         return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
+    }
+
+    func rateMessage(messageId: String, thumbs: MessageThumbsRating?) async throws -> MessageRatingResponse {
+        let request = MessageRatingRequest(
+            messageId: messageId,
+            thumbs: thumbs?.rawValue
+        )
+        return try await self.request(endpoint: "/api/db/message-ratings", method: .post, body: request)
     }
 
     // MARK: - Follow-Up Questions
@@ -554,17 +569,6 @@ final class NanoChatAPI: Sendable {
         // Decode as array directly from the new endpoint
         let models = try JSONDecoder().decode([NanoGPTModelResponse].self, from: data)
 
-        // Debug: print capabilities
-        for model in models {
-            if let caps = model.capabilities {
-                print(
-                    "Model: \(model.name), Vision: \(caps.vision ?? false), Reasoning: \(caps.reasoning ?? false), Images: \(caps.images ?? false), Video: \(caps.video ?? false)"
-                )
-            } else {
-                print("Model: \(model.name), Capabilities: nil")
-            }
-        }
-
         // Convert to UserModel format
         return models.map { model in
             UserModel(
@@ -594,8 +598,7 @@ final class NanoChatAPI: Sendable {
                                     ModelParamDefinition.self, from: jsonData)
                                 cleanParams[key] = paramDef
                             } catch {
-                                print(
-                                    "Failed to decode param \(key) for model \(model.id): \(error)")
+                                // Failed to decode param
                             }
                         }
                     }
@@ -741,10 +744,6 @@ final class NanoChatAPI: Sendable {
             let decoded = try JSONDecoder().decode(StorageUploadResponse.self, from: responseData)
             return decoded
         } catch {
-            print("Decoding error for storage upload: \(error)")
-            if let jsonString = String(data: responseData, encoding: .utf8) {
-                print("Response body: \(jsonString)")
-            }
             throw APIError.decodingError(error)
         }
     }
@@ -1026,26 +1025,13 @@ final class NanoChatAPI: Sendable {
         }
 
         guard 200...299 ~= httpResponse.statusCode else {
-            print("User settings API error: \(httpResponse.statusCode)")
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Response body: \(jsonString)")
-            }
             throw APIError.httpError(statusCode: httpResponse.statusCode)
-        }
-
-        // Debug logging
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("User settings response: \(jsonString)")
         }
 
         do {
             let decoded = try JSONDecoder().decode(UserSettings.self, from: data)
             return decoded
         } catch {
-            print("Decoding error for user settings: \(error)")
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("Response body: \(jsonString)")
-            }
             throw APIError.decodingError(error)
         }
     }
@@ -1249,6 +1235,21 @@ struct BranchConversationResponse: Codable {
     }
 }
 
+struct ToggleConversationPinRequest: Codable {
+    let action: String
+    let conversationId: String
+}
+
+struct TogglePinResponse: Codable {
+    let pinned: Bool
+}
+
+struct UpdateConversationTitleRequest: Codable {
+    let action: String
+    let conversationId: String
+    let title: String
+}
+
 // MARK: - Attachment Types
 
 struct ImageAttachment: Codable {
@@ -1282,6 +1283,22 @@ enum DocumentFileType: String, Codable {
     case markdown
     case text
     case epub
+}
+
+// MARK: - Message Rating Types
+
+enum MessageThumbsRating: String, Codable {
+    case up
+    case down
+}
+
+struct MessageRatingRequest: Codable {
+    let messageId: String
+    let thumbs: String?
+}
+
+struct MessageRatingResponse: Codable {
+    let success: Bool
 }
 
 // MARK: - NanoGPT Model Types

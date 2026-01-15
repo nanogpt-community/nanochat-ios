@@ -16,8 +16,10 @@ struct ProjectsListView: View {
             NavigationStack {
                 Group {
                     if isLoading && projects.isEmpty {
-                        ProgressView()
-                            .tint(Theme.Colors.secondary)
+                        ScrollView {
+                            GlassListSkeleton()
+                        }
+                        .transition(.opacity)
                     } else if projects.isEmpty {
                         ContentUnavailableView {
                             Label("No Projects", systemImage: "folder")

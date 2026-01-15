@@ -46,7 +46,6 @@ final class AccountSettingsViewModel {
             followUpModelId = loadedSettings.followUpModelId ?? ""
         } catch {
             self.error = error.localizedDescription
-            print("Failed to load user settings: \(error)")
         }
 
         isLoading = false
@@ -154,7 +153,6 @@ final class AccountSettingsViewModel {
             settings = updatedSettings
         } catch {
             self.error = error.localizedDescription
-            print("Failed to update user settings: \(error)")
 
             // Revert local state on error
             self.privacyMode = previousPrivacyMode

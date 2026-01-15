@@ -38,32 +38,14 @@ final class ModelManager: ObservableObject {
             if let lastUsedModelId = lastUsedModelId,
                let lastModel = allModels.filterEnabled().first(where: { $0.modelId == lastUsedModelId }) {
                 selectedModel = lastModel
-                print("Restored last used model: \(lastModel.modelId)")
             } else if let defaultModel = allModels.filterEnabled().first(where: { $0.pinned }) {
                 // Fall back to pinned model
                 selectedModel = defaultModel
-                print("Using pinned model: \(defaultModel.modelId)")
             } else if let firstModel = allModels.filterEnabled().first {
                 // Fall back to first enabled model
                 selectedModel = firstModel
-                print("Using first enabled model: \(firstModel.modelId)")
             }
         } catch {
-            print("CRITICAL ERROR loading models: \(error)")
-            if let decodingError = error as? DecodingError {
-                switch decodingError {
-                case .typeMismatch(let type, let context):
-                    print("Type mismatch: \(type), context: \(context)")
-                case .valueNotFound(let type, let context):
-                    print("Value not found: \(type), context: \(context)")
-                case .keyNotFound(let key, let context):
-                    print("Key not found: \(key), context: \(context)")
-                case .dataCorrupted(let context):
-                    print("Data corrupted: \(context)")
-                @unknown default:
-                    print("Unknown decoding error")
-                }
-            }
             errorMessage = error.localizedDescription
         }
     }
