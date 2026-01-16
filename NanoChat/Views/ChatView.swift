@@ -1088,407 +1088,26 @@ struct MessageBubble: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             HStack(alignment: .top, spacing: Theme.Spacing.sm) {
-                // Avatar
-                Circle()
-                    .fill(
-                        message.role == "user"
-                            ? Theme.Colors.userBubbleGradient
-                            : LinearGradient(
-                                colors: [Theme.Colors.secondary, Theme.Colors.primary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                    )
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Image(systemName: message.role == "user" ? "person.fill" : "sparkles")
-                            .font(.system(size: 14))
-                            .foregroundStyle(.white)
-                    )
-
+                avatarView
+                
                 VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                    // Header
-                HStack(spacing: Theme.Spacing.xs) {
-                    Text(message.role == "user" ? "You" : "Assistant")
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.Colors.text)
-
-                    Spacer()
-
-                    Button {
-                        toggleStarred()
-                    } label: {
-                        if isStarring {
-                            ProgressView()
-                                .scaleEffect(0.7)
-                                .tint(Theme.Colors.secondary)
-                        } else {
-                            Image(systemName: isStarred ? "star.fill" : "star")
-                                .font(.caption2)
-                                .foregroundStyle(
-                                    isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .disabled(isStarring)
-
-                    if message.role == "assistant" {
-                        Button {
-                            Task {
-                                await toggleSpeechPlayback()
-                            }
-                        } label: {
-                            if isSynthesizingSpeech
-                                || audioPlayback.isLoadingMessageId == message.id
-                            {
-                                ProgressView()
-                                    .scaleEffect(0.7)
-                                    .tint(Theme.Colors.secondary)
-                            } else {
-                                Image(
-                                    systemName: audioPlayback.currentlyPlayingMessageId
-                                        == message.id
-                                        ? "stop.fill" : "speaker.wave.2"
-                                )
-                                .font(.caption2)
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    if let model = message.modelId {
-                        Text(model)
-                            .font(.caption2)
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                    }
+                    headerView
+                    mediaAttachmentsView
+                    reasoningView
+                    messageContentView
+                    footerView
                 }
-
-                // Display attached and inline-detected images
-                if !allImages.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: Theme.Spacing.sm) {
-                            ForEach(allImages) { imageItem in
-                                Button {
-                                    selectedImage = imageItem
-                                    HapticManager.shared.selection()
-                                } label: {
-                                    AsyncImage(url: imageItem.url) { phase in
-                                        switch phase {
-                                        case .empty:
-                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                                .fill(Theme.Colors.glassBackground)
-                                                .frame(width: 120, height: 120)
-                                                .overlay(
-                                                    ProgressView()
-                                                        .tint(Theme.Colors.secondary)
-                                                )
-                                        case .success(let loadedImage):
-                                            loadedImage
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: 120, height: 120)
-                                                .clipShape(
-                                                    RoundedRectangle(
-                                                        cornerRadius: Theme.CornerRadius.sm))
-                                        case .failure:
-                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                                .fill(Theme.Colors.glassBackground)
-                                                .frame(width: 120, height: 120)
-                                                .overlay(
-                                                    Image(systemName: "photo")
-                                                        .foregroundStyle(Theme.Colors.textTertiary)
-                                                )
-                                        @unknown default:
-                                            EmptyView()
-                                        }
-                                    }
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                            .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                                    )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.vertical, Theme.Spacing.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTap()
                 }
-
-                // Display inline-detected videos (generated content URLs)
-                if !inlineVideoURLs.isEmpty {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                        ForEach(inlineVideoURLs, id: \.absoluteString) { videoURL in
-                            let player = player(for: videoURL)
-                            VideoPlayer(player: player)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 220)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                                )
-                                .onAppear {
-                                    cachePlayer(player, for: videoURL)
-                                }
-                                .onDisappear {
-                                    player.pause()
-                                    player.replaceCurrentItem(with: nil)
-                                    videoPlayers.removeValue(forKey: videoURL.absoluteString)
-                                }
-                        }
-                    }
-
-                    .padding(.vertical, Theme.Spacing.xs)
-                }
-
-                // Display attached documents
-                if let documents = message.documents, !documents.isEmpty {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                        ForEach(documents, id: \.storageId) { document in
-                            Button {
-                                HapticManager.shared.tap()
-                                onDocumentTap?(document)
-                            } label: {
-                                HStack(spacing: Theme.Spacing.sm) {
-                                    Image(systemName: documentIcon(for: document.fileType))
-                                        .font(.title3)
-                                        .foregroundStyle(Theme.Colors.secondary)
-
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(document.fileName ?? "Document")
-                                            .font(.caption)
-                                            .foregroundStyle(Theme.Colors.text)
-                                            .lineLimit(1)
-
-                                        Text(document.fileType.uppercased())
-                                            .font(.caption2)
-                                            .foregroundStyle(Theme.Colors.textTertiary)
-                                    }
-
-                                    Spacer()
-
-                                    Image(systemName: "chevron.right")
-                                        .font(.caption2)
-                                        .foregroundStyle(Theme.Colors.textTertiary)
-                                }
-                                .padding(Theme.Spacing.sm)
-                                .background(Theme.Colors.glassPane)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.vertical, Theme.Spacing.xs)
-                }
-
-                // Reasoning Dropdown (if available)
-                if let reasoning = message.reasoning, !reasoning.isEmpty {
-                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                isReasoningExpanded.toggle()
-                            }
-                        } label: {
-                            HStack(spacing: 4) {
-                                Image(systemName: "brain.head.profile")
-                                    .font(.caption)
-                                Text("Reasoning")
-                                    .font(.caption)
-                                    .foregroundStyle(Theme.Colors.textSecondary)
-                                Image(
-                                    systemName: isReasoningExpanded ? "chevron.up" : "chevron.down"
-                                )
-                                .font(.caption2)
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-
-                        if isReasoningExpanded {
-                            Text(reasoning)
-                                .font(.caption)
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                                .padding(Theme.Spacing.sm)
-                                .glassCard()
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
-                }
-
-                // Main message content with markdown support
-                Group {
-                    if isEditing {
-                        VStack(spacing: Theme.Spacing.sm) {
-                            TextEditor(text: $editedContent)
-                                .font(.body)
-                                .foregroundStyle(Theme.Colors.text)
-                                .padding(Theme.Spacing.md)
-                                .background(Theme.Colors.glassPane)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
-                                )
-                                .frame(minHeight: 100)
-
-                            HStack(spacing: Theme.Spacing.sm) {
-                                Button {
-                                    saveEdit()
-                                } label: {
-                                    Label("Save", systemImage: "checkmark")
-                                        .font(.caption)
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(isSaving)
-
-                                Button {
-                                    isEditing = false
-                                    editedContent = ""
-                                } label: {
-                                    Label("Cancel", systemImage: "xmark")
-                                        .font(.caption)
-                                }
-                                .buttonStyle(.bordered)
-
-                                Spacer()
-
-                                if isSaving {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                }
-                            }
-                        }
-                    } else {
-                        Text(attributedString)
-                            .font(.body)
-                            .foregroundStyle(Theme.Colors.text)
-                            .textSelection(.enabled)
-                            .padding(Theme.Spacing.md)
-                            .glassCard()
-                            .contextMenu {
-                                Button {
-                                    HapticManager.shared.tap()
-                                    startEditing()
-                                } label: {
-                                    Label("Edit", systemImage: "pencil")
-                                }
-
-                                if message.role == "assistant" {
-                                    Button {
-                                        HapticManager.shared.tap()
-                                        onRegenerate?()
-                                    } label: {
-                                        Label("Regenerate", systemImage: "arrow.clockwise")
-                                    }
-                                }
-
-                                Button {
-                                    HapticManager.shared.tap()
-                                    UIPasteboard.general.string = message.content
-                                    withAnimation {
-                                        showCopyFeedback = true
-                                    }
-                                    HapticManager.shared.success()
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                                        withAnimation {
-                                            showCopyFeedback = false
-                                        }
-                                    }
-                                } label: {
-                                    Label(
-                                        showCopyFeedback ? "Copied!" : "Copy",
-                                        systemImage: showCopyFeedback ? "checkmark" : "doc.on.doc")
-                                }
-
-                                Button {
-                                    HapticManager.shared.tap()
-                                    shareMessage()
-                                } label: {
-                                    Label("Share", systemImage: "square.and.arrow.up")
-                                }
-                            }
-                    }
-                }
-
-                // Rating section (for assistant messages)
-                if message.role == "assistant" {
-                    HStack(spacing: Theme.Spacing.sm) {
-                        Button {
-                            rateMessage(.thumbsUp)
-                        } label: {
-                            Image(
-                                systemName: userRating == .thumbsUp
-                                    ? "hand.thumbsup.fill" : "hand.thumbsup"
-                            )
-                            .font(.caption)
-                            .foregroundStyle(
-                                userRating == .thumbsUp
-                                    ? Theme.Colors.secondary : Theme.Colors.textTertiary)
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            rateMessage(.thumbsDown)
-                        } label: {
-                            Image(
-                                systemName: userRating == .thumbsDown
-                                    ? "hand.thumbsdown.fill" : "hand.thumbsdown"
-                            )
-                            .font(.caption)
-                            .foregroundStyle(
-                                userRating == .thumbsDown
-                                    ? Theme.Colors.secondary : Theme.Colors.textTertiary)
-                        }
-                        .buttonStyle(.plain)
-
-                        Spacer()
-
-                        Button {
-                            branchConversation()
-                        } label: {
-                            if isBranching {
-                                ProgressView()
-                                    .scaleEffect(0.8)
-                            } else {
-                                Image(systemName: "arrow.triangle.branch")
-                                    .font(.caption)
-                                    .foregroundStyle(Theme.Colors.textTertiary)
-                            }
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(isBranching)
-                    }
-                    .padding(.horizontal, Theme.Spacing.xs)
-                }
-                }
+                .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                onTap()
-            }
-            .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
-
+            
             // Selection indicator
             if isSelected {
-                ZStack {
-                    Circle()
-                        .fill(Theme.Colors.secondary)
-                        .frame(width: 20, height: 20)
-
-                    Image(systemName: "checkmark")
-                        .font(.caption2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                }
-                .padding(Theme.Spacing.xs)
-                .transition(.scale.combined(with: .opacity))
+                selectionIndicator
             }
         }
         .padding(.vertical, Theme.Spacing.xs)
@@ -1522,18 +1141,406 @@ struct MessageBubble: View {
             ImagePreviewView(item: imageItem)
         }
     }
-
-    private var attributedString: AttributedString {
-        do {
-            let attributed = try AttributedString(
-                markdown: message.content,
-                options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+    
+    private var avatarView: some View {
+        Circle()
+            .fill(
+                message.role == "user"
+                    ? Theme.Colors.userBubbleGradient
+                    : LinearGradient(
+                        colors: [Theme.Colors.secondary, Theme.Colors.primary],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
             )
-            return attributed
-        } catch {
-            return AttributedString(message.content)
+            .frame(width: 32, height: 32)
+            .overlay(
+                Image(systemName: message.role == "user" ? "person.fill" : "sparkles")
+                    .font(.system(size: 14))
+                    .foregroundStyle(.white)
+            )
+    }
+    
+    private var headerView: some View {
+        HStack(spacing: Theme.Spacing.xs) {
+            Text(message.role == "user" ? "You" : "Assistant")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(Theme.Colors.text)
+
+            Spacer()
+
+            Button {
+                toggleStarred()
+            } label: {
+                if isStarring {
+                    ProgressView()
+                        .scaleEffect(0.7)
+                        .tint(Theme.Colors.secondary)
+                } else {
+                    Image(systemName: isStarred ? "star.fill" : "star")
+                        .font(.caption2)
+                        .foregroundStyle(
+                            isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                }
+            }
+            .buttonStyle(.plain)
+            .disabled(isStarring)
+
+            if message.role == "assistant" {
+                Button {
+                    Task {
+                        await toggleSpeechPlayback()
+                    }
+                } label: {
+                    if isSynthesizingSpeech
+                        || audioPlayback.isLoadingMessageId == message.id
+                    {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .tint(Theme.Colors.secondary)
+                    } else {
+                        Image(
+                            systemName: audioPlayback.currentlyPlayingMessageId
+                                == message.id
+                                ? "stop.fill" : "speaker.wave.2"
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+
+            if let model = message.modelId {
+                Text(model)
+                    .font(.caption2)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
         }
     }
+    
+    @ViewBuilder
+    private var mediaAttachmentsView: some View {
+        // Display attached and inline-detected images
+        if !allImages.isEmpty {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Theme.Spacing.sm) {
+                    ForEach(allImages) { imageItem in
+                        Button {
+                            selectedImage = imageItem
+                            HapticManager.shared.selection()
+                        } label: {
+                            AsyncImage(url: imageItem.url) { phase in
+                                switch phase {
+                                case .empty:
+                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                        .fill(Theme.Colors.glassBackground)
+                                        .frame(width: 120, height: 120)
+                                        .overlay(
+                                            ProgressView()
+                                                .tint(Theme.Colors.secondary)
+                                        )
+                                case .success(let loadedImage):
+                                    loadedImage
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: 120, height: 120)
+                                        .clipShape(
+                                            RoundedRectangle(
+                                                cornerRadius: Theme.CornerRadius.sm))
+                                case .failure:
+                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                        .fill(Theme.Colors.glassBackground)
+                                        .frame(width: 120, height: 120)
+                                        .overlay(
+                                            Image(systemName: "photo")
+                                                .foregroundStyle(Theme.Colors.textTertiary)
+                                        )
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            }
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                    .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(.vertical, Theme.Spacing.xs)
+        }
+
+        // Display inline-detected videos (generated content URLs)
+        if !inlineVideoURLs.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                ForEach(inlineVideoURLs, id: \.absoluteString) { videoURL in
+                    let player = player(for: videoURL)
+                    VideoPlayer(player: player)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                        )
+                        .onAppear {
+                            cachePlayer(player, for: videoURL)
+                        }
+                        .onDisappear {
+                            player.pause()
+                            player.replaceCurrentItem(with: nil)
+                            videoPlayers.removeValue(forKey: videoURL.absoluteString)
+                        }
+                }
+            }
+            .padding(.vertical, Theme.Spacing.xs)
+        }
+
+        // Display attached documents
+        if let documents = message.documents, !documents.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                ForEach(documents, id: \.storageId) { document in
+                    Button {
+                        HapticManager.shared.tap()
+                        onDocumentTap?(document)
+                    } label: {
+                        HStack(spacing: Theme.Spacing.sm) {
+                            Image(systemName: documentIcon(for: document.fileType))
+                                .font(.title3)
+                                .foregroundStyle(Theme.Colors.secondary)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(document.fileName ?? "Document")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.Colors.text)
+                                    .lineLimit(1)
+
+                                Text(document.fileType.uppercased())
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                        }
+                        .padding(Theme.Spacing.sm)
+                        .background(Theme.Colors.glassPane)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, Theme.Spacing.xs)
+        }
+    }
+    
+    @ViewBuilder
+    private var reasoningView: some View {
+        if let reasoning = message.reasoning, !reasoning.isEmpty {
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isReasoningExpanded.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "brain.head.profile")
+                            .font(.caption)
+                        Text("Reasoning")
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                        Image(
+                            systemName: isReasoningExpanded ? "chevron.up" : "chevron.down"
+                        )
+                        .font(.caption2)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if isReasoningExpanded {
+                    Text(reasoning)
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .padding(Theme.Spacing.sm)
+                        .glassCard()
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var messageContentView: some View {
+        if isEditing {
+            VStack(spacing: Theme.Spacing.sm) {
+                TextEditor(text: $editedContent)
+                    .font(.body)
+                    .foregroundStyle(Theme.Colors.text)
+                    .padding(Theme.Spacing.md)
+                    .background(Theme.Colors.glassPane)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                    )
+                    .frame(minHeight: 100)
+
+                HStack(spacing: Theme.Spacing.sm) {
+                    Button {
+                        saveEdit()
+                    } label: {
+                        Label("Save", systemImage: "checkmark")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(isSaving)
+
+                    Button {
+                        isEditing = false
+                        editedContent = ""
+                    } label: {
+                        Label("Cancel", systemImage: "xmark")
+                            .font(.caption)
+                    }
+                    .buttonStyle(.bordered)
+
+                    Spacer()
+
+                    if isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    }
+                }
+            }
+        } else {
+            MessageContent(content: message.content)
+                .padding(Theme.Spacing.md)
+                .glassCard()
+                .contextMenu {
+                    Button {
+                        HapticManager.shared.tap()
+                        startEditing()
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+
+                    if message.role == "assistant" {
+                        Button {
+                            HapticManager.shared.tap()
+                            onRegenerate?()
+                        } label: {
+                            Label("Regenerate", systemImage: "arrow.clockwise")
+                        }
+                    }
+
+                    Button {
+                        HapticManager.shared.tap()
+                        UIPasteboard.general.string = message.content
+                        withAnimation {
+                            showCopyFeedback = true
+                        }
+                        HapticManager.shared.success()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            withAnimation {
+                                showCopyFeedback = false
+                            }
+                        }
+                    } label: {
+                        Label(
+                            showCopyFeedback ? "Copied!" : "Copy",
+                            systemImage: showCopyFeedback ? "checkmark" : "doc.on.doc")
+                    }
+
+                    Button {
+                        HapticManager.shared.tap()
+                        shareMessage()
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                    }
+                }
+        }
+    }
+    
+    @ViewBuilder
+    private var footerView: some View {
+        if message.role == "assistant" {
+            HStack(spacing: Theme.Spacing.sm) {
+                Button {
+                    rateMessage(.thumbsUp)
+                } label: {
+                    Image(
+                        systemName: userRating == .thumbsUp
+                            ? "hand.thumbsup.fill" : "hand.thumbsup"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(
+                        userRating == .thumbsUp
+                            ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    rateMessage(.thumbsDown)
+                } label: {
+                    Image(
+                        systemName: userRating == .thumbsDown
+                            ? "hand.thumbsdown.fill" : "hand.thumbsdown"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(
+                        userRating == .thumbsDown
+                            ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+
+                Button {
+                    branchConversation()
+                } label: {
+                    if isBranching {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "arrow.triangle.branch")
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isBranching)
+            }
+            .padding(.horizontal, Theme.Spacing.xs)
+        }
+    }
+    
+    private var selectionIndicator: some View {
+        ZStack {
+            Circle()
+                .fill(Theme.Colors.secondary)
+                .frame(width: 20, height: 20)
+
+            Image(systemName: "checkmark")
+                .font(.caption2)
+                .fontWeight(.bold)
+                .foregroundStyle(.white)
+        }
+        .padding(Theme.Spacing.xs)
+        .transition(.scale.combined(with: .opacity))
+    }
+
+
 
     private func toggleSpeechPlayback() async {
         guard message.role == "assistant" else { return }
@@ -2140,6 +2147,163 @@ struct TypingDot: View {
             .frame(width: 8, height: 8)
             .offset(y: isAnimating ? -4 : 2)
             .opacity(isAnimating ? 1.0 : 0.5)
+    }
+}
+
+struct MessageContent: View {
+    let content: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.md) {
+            ForEach(parseContent(content)) { segment in
+                switch segment.type {
+                case .text:
+                    if !segment.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(safeAttributedString(from: segment.content))
+                            .font(.body)
+                            .foregroundStyle(Theme.Colors.text)
+                            .textSelection(.enabled)
+                    }
+                case .code(let language):
+                    CodeBlockView(code: segment.content, language: language)
+                }
+            }
+        }
+    }
+    
+    private func safeAttributedString(from markdown: String) -> AttributedString {
+        do {
+            return try AttributedString(markdown: markdown)
+        } catch {
+            return AttributedString(markdown)
+        }
+    }
+    
+    private func parseContent(_ content: String) -> [MessageSegment] {
+        var segments: [MessageSegment] = []
+        // Match code blocks: ```language\ncode``` or ```\ncode```
+        // We use a non-greedy match for content
+        let codeBlockPattern = "```(.*?)\\n([\\s\\S]*?)```"
+        
+        guard let regex = try? NSRegularExpression(pattern: codeBlockPattern, options: []) else {
+            return [MessageSegment(type: .text, content: content)]
+        }
+        
+        let nsString = content as NSString
+        let matches = regex.matches(in: content, options: [], range: NSRange(location: 0, length: nsString.length))
+        
+        var lastIndex = 0
+        
+        for match in matches {
+            // Text before code block
+            let start = match.range.location
+            if start > lastIndex {
+                let textRange = NSRange(location: lastIndex, length: start - lastIndex)
+                let text = nsString.substring(with: textRange)
+                if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    segments.append(MessageSegment(type: .text, content: text))
+                }
+            }
+            
+            // Code block
+            let langRange = match.range(at: 1)
+            let codeRange = match.range(at: 2)
+            
+            let language = langRange.location != NSNotFound ? nsString.substring(with: langRange).trimmingCharacters(in: .whitespacesAndNewlines) : nil
+            let code = nsString.substring(with: codeRange).trimmingCharacters(in: .newlines)
+            
+            segments.append(MessageSegment(type: .code(language: language), content: code))
+            
+            lastIndex = start + match.range.length
+        }
+        
+        // Remaining text
+        if lastIndex < nsString.length {
+            let remainingRange = NSRange(location: lastIndex, length: nsString.length - lastIndex)
+            let remainingText = nsString.substring(with: remainingRange)
+            if !remainingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                segments.append(MessageSegment(type: .text, content: remainingText))
+            }
+        }
+        
+        // If no matches found, return original content as single text segment
+        if segments.isEmpty && !content.isEmpty {
+            return [MessageSegment(type: .text, content: content)]
+        }
+        
+        return segments
+    }
+}
+
+struct MessageSegment: Identifiable {
+    let id = UUID()
+    let type: SegmentType
+    let content: String
+    
+    enum SegmentType {
+        case text
+        case code(language: String?)
+    }
+}
+
+struct CodeBlockView: View {
+    let code: String
+    let language: String?
+    @State private var isCopied = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Text(language?.isEmpty == false ? language! : "code")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .textCase(.uppercase)
+                
+                Spacer()
+                
+                Button {
+                    UIPasteboard.general.string = code
+                    HapticManager.shared.success()
+                    withAnimation {
+                        isCopied = true
+                    }
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation {
+                            isCopied = false
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                        Text(isCopied ? "Copied" : "Copy")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.4))
+            
+            // Code
+            ScrollView(.horizontal, showsIndicators: true) {
+                Text(code)
+                    .font(.system(.callout, design: .monospaced))
+                    .foregroundStyle(Theme.Colors.text)
+                    .padding(12)
+                    .frame(minWidth: 100, alignment: .leading)
+            }
+            .background(Color.black.opacity(0.2))
+        }
+        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+        )
     }
 }
 
