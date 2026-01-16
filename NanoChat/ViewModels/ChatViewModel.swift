@@ -25,6 +25,12 @@ final class ChatViewModel: ObservableObject {
     @Published var followUpSuggestions: [String] = []
     @Published var isLoadingFollowUps = false
 
+    // Streaming properties
+    @Published var streamingContent: String = ""
+    @Published var streamingReasoning: String = ""
+    @Published var streamingMessageId: String?
+    @Published var streamingConversationId: String?
+
     private let api = NanoChatAPI.shared
 
     func loadConversations() async {
@@ -108,12 +114,194 @@ final class ChatViewModel: ObservableObject {
         images: [ImageAttachment]? = nil,
         documents: [DocumentAttachment]? = nil,
         imageParams: [String: AnyCodable]? = nil,
-        videoParams: [String: AnyCodable]? = nil
+        videoParams: [String: AnyCodable]? = nil,
+        reasoningEffort: String? = nil
     ) async {
         guard !message.isEmpty || images?.isEmpty == false || documents?.isEmpty == false else {
             return
         }
 
+        // Use SSE streaming for text models (no images/imageParams/videoParams)
+        let isImageOrVideoGeneration =
+            images?.isEmpty == false || imageParams?.isEmpty == false
+            || videoParams?.isEmpty == false
+
+        if !isImageOrVideoGeneration {
+            await sendMessageWithStreaming(
+                message: message,
+                modelId: modelId,
+                conversationId: conversationId,
+                assistantId: assistantId,
+                webSearchEnabled: webSearchEnabled,
+                webSearchMode: webSearchMode,
+                webSearchProvider: webSearchProvider,
+                providerId: providerId,
+                documents: documents,
+                reasoningEffort: reasoningEffort
+            )
+        } else {
+            // Fallback to polling for image/video generation
+            await sendMessageWithPolling(
+                message: message,
+                modelId: modelId,
+                conversationId: conversationId,
+                assistantId: assistantId,
+                webSearchEnabled: webSearchEnabled,
+                webSearchMode: webSearchMode,
+                webSearchProvider: webSearchProvider,
+                providerId: providerId,
+                images: images,
+                documents: documents,
+                imageParams: imageParams,
+                videoParams: videoParams
+            )
+        }
+    }
+
+    /// Send message using SSE streaming for real-time token delivery
+    private func sendMessageWithStreaming(
+        message: String,
+        modelId: String,
+        conversationId: String? = nil,
+        assistantId: String? = nil,
+        webSearchEnabled: Bool = false,
+        webSearchMode: String? = nil,
+        webSearchProvider: String? = nil,
+        providerId: String? = nil,
+        documents: [DocumentAttachment]? = nil,
+        reasoningEffort: String? = nil
+    ) async {
+        isGenerating = true
+        streamingContent = ""
+        streamingReasoning = ""
+        streamingMessageId = nil
+        streamingConversationId = nil
+
+        var receivedAnyEvent = false
+
+        do {
+            let stream = api.generateMessageStream(
+                message: message,
+                modelId: modelId,
+                conversationId: conversationId ?? currentConversation?.id,
+                assistantId: assistantId,
+                projectId: currentConversation?.projectId,
+                webSearchEnabled: webSearchEnabled,
+                webSearchMode: webSearchMode,
+                webSearchProvider: webSearchProvider,
+                providerId: providerId,
+                documents: documents,
+                reasoningEffort: reasoningEffort
+            )
+
+            for try await event in stream {
+                receivedAnyEvent = true
+
+                switch event {
+                case .messageStart(let convId, let msgId):
+                    streamingConversationId = convId
+                    streamingMessageId = msgId
+
+                    // Update current conversation if this is a new one
+                    if conversationId == nil && currentConversation?.id != convId {
+                        await loadConversations()
+                        if let conversation = conversations.first(where: { $0.id == convId }) {
+                            currentConversation = conversation
+                        }
+                    }
+
+                    // Load messages to get the user message that was created
+                    await loadMessages(conversationId: convId)
+
+                case .delta(let content, let reasoning):
+                    streamingContent += content
+                    if !reasoning.isEmpty {
+                        streamingReasoning += reasoning
+                    }
+
+                case .messageComplete(_, _, _):
+                    // Reload messages to get the final saved message from the server
+                    if let convId = streamingConversationId {
+                        await loadMessages(conversationId: convId)
+                        await loadConversations()
+                    }
+
+                    // Clear streaming state in correct order:
+                    // 1. First clear streamingMessageId so the final message appears in the list
+                    // 2. Then clear other state to hide the streaming bubble
+                    // 3. Set isGenerating false before clearing content to avoid showing TypingIndicator
+                    streamingMessageId = nil
+                    streamingConversationId = nil
+                    isGenerating = false
+                    streamingContent = ""
+                    streamingReasoning = ""
+
+                    // Haptic feedback when message is received
+                    HapticManager.shared.messageReceived()
+
+                case .error(let errorMsg):
+                    errorMessage = errorMsg
+                    streamingMessageId = nil
+                    streamingConversationId = nil
+                    isGenerating = false
+                    streamingContent = ""
+                    streamingReasoning = ""
+                }
+            }
+
+            // Only set false if not already handled by messageComplete or error
+            if isGenerating {
+                isGenerating = false
+            }
+        } catch {
+            // If streaming failed and we didn't receive any events, fall back to polling
+            if !receivedAnyEvent {
+                print("SSE streaming failed, falling back to polling: \(error.localizedDescription)")
+                streamingMessageId = nil
+                streamingConversationId = nil
+                streamingContent = ""
+                streamingReasoning = ""
+
+                await sendMessageWithPolling(
+                    message: message,
+                    modelId: modelId,
+                    conversationId: conversationId,
+                    assistantId: assistantId,
+                    webSearchEnabled: webSearchEnabled,
+                    webSearchMode: webSearchMode,
+                    webSearchProvider: webSearchProvider,
+                    providerId: providerId,
+                    images: nil,
+                    documents: documents,
+                    imageParams: nil,
+                    videoParams: nil
+                )
+            } else {
+                errorMessage = error.localizedDescription
+                streamingMessageId = nil
+                streamingConversationId = nil
+                isGenerating = false
+                streamingContent = ""
+                streamingReasoning = ""
+            }
+        }
+    }
+
+    /// Send message using polling for image/video generation
+    private func sendMessageWithPolling(
+        message: String,
+        modelId: String,
+        conversationId: String? = nil,
+        assistantId: String? = nil,
+        webSearchEnabled: Bool = false,
+        webSearchMode: String? = nil,
+        webSearchProvider: String? = nil,
+        providerId: String? = nil,
+        images: [ImageAttachment]? = nil,
+        documents: [DocumentAttachment]? = nil,
+        imageParams: [String: AnyCodable]? = nil,
+        videoParams: [String: AnyCodable]? = nil
+    ) async {
         isGenerating = true
 
         do {

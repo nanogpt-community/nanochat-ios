@@ -5,12 +5,20 @@ final class NanoChatAPI: Sendable {
     static let shared = NanoChatAPI()
     private let config = APIConfiguration.shared
     private let session: URLSession
+    private let streamingSession: URLSession
 
     private init() {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30
         configuration.timeoutIntervalForResource = 300
         self.session = URLSession(configuration: configuration)
+
+        // Dedicated session for SSE streaming with longer timeouts
+        let streamingConfig = URLSessionConfiguration.default
+        streamingConfig.timeoutIntervalForRequest = 300
+        streamingConfig.timeoutIntervalForResource = 600
+        streamingConfig.requestCachePolicy = .reloadIgnoringLocalCacheData
+        self.streamingSession = URLSession(configuration: streamingConfig)
     }
 
     // MARK: - Generic Request Methods
@@ -286,6 +294,200 @@ final class NanoChatAPI: Sendable {
         )
         return try await self.request(
             endpoint: "/api/generate-message", method: .post, body: request)
+    }
+
+    // MARK: - SSE Streaming
+
+    /// Generates a message using SSE streaming for real-time token delivery
+    /// - Returns: An AsyncThrowingStream of SSEEvent that yields events as they arrive
+    func generateMessageStream(
+        message: String,
+        modelId: String,
+        conversationId: String? = nil,
+        assistantId: String? = nil,
+        projectId: String? = nil,
+        webSearchEnabled: Bool = false,
+        webSearchMode: String? = nil,
+        webSearchProvider: String? = nil,
+        providerId: String? = nil,
+        documents: [DocumentAttachment]? = nil,
+        reasoningEffort: String? = nil
+    ) -> AsyncThrowingStream<SSEEvent, Error> {
+        let baseURL = config.baseURL
+        let apiKey = config.apiKey
+        let streamSession = streamingSession
+
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    guard let url = URL(string: "\(baseURL)/api/generate-message/stream")
+                    else {
+                        continuation.finish(throwing: APIError.invalidURL)
+                        return
+                    }
+
+                    var request = URLRequest(url: url)
+                    request.httpMethod = "POST"
+                    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+                    request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+
+                    if let apiKey = apiKey {
+                        request.setValue(
+                            "Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+                    }
+
+                    let payload = GenerateMessageStreamRequest(
+                        message: message,
+                        model_id: modelId,
+                        conversation_id: conversationId,
+                        assistant_id: assistantId,
+                        project_id: projectId,
+                        web_search_enabled: webSearchEnabled,
+                        web_search_mode: webSearchMode,
+                        web_search_provider: webSearchProvider,
+                        provider_id: providerId,
+                        documents: documents,
+                        reasoning_effort: reasoningEffort
+                    )
+                    request.httpBody = try JSONEncoder().encode(payload)
+
+                    // Use streaming session for SSE with raw bytes
+                    let (bytes, response) = try await streamSession.bytes(for: request)
+
+                    guard let httpResponse = response as? HTTPURLResponse else {
+                        continuation.finish(throwing: APIError.invalidResponse)
+                        return
+                    }
+
+                    guard 200...299 ~= httpResponse.statusCode else {
+                        continuation.finish(
+                            throwing: APIError.httpError(statusCode: httpResponse.statusCode))
+                        return
+                    }
+
+                    // Parse SSE events from raw bytes
+                    var buffer = Data()
+
+                    for try await byte in bytes {
+                        // Check for cancellation
+                        if Task.isCancelled {
+                            continuation.finish()
+                            return
+                        }
+
+                        buffer.append(byte)
+
+                        // Check if we have a complete event (ends with double newline)
+                        if buffer.count >= 2 {
+                            // Look for \n\n which marks end of an SSE event
+                            if let bufferString = String(data: buffer, encoding: .utf8),
+                               bufferString.hasSuffix("\n\n") {
+                                // Parse the event
+                                let eventString = bufferString.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if let event = parseSSEEventFromString(eventString) {
+                                    continuation.yield(event)
+
+                                    // If it's an error or complete event, we're done
+                                    if case .error = event {
+                                        continuation.finish()
+                                        return
+                                    }
+                                    if case .messageComplete = event {
+                                        continuation.finish()
+                                        return
+                                    }
+                                }
+                                // Clear buffer for next event
+                                buffer = Data()
+                            }
+                        }
+                    }
+
+                    // Process any remaining buffer
+                    if !buffer.isEmpty,
+                       let bufferString = String(data: buffer, encoding: .utf8) {
+                        let eventString = bufferString.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !eventString.isEmpty, let event = parseSSEEventFromString(eventString) {
+                            continuation.yield(event)
+                        }
+                    }
+
+                    continuation.finish()
+                } catch {
+                    if !Task.isCancelled {
+                        continuation.finish(throwing: error)
+                    } else {
+                        continuation.finish()
+                    }
+                }
+            }
+
+            continuation.onTermination = { _ in
+                task.cancel()
+            }
+        }
+    }
+
+    /// Parse a complete SSE event string into an SSEEvent
+    private func parseSSEEventFromString(_ eventString: String) -> SSEEvent? {
+        let lines = eventString.components(separatedBy: "\n")
+        var eventType: String?
+        var dataLines: [String] = []
+
+        for line in lines {
+            if line.hasPrefix("event:") {
+                eventType = String(line.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+            } else if line.hasPrefix("data:") {
+                dataLines.append(String(line.dropFirst(5)).trimmingCharacters(in: .whitespaces))
+            }
+        }
+
+        guard let type = eventType, !dataLines.isEmpty else {
+            return nil
+        }
+
+        let data = dataLines.joined(separator: "\n")
+        return parseSSEEvent(type: type, data: data)
+    }
+
+    private func parseSSEEvent(type: String, data: String) -> SSEEvent? {
+        guard let jsonData = data.data(using: .utf8) else {
+            return nil
+        }
+
+        switch type {
+        case "message_start":
+            if let decoded = try? JSONDecoder().decode(SSEMessageStartData.self, from: jsonData) {
+                return .messageStart(conversationId: decoded.conversationId, messageId: decoded.messageId)
+            }
+            return nil
+
+        case "delta":
+            if let decoded = try? JSONDecoder().decode(SSEDeltaData.self, from: jsonData) {
+                return .delta(content: decoded.content, reasoning: decoded.reasoning)
+            }
+            return nil
+
+        case "message_complete":
+            if let decoded = try? JSONDecoder().decode(SSEMessageCompleteData.self, from: jsonData) {
+                return .messageComplete(
+                    tokenCount: decoded.tokenCount,
+                    costUsd: decoded.costUsd,
+                    responseTimeMs: decoded.responseTimeMs
+                )
+            }
+            return nil
+
+        case "error":
+            if let decoded = try? JSONDecoder().decode(SSEErrorData.self, from: jsonData) {
+                return .error(message: decoded.error)
+            }
+            return nil
+
+        default:
+            return nil
+        }
     }
 
     // MARK: - Audio
@@ -1221,6 +1423,21 @@ struct GenerateMessageRequest: Codable {
     let video_params: [String: AnyCodable]?
 }
 
+/// Request body for the SSE streaming endpoint (no image_params/video_params/images as streaming doesn't support image generation)
+struct GenerateMessageStreamRequest: Codable {
+    let message: String
+    let model_id: String
+    let conversation_id: String?
+    let assistant_id: String?
+    let project_id: String?
+    let web_search_enabled: Bool
+    let web_search_mode: String?
+    let web_search_provider: String?
+    let provider_id: String?
+    let documents: [DocumentAttachment]?
+    let reasoning_effort: String?
+}
+
 struct BranchConversationRequest: Codable {
     let action: String
     let conversationId: String
@@ -1447,4 +1664,46 @@ struct GenerateFollowUpQuestionsRequest: Codable {
 struct GenerateFollowUpQuestionsResponse: Codable {
     let ok: Bool
     let suggestions: [String]
+}
+
+// MARK: - SSE Streaming Types
+
+/// Represents the different SSE events from the streaming endpoint
+enum SSEEvent {
+    case messageStart(conversationId: String, messageId: String)
+    case delta(content: String, reasoning: String)
+    case messageComplete(tokenCount: Int, costUsd: Double, responseTimeMs: Int)
+    case error(message: String)
+}
+
+/// Raw decoded types for SSE event data
+struct SSEMessageStartData: Codable {
+    let conversationId: String
+    let messageId: String
+
+    enum CodingKeys: String, CodingKey {
+        case conversationId = "conversation_id"
+        case messageId = "message_id"
+    }
+}
+
+struct SSEDeltaData: Codable {
+    let content: String
+    let reasoning: String
+}
+
+struct SSEMessageCompleteData: Codable {
+    let tokenCount: Int
+    let costUsd: Double
+    let responseTimeMs: Int
+
+    enum CodingKeys: String, CodingKey {
+        case tokenCount = "token_count"
+        case costUsd = "cost_usd"
+        case responseTimeMs = "response_time_ms"
+    }
+}
+
+struct SSEErrorData: Codable {
+    let error: String
 }

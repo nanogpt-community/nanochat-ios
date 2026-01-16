@@ -162,10 +162,17 @@ struct ChatView: View {
     }
     
     private var displayedMessages: [MessageResponse] {
-        if searchText.isEmpty {
-            return viewModel.messages
+        var messages = viewModel.messages
+
+        // Filter out the message currently being streamed to avoid duplicate bubbles
+        if let streamingId = viewModel.streamingMessageId {
+            messages = messages.filter { $0.id != streamingId }
         }
-        return viewModel.messages.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
+
+        if searchText.isEmpty {
+            return messages
+        }
+        return messages.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
     }
 
     @ViewBuilder
@@ -227,10 +234,18 @@ struct ChatView: View {
                             ))
                     }
 
-                    // Typing indicator when generating
+                    // Streaming content or typing indicator when generating
                     if viewModel.isGenerating {
-                        TypingIndicator()
-                            .id("typing-indicator")
+                        if !viewModel.streamingContent.isEmpty {
+                            StreamingMessageBubble(
+                                content: viewModel.streamingContent,
+                                reasoning: viewModel.streamingReasoning
+                            )
+                            .id("streaming-message")
+                        } else {
+                            TypingIndicator()
+                                .id("typing-indicator")
+                        }
                     }
 
                     // Follow-up questions after generation completes
@@ -253,6 +268,7 @@ struct ChatView: View {
                 .animation(Theme.Animation.smooth, value: viewModel.messages.count)
                 .animation(Theme.Animation.smooth, value: viewModel.isGenerating)
                 .animation(Theme.Animation.smooth, value: viewModel.followUpSuggestions)
+                .animation(.none, value: viewModel.streamingContent)
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
@@ -262,6 +278,13 @@ struct ChatView: View {
                 if isGenerating {
                     withAnimation {
                         proxy.scrollTo("typing-indicator", anchor: .bottom)
+                    }
+                }
+            }
+            .onChange(of: viewModel.streamingContent) { _, _ in
+                if viewModel.isGenerating && !viewModel.streamingContent.isEmpty {
+                    withAnimation {
+                        proxy.scrollTo("streaming-message", anchor: .bottom)
                     }
                 }
             }
@@ -1088,22 +1111,29 @@ struct MessageBubble: View {
     var body: some View {
         ZStack(alignment: .topTrailing) {
             HStack(alignment: .top, spacing: Theme.Spacing.sm) {
-                avatarView
-                
-                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                if message.role == "assistant" {
+                    avatarView
+                } else {
+                    Spacer(minLength: 40)
+                }
+
+                VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: Theme.Spacing.xs) {
                     headerView
                     mediaAttachmentsView
                     reasoningView
                     messageContentView
                     footerView
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    onTap()
+
+                if message.role == "assistant" {
+                    Spacer(minLength: 40)
                 }
-                .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+            .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
             
             // Selection indicator
             if isSelected {
@@ -1163,31 +1193,55 @@ struct MessageBubble: View {
     
     private var headerView: some View {
         HStack(spacing: Theme.Spacing.xs) {
-            Text(message.role == "user" ? "You" : "Assistant")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(Theme.Colors.text)
-
-            Spacer()
-
-            Button {
-                toggleStarred()
-            } label: {
-                if isStarring {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                        .tint(Theme.Colors.secondary)
-                } else {
-                    Image(systemName: isStarred ? "star.fill" : "star")
-                        .font(.caption2)
-                        .foregroundStyle(
-                            isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+            if message.role == "user" {
+                Spacer()
+                
+                Button {
+                    toggleStarred()
+                } label: {
+                    if isStarring {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .tint(Theme.Colors.secondary)
+                    } else {
+                        Image(systemName: isStarred ? "star.fill" : "star")
+                            .font(.caption2)
+                            .foregroundStyle(
+                                isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                    }
                 }
-            }
-            .buttonStyle(.plain)
-            .disabled(isStarring)
+                .buttonStyle(.plain)
+                .disabled(isStarring)
 
-            if message.role == "assistant" {
+                Text("You")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.Colors.text)
+            } else {
+                Text("Assistant")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.Colors.text)
+
+                Spacer()
+
+                Button {
+                    toggleStarred()
+                } label: {
+                    if isStarring {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .tint(Theme.Colors.secondary)
+                    } else {
+                        Image(systemName: isStarred ? "star.fill" : "star")
+                            .font(.caption2)
+                            .foregroundStyle(
+                                isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isStarring)
+
                 Button {
                     Task {
                         await toggleSpeechPlayback()
@@ -1426,7 +1480,24 @@ struct MessageBubble: View {
         } else {
             MessageContent(content: message.content)
                 .padding(Theme.Spacing.md)
-                .glassCard()
+                .background(
+                    Group {
+                        if message.role == "user" {
+                            Theme.Colors.userBubbleGradient
+                        } else {
+                            ZStack {
+                                Theme.Colors.glassBackground
+                            }
+                            .background(Theme.Colors.glassPane)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
+                                    .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                            )
+                            .shadow(color: Theme.Colors.glassShadow, radius: 10, x: 0, y: 4)
+                        }
+                    }
+                )
+                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg, style: .continuous))
                 .contextMenu {
                     Button {
                         HapticManager.shared.tap()
@@ -2150,6 +2221,141 @@ struct TypingDot: View {
     }
 }
 
+// MARK: - Streaming Message Bubble
+
+/// Displays streaming content in real-time as tokens arrive via SSE
+struct StreamingMessageBubble: View {
+    let content: String
+    let reasoning: String
+
+    @State private var isReasoningExpanded = false
+    @State private var glowOpacity: Double = 0.3
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Theme.Spacing.sm) {
+            // Avatar (matches assistant avatar)
+            ZStack {
+                Circle()
+                    .fill(Theme.Colors.secondary.opacity(glowOpacity))
+                    .frame(width: 40, height: 40)
+                    .blur(radius: 10)
+
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Theme.Colors.secondary, Theme.Colors.primary],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white)
+                    )
+            }
+
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                // Header
+                HStack(spacing: Theme.Spacing.xs) {
+                    Text("Assistant")
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    // Streaming indicator
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(Theme.Colors.primary)
+                            .frame(width: 6, height: 6)
+                            .opacity(glowOpacity)
+                        Text("Streaming")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+                }
+
+                // Reasoning section (if present)
+                if !reasoning.isEmpty {
+                    VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                        Button {
+                            withAnimation(Theme.Animation.smooth) {
+                                isReasoningExpanded.toggle()
+                            }
+                        } label: {
+                            HStack(spacing: Theme.Spacing.xs) {
+                                Image(systemName: "brain")
+                                    .font(.caption)
+                                Text("Reasoning")
+                                    .font(.caption)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Image(
+                                    systemName: isReasoningExpanded
+                                        ? "chevron.up" : "chevron.down"
+                                )
+                                .font(.caption2)
+                            }
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .padding(.horizontal, Theme.Spacing.sm)
+                            .padding(.vertical, Theme.Spacing.xs)
+                            .background(Theme.Colors.glassBackground.opacity(0.5))
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                        }
+                        .buttonStyle(.plain)
+
+                        if isReasoningExpanded {
+                            Text(reasoning)
+                                .font(.caption)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                                .padding(Theme.Spacing.sm)
+                                .background(Theme.Colors.glassBackground.opacity(0.3))
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
+                }
+
+                // Content
+                MessageContent(content: content)
+                    .padding(.horizontal, Theme.Spacing.md)
+                    .padding(.vertical, Theme.Spacing.sm)
+                    .background(Theme.Colors.glassPane)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
+                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                    )
+
+                // Blinking cursor at the end
+                HStack(spacing: 0) {
+                    Rectangle()
+                        .fill(Theme.Colors.primary)
+                        .frame(width: 2, height: 16)
+                        .opacity(glowOpacity > 0.4 ? 1 : 0)
+                }
+                .padding(.leading, Theme.Spacing.md)
+            }
+
+            Spacer()
+        }
+        .padding(.vertical, Theme.Spacing.xs)
+        .onAppear {
+            startGlowAnimation()
+        }
+    }
+
+    private func startGlowAnimation() {
+        withAnimation(
+            .easeInOut(duration: 0.6)
+                .repeatForever(autoreverses: true)
+        ) {
+            glowOpacity = 0.8
+        }
+    }
+}
+
 struct MessageContent: View {
     let content: String
     
@@ -2176,8 +2382,10 @@ struct MessageContent: View {
                         } else {
                             Text(safeAttributedString(from: segment.content))
                                 .font(.body)
+                                .lineSpacing(4)
                                 .foregroundStyle(Theme.Colors.text)
                                 .textSelection(.enabled)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
                 case .code(let language):
@@ -2189,7 +2397,9 @@ struct MessageContent: View {
     
     private func safeAttributedString(from markdown: String) -> AttributedString {
         do {
-            let attributed = try AttributedString(markdown: markdown)
+            var attributed = try AttributedString(markdown: markdown)
+            // Ensure the text color is respected even inside the attributed string
+            attributed.foregroundColor = .white
             return attributed
         } catch {
             return AttributedString(markdown)
@@ -2198,30 +2408,25 @@ struct MessageContent: View {
     
     private func parseContent(_ content: String) -> [MessageSegment] {
         var segments: [MessageSegment] = []
+        // Using omittingEmptySubsequences: false is default for components(separatedBy:)
+        // We want to handle empty lines explicitly if needed, or skip them.
         let lines = content.components(separatedBy: .newlines)
-        var currentText = ""
         var inCodeBlock = false
         var codeBlockLanguage: String?
         var codeBlockContent = ""
         
         for line in lines {
+            // Check for code block markers
             if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
                 if inCodeBlock {
-                    // End of code block
-                    if !currentText.isEmpty {
-                        segments.append(MessageSegment(type: .text, content: currentText))
-                        currentText = ""
-                    }
-                    segments.append(MessageSegment(type: .code(language: codeBlockLanguage), content: codeBlockContent.trimmingCharacters(in: .newlines)))
+                    // END of code block
+                    // Finish current code block
+                    segments.append(MessageSegment(type: .code(language: codeBlockLanguage), content: codeBlockContent))
                     codeBlockContent = ""
                     inCodeBlock = false
                     codeBlockLanguage = nil
                 } else {
-                    // Start of code block
-                    if !currentText.isEmpty {
-                        segments.append(MessageSegment(type: .text, content: currentText))
-                        currentText = ""
-                    }
+                    // START of code block
                     inCodeBlock = true
                     let trimmed = line.trimmingCharacters(in: .whitespaces)
                     if trimmed.count > 3 {
@@ -2231,24 +2436,32 @@ struct MessageContent: View {
             } else if inCodeBlock {
                 codeBlockContent += line + "\n"
             } else {
-                // Header detection (Basic H1/H2)
-                // Note: This is a simple line-based parser. It might split paragraphs if not careful.
-                // For better robustness, we should group non-header lines.
+                // REGULAR CONTENT
+                let trimmedLine = line.trimmingCharacters(in: .whitespaces)
+                
+                if trimmedLine.isEmpty {
+                    // Skip empty lines. The parent VStack's spacing (Theme.Spacing.md)
+                    // provides sufficient visual separation between paragraphs.
+                    continue
+                }
+                
+                // Header detection
                 if line.hasPrefix("# ") || line.hasPrefix("## ") {
-                    if !currentText.isEmpty {
-                        segments.append(MessageSegment(type: .text, content: currentText))
-                        currentText = ""
-                    }
                     let level = line.hasPrefix("## ") ? 2 : 1
                     segments.append(MessageSegment(type: .text, content: line, headerLevel: level))
                 } else {
-                    currentText += line + "\n"
+                    // Regular text line -> New Segment
+                    // We treat each newline-separated block as a distinct paragraph/segment.
+                    // This creates a separate Text view for each line in the source,
+                    // ensuring they are vertically stacked with spacing, fixing the "all on one line" issue.
+                    segments.append(MessageSegment(type: .text, content: line))
                 }
             }
         }
         
-        if !currentText.isEmpty {
-            segments.append(MessageSegment(type: .text, content: currentText))
+        // Handle unclosed code block (rare but possible)
+        if inCodeBlock && !codeBlockContent.isEmpty {
+             segments.append(MessageSegment(type: .code(language: codeBlockLanguage), content: codeBlockContent))
         }
         
         return segments
