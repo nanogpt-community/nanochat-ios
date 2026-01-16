@@ -1110,7 +1110,7 @@ struct MessageBubble: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            HStack(alignment: .top, spacing: Theme.Spacing.sm) {
+            HStack(alignment: .top, spacing: Theme.Spacing.md) {
                 if message.role == "assistant" {
                     avatarView
                 } else {
@@ -1126,7 +1126,7 @@ struct MessageBubble: View {
                 }
 
                 if message.role == "assistant" {
-                    Spacer(minLength: 40)
+                    Spacer(minLength: 0) // Allow full width for assistant
                 }
             }
             .contentShape(Rectangle())
@@ -1479,25 +1479,15 @@ struct MessageBubble: View {
             }
         } else {
             MessageContent(content: message.content)
-                .padding(Theme.Spacing.md)
+                .padding(Theme.Spacing.xs) // Minimal padding for alignment
                 .background(
                     Group {
                         if message.role == "user" {
                             Theme.Colors.userBubbleGradient
-                        } else {
-                            ZStack {
-                                Theme.Colors.glassBackground
-                            }
-                            .background(Theme.Colors.glassPane)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
-                                    .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
-                            )
-                            .shadow(color: Theme.Colors.glassShadow, radius: 10, x: 0, y: 4)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg, style: .continuous))
                         }
                     }
                 )
-                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg, style: .continuous))
                 .contextMenu {
                     Button {
                         HapticManager.shared.tap()
@@ -2319,14 +2309,7 @@ struct StreamingMessageBubble: View {
 
                 // Content
                 MessageContent(content: content)
-                    .padding(.horizontal, Theme.Spacing.md)
-                    .padding(.vertical, Theme.Spacing.sm)
-                    .background(Theme.Colors.glassPane)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.lg))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.CornerRadius.lg)
-                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
-                    )
+                    .padding(.vertical, Theme.Spacing.xs)
 
                 // Blinking cursor at the end
                 HStack(spacing: 0) {
@@ -2521,12 +2504,10 @@ struct CodeBlockView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.black.opacity(0.4))
+            .background(Color.black.opacity(0.3)) // Subtle header background
             
             // Code with basic syntax highlighting
             ScrollView(.horizontal, showsIndicators: true) {
-                // Use a ZStack to layer syntax highlighted text over the original text (hidden) for sizing
-                // or just construct an AttributedString
                 Text(syntaxHighlight(code))
                     .font(.system(.callout, design: .monospaced))
                     .foregroundStyle(Theme.Colors.text)
@@ -2536,10 +2517,7 @@ struct CodeBlockView: View {
             .background(Color(red: 0.1, green: 0.1, blue: 0.12)) // Darker code background
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-        )
+        // Removed overlay border for cleaner look
     }
     
     private func syntaxHighlight(_ code: String) -> AttributedString {
