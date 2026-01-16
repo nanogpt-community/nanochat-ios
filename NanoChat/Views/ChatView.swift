@@ -305,7 +305,7 @@ struct ChatView: View {
                     .frame(width: 70, height: 70)
                     .overlay(
                         Image(systemName: "sparkles")
-                            .font(.system(size: 30))
+                            .font(Theme.Typography.system(size: 30))
                             .foregroundStyle(.white)
                     )
                     .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 15, x: 0, y: 8)
@@ -313,12 +313,12 @@ struct ChatView: View {
 
             VStack(spacing: Theme.Spacing.sm) {
                 Text("Start a conversation")
-                    .font(.title3)
+                    .font(Theme.Typography.title3)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
 
                 Text("Ask me anything or try one of these")
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .foregroundStyle(Theme.Colors.textSecondary)
             }
 
@@ -399,12 +399,12 @@ struct ChatView: View {
                         multiSelectViewModel.exitEditMode()
                     } label: {
                         Text("Cancel")
-                            .font(.subheadline)
+                            .font(Theme.Typography.subheadline)
                     }
                     .foregroundStyle(Theme.Colors.textSecondary)
 
                     Text(multiSelectViewModel.selectionDescription)
-                        .font(.caption)
+                        .font(Theme.Typography.caption)
                         .foregroundStyle(Theme.Colors.textTertiary)
                 }
             } else {
@@ -464,10 +464,10 @@ struct ChatView: View {
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: "person.2.fill")
-                    .font(.system(size: 14))
+                    .font(Theme.Typography.system(size: 14))
                     .foregroundStyle(Theme.Colors.secondary)
                 Text(assistant.name)
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .fontWeight(.medium)
                     .foregroundStyle(Theme.Colors.text)
                     .lineLimit(1)
@@ -517,17 +517,17 @@ struct ChatView: View {
                             ZStack {
                                 Circle()
                                     .fill(Theme.Colors.glassBackground)
-                                    .frame(width: 24, height: 24)
+                                    .frame(width: 24 * Theme.imageScaleFactor, height: 24 * Theme.imageScaleFactor)
                                     .overlay(
                                         Circle()
                                             .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                                     )
                                 Image(systemName: "slider.horizontal.3")
-                                    .font(.system(size: 12))
+                                    .font(Theme.Typography.system(size: 12))
                                     .foregroundStyle(Theme.Colors.secondary)
                             }
                             Text("Image Settings")
-                                .font(.subheadline)
+                                .font(Theme.Typography.subheadline)
                                 .foregroundStyle(Theme.Colors.text)
                         }
                         .padding(.horizontal, Theme.Spacing.md)
@@ -552,17 +552,17 @@ struct ChatView: View {
                             ZStack {
                                 Circle()
                                     .fill(Theme.Colors.glassBackground)
-                                    .frame(width: 24, height: 24)
+                                    .frame(width: 24 * Theme.imageScaleFactor, height: 24 * Theme.imageScaleFactor)
                                     .overlay(
                                         Circle()
                                             .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                                     )
                                 Image(systemName: "slider.horizontal.3")
-                                    .font(.system(size: 12))
+                                    .font(Theme.Typography.system(size: 12))
                                     .foregroundStyle(Theme.Colors.secondary)
                             }
                             Text("Video Settings")
-                                .font(.subheadline)
+                                .font(Theme.Typography.subheadline)
                                 .foregroundStyle(Theme.Colors.text)
                         }
                         .padding(.horizontal, Theme.Spacing.md)
@@ -603,7 +603,7 @@ struct ChatView: View {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 80, height: 80)
+                                        .frame(width: 80 * Theme.imageScaleFactor, height: 80 * Theme.imageScaleFactor)
                                         .clipShape(
                                             RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                         )
@@ -629,14 +629,14 @@ struct ChatView: View {
                             ZStack(alignment: .topTrailing) {
                                 VStack(spacing: 4) {
                                     Image(systemName: "doc.fill")
-                                        .font(.title2)
+                                        .font(Theme.Typography.title2)
                                         .foregroundStyle(Theme.Colors.secondary)
                                     Text(documentURL.lastPathComponent)
-                                        .font(.caption2)
+                                        .font(Theme.Typography.caption2)
                                         .foregroundStyle(Theme.Colors.textSecondary)
                                         .lineLimit(1)
                                 }
-                                .frame(width: 80, height: 80)
+                                .frame(width: 80 * Theme.imageScaleFactor, height: 80 * Theme.imageScaleFactor)
                                 .padding(Theme.Spacing.sm)
                                 .background(.ultraThinMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
@@ -658,7 +658,7 @@ struct ChatView: View {
                     }
                     .padding(.horizontal, Theme.Spacing.lg)
                 }
-                .frame(height: 100)
+                .frame(height: 100 * Theme.imageScaleFactor)
             }
 
             // Message Input (existing)
@@ -714,24 +714,24 @@ struct ChatView: View {
                 ZStack {
                     Circle()
                         .fill(Theme.Colors.glassBackground)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 24 * Theme.imageScaleFactor, height: 24 * Theme.imageScaleFactor)
                         .overlay(
                             Circle()
                                 .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                         )
 
                     Image(systemName: "cpu")
-                        .font(.system(size: 12))
+                        .font(Theme.Typography.system(size: 12))
                         .foregroundStyle(Theme.Colors.secondary)
                 }
 
                 Text(model.name ?? model.modelId)
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .foregroundStyle(Theme.Colors.text)
                     .lineLimit(1)
 
                 Image(systemName: "chevron.down")
-                    .font(.caption2)
+                    .font(Theme.Typography.caption2)
                     .foregroundStyle(Theme.Colors.textTertiary)
             }
             .padding(.horizontal, Theme.Spacing.md)
@@ -758,7 +758,7 @@ struct ChatView: View {
     private func modelSelectorLabel(model: UserModel) -> some View {
         HStack {
             Text(model.name ?? model.modelId)
-                .font(.subheadline)
+                .font(Theme.Typography.subheadline)
                 .foregroundStyle(Theme.Colors.text)
 
             Spacer()
@@ -766,7 +766,7 @@ struct ChatView: View {
             ModelCapabilityBadges(
                 capabilities: model.capabilities, subscriptionIncluded: model.subscriptionIncluded
             )
-            .font(.caption)
+            .font(Theme.Typography.caption)
 
             if modelManager.selectedModel?.id == model.id {
                 Image(systemName: "checkmark")
@@ -796,7 +796,7 @@ struct ChatView: View {
                             .tint(Theme.Colors.textTertiary)
                     } else {
                         Image(systemName: "arrow.up")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(Theme.Typography.system(size: 18, weight: .semibold))
                             .foregroundStyle(Theme.Colors.textTertiary)
                     }
                 } else {
@@ -806,7 +806,7 @@ struct ChatView: View {
                         .shadow(color: Theme.Colors.primary.opacity(0.4), radius: 8, x: 0, y: 4)
 
                     Image(systemName: "arrow.up")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(Theme.Typography.system(size: 18, weight: .semibold))
                         .foregroundStyle(.white)
                 }
             }
@@ -830,24 +830,24 @@ struct ChatView: View {
                 ZStack {
                     Circle()
                         .fill(Theme.Colors.glassBackground)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 24 * Theme.imageScaleFactor, height: 24 * Theme.imageScaleFactor)
                         .overlay(
                             Circle()
                                 .stroke(Theme.Colors.glassBorder, lineWidth: 1)
                         )
 
                     Image(systemName: "server.rack")
-                        .font(.system(size: 12))
+                        .font(Theme.Typography.system(size: 12))
                         .foregroundStyle(Theme.Colors.primary)
                 }
 
                 Text(viewModel.selectedProviderId ?? "Auto")
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .foregroundStyle(Theme.Colors.text)
                     .lineLimit(1)
 
                 Image(systemName: "chevron.down")
-                    .font(.caption2)
+                    .font(Theme.Typography.caption2)
                     .foregroundStyle(Theme.Colors.textTertiary)
             }
             .padding(.horizontal, Theme.Spacing.md)
@@ -993,7 +993,7 @@ struct ChatView: View {
                 batchCopyMessages()
             } label: {
                 Label("Copy", systemImage: "doc.on.doc")
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
             }
             .buttonStyle(.bordered)
             .tint(Theme.Colors.primary)
@@ -1002,7 +1002,7 @@ struct ChatView: View {
                 batchExportMessages()
             } label: {
                 Label("Export", systemImage: "square.and.arrow.up")
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
             }
             .buttonStyle(.bordered)
             .tint(Theme.Colors.secondary)
@@ -1013,7 +1013,7 @@ struct ChatView: View {
                 }
             } label: {
                 Label("Star", systemImage: "star.fill")
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
             }
             .buttonStyle(.bordered)
             .tint(Theme.Colors.warning)
@@ -1183,10 +1183,10 @@ struct MessageBubble: View {
                         endPoint: .bottomTrailing
                     )
             )
-            .frame(width: 32, height: 32)
+            .frame(width: 32 * Theme.imageScaleFactor, height: 32 * Theme.imageScaleFactor)
             .overlay(
                 Image(systemName: message.role == "user" ? "person.fill" : "sparkles")
-                    .font(.system(size: 14))
+                    .font(Theme.Typography.system(size: 14))
                     .foregroundStyle(.white)
             )
     }
@@ -1205,7 +1205,7 @@ struct MessageBubble: View {
                             .tint(Theme.Colors.secondary)
                     } else {
                         Image(systemName: isStarred ? "star.fill" : "star")
-                            .font(.caption2)
+                            .font(Theme.Typography.caption2)
                             .foregroundStyle(
                                 isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                     }
@@ -1214,12 +1214,12 @@ struct MessageBubble: View {
                 .disabled(isStarring)
 
                 Text("You")
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
             } else {
                 Text("Assistant")
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
 
@@ -1234,7 +1234,7 @@ struct MessageBubble: View {
                             .tint(Theme.Colors.secondary)
                     } else {
                         Image(systemName: isStarred ? "star.fill" : "star")
-                            .font(.caption2)
+                            .font(Theme.Typography.caption2)
                             .foregroundStyle(
                                 isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                     }
@@ -1259,7 +1259,7 @@ struct MessageBubble: View {
                                 == message.id
                                 ? "stop.fill" : "speaker.wave.2"
                         )
-                        .font(.caption2)
+                        .font(Theme.Typography.caption2)
                         .foregroundStyle(Theme.Colors.textTertiary)
                     }
                 }
@@ -1268,7 +1268,7 @@ struct MessageBubble: View {
 
             if let model = message.modelId {
                 Text(model)
-                    .font(.caption2)
+                    .font(Theme.Typography.caption2)
                     .foregroundStyle(Theme.Colors.textTertiary)
             }
         }
@@ -1290,7 +1290,7 @@ struct MessageBubble: View {
                                 case .empty:
                                     RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                         .fill(Theme.Colors.glassBackground)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 120 * Theme.imageScaleFactor, height: 120 * Theme.imageScaleFactor)
                                         .overlay(
                                             ProgressView()
                                                 .tint(Theme.Colors.secondary)
@@ -1299,14 +1299,14 @@ struct MessageBubble: View {
                                     loadedImage
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 120 * Theme.imageScaleFactor, height: 120 * Theme.imageScaleFactor)
                                         .clipShape(
                                             RoundedRectangle(
                                                 cornerRadius: Theme.CornerRadius.sm))
                                 case .failure:
                                     RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                         .fill(Theme.Colors.glassBackground)
-                                        .frame(width: 120, height: 120)
+                                        .frame(width: 120 * Theme.imageScaleFactor, height: 120 * Theme.imageScaleFactor)
                                         .overlay(
                                             Image(systemName: "photo")
                                                 .foregroundStyle(Theme.Colors.textTertiary)
@@ -1334,7 +1334,7 @@ struct MessageBubble: View {
                     let player = player(for: videoURL)
                     VideoPlayer(player: player)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 220)
+                        .frame(height: 220 * Theme.imageScaleFactor)
                         .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                         .overlay(
                             RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
@@ -1363,24 +1363,24 @@ struct MessageBubble: View {
                     } label: {
                         HStack(spacing: Theme.Spacing.sm) {
                             Image(systemName: documentIcon(for: document.fileType))
-                                .font(.title3)
+                                .font(Theme.Typography.title3)
                                 .foregroundStyle(Theme.Colors.secondary)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(document.fileName ?? "Document")
-                                    .font(.caption)
+                                    .font(Theme.Typography.caption)
                                     .foregroundStyle(Theme.Colors.text)
                                     .lineLimit(1)
 
                                 Text(document.fileType.uppercased())
-                                    .font(.caption2)
+                                    .font(Theme.Typography.caption2)
                                     .foregroundStyle(Theme.Colors.textTertiary)
                             }
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
-                                .font(.caption2)
+                                .font(Theme.Typography.caption2)
                                 .foregroundStyle(Theme.Colors.textTertiary)
                         }
                         .padding(Theme.Spacing.sm)
@@ -1409,14 +1409,14 @@ struct MessageBubble: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "brain.head.profile")
-                            .font(.caption)
+                            .font(Theme.Typography.caption)
                         Text("Reasoning")
-                            .font(.caption)
+                            .font(Theme.Typography.caption)
                             .foregroundStyle(Theme.Colors.textSecondary)
                         Image(
                             systemName: isReasoningExpanded ? "chevron.up" : "chevron.down"
                         )
-                        .font(.caption2)
+                        .font(Theme.Typography.caption2)
                         .foregroundStyle(Theme.Colors.textTertiary)
                     }
                 }
@@ -1424,7 +1424,7 @@ struct MessageBubble: View {
 
                 if isReasoningExpanded {
                     Text(reasoning)
-                        .font(.caption)
+                        .font(Theme.Typography.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .padding(Theme.Spacing.sm)
                         .glassCard()
@@ -1439,7 +1439,7 @@ struct MessageBubble: View {
         if isEditing {
             VStack(spacing: Theme.Spacing.sm) {
                 TextEditor(text: $editedContent)
-                    .font(.body)
+                    .font(Theme.Typography.body)
                     .foregroundStyle(Theme.Colors.text)
                     .padding(Theme.Spacing.md)
                     .background(Theme.Colors.glassPane)
@@ -1455,7 +1455,7 @@ struct MessageBubble: View {
                         saveEdit()
                     } label: {
                         Label("Save", systemImage: "checkmark")
-                            .font(.caption)
+                            .font(Theme.Typography.caption)
                     }
                     .buttonStyle(.bordered)
                     .disabled(isSaving)
@@ -1465,7 +1465,7 @@ struct MessageBubble: View {
                         editedContent = ""
                     } label: {
                         Label("Cancel", systemImage: "xmark")
-                            .font(.caption)
+                            .font(Theme.Typography.caption)
                     }
                     .buttonStyle(.bordered)
 
@@ -1544,7 +1544,7 @@ struct MessageBubble: View {
                         systemName: userRating == .thumbsUp
                             ? "hand.thumbsup.fill" : "hand.thumbsup"
                     )
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
                     .foregroundStyle(
                         userRating == .thumbsUp
                             ? Theme.Colors.secondary : Theme.Colors.textTertiary)
@@ -1558,7 +1558,7 @@ struct MessageBubble: View {
                         systemName: userRating == .thumbsDown
                             ? "hand.thumbsdown.fill" : "hand.thumbsdown"
                     )
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
                     .foregroundStyle(
                         userRating == .thumbsDown
                             ? Theme.Colors.secondary : Theme.Colors.textTertiary)
@@ -1575,7 +1575,7 @@ struct MessageBubble: View {
                             .scaleEffect(0.8)
                     } else {
                         Image(systemName: "arrow.triangle.branch")
-                            .font(.caption)
+                            .font(Theme.Typography.caption)
                             .foregroundStyle(Theme.Colors.textTertiary)
                     }
                 }
@@ -1593,7 +1593,7 @@ struct MessageBubble: View {
                 .frame(width: 20, height: 20)
 
             Image(systemName: "checkmark")
-                .font(.caption2)
+                .font(Theme.Typography.caption2)
                 .fontWeight(.bold)
                 .foregroundStyle(.white)
         }
@@ -1911,11 +1911,11 @@ struct VoiceRecorderSheet: View {
             VStack(spacing: Theme.Spacing.lg) {
                 VStack(spacing: Theme.Spacing.xs) {
                     Text("Voice Input")
-                        .font(.title3)
+                        .font(Theme.Typography.title3)
                         .foregroundStyle(Theme.Colors.text)
 
                     Text(hasPermission ? formattedTime : "Microphone access required")
-                        .font(.subheadline)
+                        .font(Theme.Typography.subheadline)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
 
@@ -1932,7 +1932,7 @@ struct VoiceRecorderSheet: View {
                             .frame(width: 72, height: 72)
 
                         Image(systemName: recorder.isRecording ? "stop.fill" : "mic.fill")
-                            .font(.system(size: 28, weight: .semibold))
+                            .font(Theme.Typography.system(size: 28, weight: .semibold))
                             .foregroundStyle(.white)
                     }
                 }
@@ -2054,11 +2054,11 @@ struct SuggestionChip: View {
         }) {
             HStack(spacing: Theme.Spacing.sm) {
                 Image(systemName: icon)
-                    .font(.system(size: 14))
+                    .font(Theme.Typography.system(size: 14))
                     .foregroundStyle(color)
 
                 Text(text)
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .foregroundStyle(Theme.Colors.text)
                     .lineLimit(1)
                     .fixedSize(horizontal: true, vertical: false)
@@ -2124,14 +2124,14 @@ struct TypingIndicator: View {
                     .frame(width: 32, height: 32)
                     .overlay(
                         Image(systemName: "sparkles")
-                            .font(.system(size: 14))
+                            .font(Theme.Typography.system(size: 14))
                             .foregroundStyle(.white)
                     )
             }
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 Text("Assistant")
-                    .font(.subheadline)
+                    .font(Theme.Typography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
 
@@ -2241,7 +2241,7 @@ struct StreamingMessageBubble: View {
                     .frame(width: 32, height: 32)
                     .overlay(
                         Image(systemName: "sparkles")
-                            .font(.system(size: 14))
+                            .font(Theme.Typography.system(size: 14))
                             .foregroundStyle(.white)
                     )
             }
@@ -2250,7 +2250,7 @@ struct StreamingMessageBubble: View {
                 // Header
                 HStack(spacing: Theme.Spacing.xs) {
                     Text("Assistant")
-                        .font(.subheadline)
+                        .font(Theme.Typography.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(Theme.Colors.text)
 
@@ -2261,7 +2261,7 @@ struct StreamingMessageBubble: View {
                             .frame(width: 6, height: 6)
                             .opacity(glowOpacity)
                         Text("Streaming")
-                            .font(.caption2)
+                            .font(Theme.Typography.caption2)
                             .foregroundStyle(Theme.Colors.textSecondary)
                     }
                 }
@@ -2276,16 +2276,16 @@ struct StreamingMessageBubble: View {
                         } label: {
                             HStack(spacing: Theme.Spacing.xs) {
                                 Image(systemName: "brain")
-                                    .font(.caption)
+                                    .font(Theme.Typography.caption)
                                 Text("Reasoning")
-                                    .font(.caption)
+                                    .font(Theme.Typography.caption)
                                     .fontWeight(.medium)
                                 Spacer()
                                 Image(
                                     systemName: isReasoningExpanded
                                         ? "chevron.up" : "chevron.down"
                                 )
-                                .font(.caption2)
+                                .font(Theme.Typography.caption2)
                             }
                             .foregroundStyle(Theme.Colors.textSecondary)
                             .padding(.horizontal, Theme.Spacing.sm)
@@ -2297,7 +2297,7 @@ struct StreamingMessageBubble: View {
 
                         if isReasoningExpanded {
                             Text(reasoning)
-                                .font(.caption)
+                                .font(Theme.Typography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                                 .padding(Theme.Spacing.sm)
                                 .background(Theme.Colors.glassBackground.opacity(0.3))
@@ -2364,7 +2364,7 @@ struct MessageContent: View {
                                 )
                         } else {
                             Text(safeAttributedString(from: segment.content))
-                                .font(.body)
+                                .font(Theme.Typography.body)
                                 .lineSpacing(4)
                                 .foregroundStyle(Theme.Colors.text)
                                 .textSelection(.enabled)
@@ -2473,7 +2473,7 @@ struct CodeBlockView: View {
             // Header
             HStack {
                 Text(language?.isEmpty == false ? language! : "code")
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .textCase(.uppercase)
@@ -2497,7 +2497,7 @@ struct CodeBlockView: View {
                         Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
                         Text(isCopied ? "Copied" : "Copy")
                     }
-                    .font(.caption)
+                    .font(Theme.Typography.caption)
                     .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 .buttonStyle(.plain)
@@ -2509,7 +2509,7 @@ struct CodeBlockView: View {
             // Code with basic syntax highlighting
             ScrollView(.horizontal, showsIndicators: true) {
                 Text(syntaxHighlight(code))
-                    .font(.system(.callout, design: .monospaced))
+                    .font(Theme.Typography.system(size: 16, design: .monospaced))
                     .foregroundStyle(Theme.Colors.text)
                     .padding(12)
                     .frame(minWidth: 100, alignment: .leading)

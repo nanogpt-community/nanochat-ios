@@ -44,10 +44,10 @@ struct ImagePreviewView: View {
                     case .failure:
                         VStack(spacing: Theme.Spacing.sm) {
                             Image(systemName: "photo")
-                                .font(.system(size: 36))
+                                .font(Theme.Typography.system(size: 36))
                                 .foregroundStyle(Theme.Colors.textTertiary)
                             Text("Unable to load image")
-                                .font(.caption)
+                                .font(Theme.Typography.caption)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -81,11 +81,11 @@ struct ImagePreviewView: View {
                 // File name badge
                 HStack(spacing: Theme.Spacing.xs) {
                     Image(systemName: "photo")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(Theme.Typography.system(size: 12, weight: .semibold))
                         .foregroundStyle(Theme.Colors.accent)
 
                     Text(item.fileName.isEmpty ? "image" : item.fileName)
-                        .font(.subheadline)
+                        .font(Theme.Typography.subheadline)
                         .fontWeight(.semibold)
                         .foregroundStyle(Theme.Colors.text)
                         .lineLimit(1)
@@ -110,7 +110,7 @@ struct ImagePreviewView: View {
                             .glassEffect(in: .circle)
                     } else {
                         Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(Theme.Typography.system(size: 16, weight: .semibold))
                             .foregroundStyle(Theme.Colors.text)
                             .frame(width: 36, height: 36)
                             .glassEffect(in: .circle)
@@ -124,7 +124,7 @@ struct ImagePreviewView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(Theme.Typography.system(size: 14, weight: .semibold))
                         .foregroundStyle(Theme.Colors.text)
                         .frame(width: 36, height: 36)
                         .glassEffect(in: .circle)

@@ -1,5 +1,16 @@
 import SwiftUI
 
+#if os(macOS)
+private let scaleFactor: CGFloat = 1.5
+#else
+private let scaleFactor: CGFloat = {
+    if ProcessInfo.processInfo.isiOSAppOnMac {
+        return 1.5
+    }
+    return 1.0
+}()
+#endif
+
 struct Theme {
     // MARK: - Colors
     struct Colors {
@@ -52,15 +63,33 @@ struct Theme {
         static let border = glassBorder
     }
     
+    #if os(macOS)
+    static let imageScaleFactor: CGFloat = 1.5
+    #else
+    static let imageScaleFactor: CGFloat = {
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            return 1.5
+        }
+        return 1.0
+    }()
+    #endif
+    
     typealias Radius = CornerRadius
 
     // MARK: - Typography
     struct Typography {
-        static let title = Font.system(size: 24, weight: .bold, design: .rounded)
-        static let headline = Font.system(size: 18, weight: .semibold, design: .rounded)
-        static let body = Font.system(size: 16, weight: .regular, design: .rounded)
-        static let caption = Font.system(size: 14, weight: .medium, design: .rounded)
-        static let caption2 = Font.system(size: 12, weight: .regular, design: .rounded)
+        static let title = Font.system(size: 24 * scaleFactor, weight: .bold, design: .rounded)
+        static let title2 = Font.system(size: 22 * scaleFactor, weight: .semibold, design: .rounded)
+        static let title3 = Font.system(size: 20 * scaleFactor, weight: .semibold, design: .rounded)
+        static let headline = Font.system(size: 18 * scaleFactor, weight: .semibold, design: .rounded)
+        static let subheadline = Font.system(size: 15 * scaleFactor, weight: .regular, design: .rounded)
+        static let body = Font.system(size: 16 * scaleFactor, weight: .regular, design: .rounded)
+        static let caption = Font.system(size: 14 * scaleFactor, weight: .medium, design: .rounded)
+        static let caption2 = Font.system(size: 12 * scaleFactor, weight: .regular, design: .rounded)
+        
+        static func system(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+            return Font.system(size: size * scaleFactor, weight: weight, design: design)
+        }
     }
 
     // MARK: - Gradients
@@ -106,20 +135,20 @@ struct Theme {
 
     // MARK: - Spacing
     struct Spacing {
-        static let xs: CGFloat = 4
-        static let sm: CGFloat = 8
-        static let md: CGFloat = 12
-        static let lg: CGFloat = 16
-        static let xl: CGFloat = 24
-        static let xxl: CGFloat = 32
+        static let xs: CGFloat = 4 * scaleFactor
+        static let sm: CGFloat = 8 * scaleFactor
+        static let md: CGFloat = 12 * scaleFactor
+        static let lg: CGFloat = 16 * scaleFactor
+        static let xl: CGFloat = 24 * scaleFactor
+        static let xxl: CGFloat = 32 * scaleFactor
     }
 
     // MARK: - Corner Radius
     struct CornerRadius {
-        static let sm: CGFloat = 8
-        static let md: CGFloat = 12
-        static let lg: CGFloat = 16
-        static let xl: CGFloat = 24
+        static let sm: CGFloat = 8 * scaleFactor
+        static let md: CGFloat = 12 * scaleFactor
+        static let lg: CGFloat = 16 * scaleFactor
+        static let xl: CGFloat = 24 * scaleFactor
         static let full: CGFloat = 9999
     }
     
