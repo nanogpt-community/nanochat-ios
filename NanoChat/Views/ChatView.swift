@@ -1479,7 +1479,7 @@ struct MessageBubble: View {
             }
         } else {
             MessageContent(content: message.content)
-                .padding(Theme.Spacing.xs) // Minimal padding for alignment
+                .padding(message.role == "user" ? Theme.Spacing.md : Theme.Spacing.xs)
                 .background(
                     Group {
                         if message.role == "user" {
