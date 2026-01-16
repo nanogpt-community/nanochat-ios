@@ -2159,10 +2159,26 @@ struct MessageContent: View {
                 switch segment.type {
                 case .text:
                     if !segment.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(safeAttributedString(from: segment.content))
-                            .font(.body)
-                            .foregroundStyle(Theme.Colors.text)
-                            .textSelection(.enabled)
+                        // Apply custom header styling for H1 and H2
+                        if let headerLevel = segment.headerLevel {
+                            Text(segment.content.replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespaces))
+                                .font(headerLevel == 1 ? .title2 : .title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Theme.Colors.text)
+                                .padding(.top, 4)
+                                .padding(.bottom, 2)
+                                .overlay(
+                                    Rectangle()
+                                        .fill(Theme.Colors.glassBorder)
+                                        .frame(height: 1),
+                                    alignment: .bottom
+                                )
+                        } else {
+                            Text(safeAttributedString(from: segment.content))
+                                .font(.body)
+                                .foregroundStyle(Theme.Colors.text)
+                                .textSelection(.enabled)
+                        }
                     }
                 case .code(let language):
                     CodeBlockView(code: segment.content, language: language)
@@ -2173,7 +2189,8 @@ struct MessageContent: View {
     
     private func safeAttributedString(from markdown: String) -> AttributedString {
         do {
-            return try AttributedString(markdown: markdown)
+            let attributed = try AttributedString(markdown: markdown)
+            return attributed
         } catch {
             return AttributedString(markdown)
         }
@@ -2181,54 +2198,57 @@ struct MessageContent: View {
     
     private func parseContent(_ content: String) -> [MessageSegment] {
         var segments: [MessageSegment] = []
-        // Match code blocks: ```language\ncode``` or ```\ncode```
-        // We use a non-greedy match for content
-        let codeBlockPattern = "```(.*?)\\n([\\s\\S]*?)```"
+        let lines = content.components(separatedBy: .newlines)
+        var currentText = ""
+        var inCodeBlock = false
+        var codeBlockLanguage: String?
+        var codeBlockContent = ""
         
-        guard let regex = try? NSRegularExpression(pattern: codeBlockPattern, options: []) else {
-            return [MessageSegment(type: .text, content: content)]
-        }
-        
-        let nsString = content as NSString
-        let matches = regex.matches(in: content, options: [], range: NSRange(location: 0, length: nsString.length))
-        
-        var lastIndex = 0
-        
-        for match in matches {
-            // Text before code block
-            let start = match.range.location
-            if start > lastIndex {
-                let textRange = NSRange(location: lastIndex, length: start - lastIndex)
-                let text = nsString.substring(with: textRange)
-                if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    segments.append(MessageSegment(type: .text, content: text))
+        for line in lines {
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
+                if inCodeBlock {
+                    // End of code block
+                    if !currentText.isEmpty {
+                        segments.append(MessageSegment(type: .text, content: currentText))
+                        currentText = ""
+                    }
+                    segments.append(MessageSegment(type: .code(language: codeBlockLanguage), content: codeBlockContent.trimmingCharacters(in: .newlines)))
+                    codeBlockContent = ""
+                    inCodeBlock = false
+                    codeBlockLanguage = nil
+                } else {
+                    // Start of code block
+                    if !currentText.isEmpty {
+                        segments.append(MessageSegment(type: .text, content: currentText))
+                        currentText = ""
+                    }
+                    inCodeBlock = true
+                    let trimmed = line.trimmingCharacters(in: .whitespaces)
+                    if trimmed.count > 3 {
+                        codeBlockLanguage = String(trimmed.dropFirst(3))
+                    }
+                }
+            } else if inCodeBlock {
+                codeBlockContent += line + "\n"
+            } else {
+                // Header detection (Basic H1/H2)
+                // Note: This is a simple line-based parser. It might split paragraphs if not careful.
+                // For better robustness, we should group non-header lines.
+                if line.hasPrefix("# ") || line.hasPrefix("## ") {
+                    if !currentText.isEmpty {
+                        segments.append(MessageSegment(type: .text, content: currentText))
+                        currentText = ""
+                    }
+                    let level = line.hasPrefix("## ") ? 2 : 1
+                    segments.append(MessageSegment(type: .text, content: line, headerLevel: level))
+                } else {
+                    currentText += line + "\n"
                 }
             }
-            
-            // Code block
-            let langRange = match.range(at: 1)
-            let codeRange = match.range(at: 2)
-            
-            let language = langRange.location != NSNotFound ? nsString.substring(with: langRange).trimmingCharacters(in: .whitespacesAndNewlines) : nil
-            let code = nsString.substring(with: codeRange).trimmingCharacters(in: .newlines)
-            
-            segments.append(MessageSegment(type: .code(language: language), content: code))
-            
-            lastIndex = start + match.range.length
         }
         
-        // Remaining text
-        if lastIndex < nsString.length {
-            let remainingRange = NSRange(location: lastIndex, length: nsString.length - lastIndex)
-            let remainingText = nsString.substring(with: remainingRange)
-            if !remainingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                segments.append(MessageSegment(type: .text, content: remainingText))
-            }
-        }
-        
-        // If no matches found, return original content as single text segment
-        if segments.isEmpty && !content.isEmpty {
-            return [MessageSegment(type: .text, content: content)]
+        if !currentText.isEmpty {
+            segments.append(MessageSegment(type: .text, content: currentText))
         }
         
         return segments
@@ -2239,6 +2259,7 @@ struct MessageSegment: Identifiable {
     let id = UUID()
     let type: SegmentType
     let content: String
+    var headerLevel: Int? = nil
     
     enum SegmentType {
         case text
@@ -2289,21 +2310,75 @@ struct CodeBlockView: View {
             .padding(.vertical, 8)
             .background(Color.black.opacity(0.4))
             
-            // Code
+            // Code with basic syntax highlighting
             ScrollView(.horizontal, showsIndicators: true) {
-                Text(code)
+                // Use a ZStack to layer syntax highlighted text over the original text (hidden) for sizing
+                // or just construct an AttributedString
+                Text(syntaxHighlight(code))
                     .font(.system(.callout, design: .monospaced))
                     .foregroundStyle(Theme.Colors.text)
                     .padding(12)
                     .frame(minWidth: 100, alignment: .leading)
             }
-            .background(Color.black.opacity(0.2))
+            .background(Color(red: 0.1, green: 0.1, blue: 0.12)) // Darker code background
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
                 .stroke(Theme.Colors.glassBorder, lineWidth: 1)
         )
+    }
+    
+    private func syntaxHighlight(_ code: String) -> AttributedString {
+        var attributed = AttributedString(code)
+        attributed.foregroundColor = .white
+        
+        // Basic keywords
+        let keywords = ["import", "from", "class", "struct", "func", "var", "let", "if", "else", "return", "true", "false", "nil", "const", "await", "async", "try", "catch", "case", "switch", "default", "public", "private", "static", "void", "int", "float", "double", "string", "bool", "new"]
+        
+        // Helper to convert NSRange to AttributedString range
+        func applyColor(_ color: Color, to matches: [NSTextCheckingResult]) {
+            for match in matches {
+                let range = match.range
+                if let stringRange = Range(range, in: code) {
+                    let startOffset = code.distance(from: code.startIndex, to: stringRange.lowerBound)
+                    let length = code.distance(from: stringRange.lowerBound, to: stringRange.upperBound)
+                    
+                    let startIndex = attributed.index(attributed.startIndex, offsetByCharacters: startOffset)
+                    let endIndex = attributed.index(startIndex, offsetByCharacters: length)
+                    
+                    attributed[startIndex..<endIndex].foregroundColor = color
+                }
+            }
+        }
+        
+        // 1. Comments
+        if let commentRegex = try? NSRegularExpression(pattern: "//.*") {
+            let matches = commentRegex.matches(in: code, range: NSRange(location: 0, length: code.utf16.count))
+            applyColor(.gray, to: matches)
+        }
+        
+        // 2. Keywords
+        for keyword in keywords {
+            if let regex = try? NSRegularExpression(pattern: "\\b\(keyword)\\b") {
+                let matches = regex.matches(in: code, range: NSRange(location: 0, length: code.utf16.count))
+                applyColor(Color(red: 1.0, green: 0.4, blue: 0.6), to: matches)
+            }
+        }
+        
+        // 3. Strings
+        if let stringRegex = try? NSRegularExpression(pattern: "\"[^\"]*\"|'[^']*'|`[^`]*`") {
+            let matches = stringRegex.matches(in: code, range: NSRange(location: 0, length: code.utf16.count))
+            applyColor(Color(red: 0.6, green: 0.8, blue: 0.4), to: matches)
+        }
+        
+        // 4. Function calls
+        if let callRegex = try? NSRegularExpression(pattern: "\\b\\w+(?=\\()") {
+            let matches = callRegex.matches(in: code, range: NSRange(location: 0, length: code.utf16.count))
+            applyColor(Color(red: 0.4, green: 0.7, blue: 1.0), to: matches)
+        }
+        
+        return attributed
     }
 }
 
