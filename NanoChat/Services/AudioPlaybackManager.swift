@@ -9,9 +9,18 @@ final class AudioPlaybackManager: NSObject, ObservableObject, AVAudioPlayerDeleg
     @Published var isLoadingMessageId: String?
 
     private var player: AVAudioPlayer?
+    
+    // Computed property for compatibility
+    var isPlaying: Bool {
+        return player?.isPlaying ?? false
+    }
+    
+    var currentMessageId: String? {
+        return currentlyPlayingMessageId
+    }
 
     func play(data: Data, messageId: String) throws {
-        stop()
+        stopPlayback()
 
         player = try AVAudioPlayer(data: data)
         player?.delegate = self
@@ -20,8 +29,17 @@ final class AudioPlaybackManager: NSObject, ObservableObject, AVAudioPlayerDeleg
 
         currentlyPlayingMessageId = messageId
     }
+    
+    func playAudio(url: URL, messageId: String) {
+        do {
+            let data = try Data(contentsOf: url)
+            try play(data: data, messageId: messageId)
+        } catch {
+            print("Failed to play audio from URL: \(error)")
+        }
+    }
 
-    func stop() {
+    func stopPlayback() {
         player?.stop()
         player = nil
         currentlyPlayingMessageId = nil

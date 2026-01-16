@@ -12,41 +12,81 @@ final class ModelManager: ObservableObject {
 
     private let api = NanoChatAPI.shared
 
-    func loadModels() async {
+    func loadModels(forceRefresh: Bool = false) async {
         isLoading = true
         defer { isLoading = false }
 
+        // 1. Try Cache First
+        if !forceRefresh {
+            if let cachedData = UserDefaults.standard.data(forKey: "cachedModels"),
+               let cachedModels = try? JSONDecoder().decode([UserModel].self, from: cachedData) {
+                print("Loaded models from cache")
+                self.allModels = cachedModels
+                self.updateGroupedModels()
+                self.selectDefaultModelIfNeeded()
+                
+                // Check if cache is fresh enough (e.g. 1 hour)
+                let lastFetch = UserDefaults.standard.double(forKey: "lastModelFetchTime")
+                let now = Date().timeIntervalSince1970
+                if now - lastFetch < 3600 { // 1 hour
+                    return // Cache is fresh, skip API call
+                }
+            }
+        }
+
+        // 2. Fetch from API
         do {
-            allModels = try await api.getUserModels()
+            let fetchedModels = try await api.getUserModels()
+            
+            // Update only if changed (optional optimization, but simple replace is fine)
+            allModels = fetchedModels
+            
+            // Save to Cache
+            if let data = try? JSONEncoder().encode(allModels) {
+                UserDefaults.standard.set(data, forKey: "cachedModels")
+                UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: "lastModelFetchTime")
+            }
             
             // Load hidden models
-            if UserDefaults.standard.object(forKey: "hiddenModelIds") != nil {
-                if let savedHiddenIds = UserDefaults.standard.array(forKey: "hiddenModelIds") as? [String] {
-                    hiddenModelIds = Set(savedHiddenIds)
-                }
-            } else {
-                // First time load: hide models that are disabled on server
-                let serverDisabledIds = allModels.filter { !$0.enabled }.map { $0.modelId }
-                hiddenModelIds = Set(serverDisabledIds)
-            }
+            loadHiddenModels()
             
             updateGroupedModels()
-
-            // Try to restore the last used model
-            let lastUsedModelId = UserDefaults.standard.string(forKey: "lastUsedModel")
-
-            if let lastUsedModelId = lastUsedModelId,
-               let lastModel = allModels.filterEnabled().first(where: { $0.modelId == lastUsedModelId }) {
-                selectedModel = lastModel
-            } else if let defaultModel = allModels.filterEnabled().first(where: { $0.pinned }) {
-                // Fall back to pinned model
-                selectedModel = defaultModel
-            } else if let firstModel = allModels.filterEnabled().first {
-                // Fall back to first enabled model
-                selectedModel = firstModel
-            }
+            selectDefaultModelIfNeeded()
+            
         } catch {
             errorMessage = error.localizedDescription
+            // If API fails but we have cache (loaded above), we might want to keep silent or show a toast?
+            // Current behavior shows error message which is fine.
+        }
+    }
+    
+    private func loadHiddenModels() {
+        if UserDefaults.standard.object(forKey: "hiddenModelIds") != nil {
+            if let savedHiddenIds = UserDefaults.standard.array(forKey: "hiddenModelIds") as? [String] {
+                hiddenModelIds = Set(savedHiddenIds)
+            }
+        } else {
+            // First time load: hide models that are disabled on server
+            let serverDisabledIds = allModels.filter { !$0.enabled }.map { $0.modelId }
+            hiddenModelIds = Set(serverDisabledIds)
+        }
+    }
+    
+    private func selectDefaultModelIfNeeded() {
+        let visibleModels = allModels.filter { !hiddenModelIds.contains($0.modelId) }
+        
+        // Try to restore the last used model
+        let lastUsedModelId = UserDefaults.standard.string(forKey: "lastUsedModel")
+
+        if let lastUsedModelId = lastUsedModelId,
+           let lastModel = visibleModels.first(where: { $0.modelId == lastUsedModelId }) {
+            selectedModel = lastModel
+        } else if let defaultModel = visibleModels.first(where: { $0.pinned }) {
+            // Fall back to pinned model
+            selectedModel = defaultModel
+        } else if let firstModel = visibleModels.first {
+            // Fall back to first enabled model
+            selectedModel = firstModel
         }
     }
 

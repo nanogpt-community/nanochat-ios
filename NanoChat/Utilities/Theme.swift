@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 #if os(macOS)
 private let scaleFactor: CGFloat = 1.5
@@ -14,53 +19,83 @@ private let scaleFactor: CGFloat = {
 struct Theme {
     // MARK: - Colors
     struct Colors {
-        // Background (Pure Black)
+        #if os(iOS)
+        // Background
+        static let backgroundStart = Color(uiColor: .systemBackground)
+        static let backgroundEnd = Color(uiColor: .systemBackground)
+        
+        // Text
+        static let textTertiary = Color(uiColor: .tertiaryLabel)
+        
+        // Glass/Surfaces
+        static let glassBackground = Color(uiColor: .systemBackground)
+        static let glassSurface = Color(uiColor: .secondarySystemBackground)
+        static let userBubble = Color(uiColor: .systemGray5)
+        static let border = Color(uiColor: .separator)
+        
+        #elseif os(macOS)
+        // Background
+        static let backgroundStart = Color(nsColor: .windowBackgroundColor)
+        static let backgroundEnd = Color(nsColor: .windowBackgroundColor)
+        
+        // Text
+        static let textTertiary = Color(nsColor: .tertiaryLabelColor)
+        
+        // Glass/Surfaces
+        static let glassBackground = Color(nsColor: .windowBackgroundColor)
+        static let glassSurface = Color(nsColor: .controlBackgroundColor)
+        static let userBubble = Color(nsColor: .controlBackgroundColor) // Approximate
+        static let border = Color(nsColor: .separatorColor)
+        
+        #else
+        // Fallback for other platforms
         static let backgroundStart = Color.black
         static let backgroundEnd = Color.black
+        static let textTertiary = Color.gray
+        static let glassBackground = Color.black
+        static let glassSurface = Color.gray.opacity(0.2)
+        static let userBubble = Color.gray.opacity(0.3)
+        static let border = Color.gray.opacity(0.5)
+        #endif
 
-        // Primary accents (Neon Pink/Purple)
-        static let primary = Color(red: 0.85, green: 0.2, blue: 0.65)   // Neon Pink
-        static let secondary = Color(red: 0.6, green: 0.1, blue: 0.9)   // Deep Neon Purple
-        static let accent = Color(red: 1.0, green: 0.4, blue: 0.8)      // Hot Pink for accents
+        // Primary accents
+        static let primary = Color.primary
+        static let secondary = Color.secondary
+        static let accent = Color.blue
 
-        // Gradient colors
-        static let gradientStart = Color(red: 0.9, green: 0.2, blue: 0.7) // Pink
-        static let gradientEnd = Color(red: 0.6, green: 0.1, blue: 0.9)   // Purple
+        // Gradient colors (Simplified/Removed for ChatGPT style)
+        static let gradientStart = backgroundStart
+        static let gradientEnd = backgroundEnd
 
         // Text colors
-        static let text = Color.white
-        static let textSecondary = Color.white.opacity(0.7)
-        static let textTertiary = Color.white.opacity(0.4)
+        static let text = Color.primary
+        static let textSecondary = Color.secondary
 
-        // Glass effect
-        static let glassBackground = Color.white.opacity(0.05)
-        static let glassBorder = Color.white.opacity(0.15)
-        static let glassShadow = Color.black.opacity(0.4)
+        // Glass effect (Made very subtle or transparent)
+        static let glassBorder = Color.clear
+        static let glassShadow = Color.black.opacity(0.1)
         
         // Specific Glass Elements
-        static let glassPane = Material.ultraThin
-        static let glassSurface = Color.white.opacity(0.03)
-
-        // User message
-        static let userBubble = Color(red: 0.7, green: 0.2, blue: 0.6)
+        static let glassPane = Material.bar
+        
+        // User message gradient (Solid now)
         static let userBubbleGradient = LinearGradient(
-            colors: [Color(red: 0.8, green: 0.2, blue: 0.7), Color(red: 0.6, green: 0.1, blue: 0.8)],
+            colors: [userBubble, userBubble],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
 
         // Assistant message
-        static let assistantBubble = Color.white.opacity(0.05)
+        static let assistantBubble = Color.clear
         
         // Status colors
-        static let success = Color(red: 0.2, green: 0.9, blue: 0.6)
-        static let warning = Color(red: 1.0, green: 0.8, blue: 0.3)
-        static let error = Color(red: 1.0, green: 0.3, blue: 0.4)
+        static let success = Color.green
+        static let warning = Color.orange
+        static let error = Color.red
         
         // Aliases for compatibility
         static let textPrimary = text
-        static let cardBackground = glassBackground
-        static let border = glassBorder
+        static let cardBackground = glassSurface
     }
     
     #if os(macOS)
@@ -95,7 +130,7 @@ struct Theme {
     // MARK: - Gradients
     struct Gradients {
         static let primary = LinearGradient(
-            colors: [Colors.gradientStart, Colors.gradientEnd],
+            colors: [Colors.primary, Colors.primary],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
@@ -107,16 +142,16 @@ struct Theme {
         )
 
         static let glow = LinearGradient(
-            colors: [Colors.primary.opacity(0.3), Colors.secondary.opacity(0.1)],
+            colors: [.clear, .clear],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
         
         static let glass = LinearGradient(
              colors: [
-                 Colors.glassBorder.opacity(0.6),
-                 Colors.glassBorder.opacity(0.1),
-                 Colors.glassBorder.opacity(0.3)
+                 Color.clear,
+                 Color.clear,
+                 Color.clear
              ],
              startPoint: .topLeading,
              endPoint: .bottomTrailing
@@ -124,9 +159,9 @@ struct Theme {
          
          static let shimmer = LinearGradient(
              colors: [
-                 Color.white.opacity(0.0),
-                 Color.white.opacity(0.1),
-                 Color.white.opacity(0.0)
+                 Color.primary.opacity(0.0),
+                 Color.primary.opacity(0.05),
+                 Color.primary.opacity(0.0)
              ],
              startPoint: .leading,
              endPoint: .trailing

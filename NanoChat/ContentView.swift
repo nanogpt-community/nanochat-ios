@@ -10,7 +10,8 @@ struct ContentView: View {
             
             Group {
                 if authManager.isAuthenticated {
-                    MainTabView()
+                    // Switch to RootView (Sidebar + Chat)
+                    RootView()
                 } else {
                     AuthenticationView()
                 }

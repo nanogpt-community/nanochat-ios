@@ -15,9 +15,11 @@
 		113213119A83A749874915B3 /* GlassSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */; };
 		1BF9EEC6ED77AAA248164C5F /* ModelPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1664515944F9D6C7344EB03 /* ModelPicker.swift */; };
 		1E88C9DEA6B6D022DBA0BDCB /* NanoChatAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1ABC795B09A3C36F87799CF /* NanoChatAPI.swift */; };
+		1EDED8A3F40367F6277F9795 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E24B32547AC4420720DB585 /* RootView.swift */; };
 		1F5D2B7469D2DA9C77DA0AEA /* AudioPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */; };
 		245767F4C7E23366BECD046A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */; };
 		2903745958E926B21CE907B9 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E548298D554723BE7D2CB6 /* GlassCard.swift */; };
+		3A81D82C12C905D2C192CD47 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F163F980E2D393DDB7906046 /* SidebarView.swift */; };
 		42138CD514B77EFF1A88EA72 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CF1B3A9B46FB65CBD0460F /* Message.swift */; };
 		45169F7B86B51D5409665357 /* AudioPlaybackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */; };
 		48284018CF631D5F09E6E20A /* AssistantsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00DD15764A26719B43912716 /* AssistantsListView.swift */; };
@@ -81,6 +83,7 @@
 		166905377217DEE8CC10FC77 /* AvailableModelsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailableModelsView.swift; sourceTree = "<group>"; };
 		1941464E6EB8C70B9CFE8277 /* LoadingSkeleton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingSkeleton.swift; sourceTree = "<group>"; };
 		1C3D21C9D16FE69448C885DA /* WebSearchMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSearchMode.swift; sourceTree = "<group>"; };
+		1E24B32547AC4420720DB585 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPreferences.swift; sourceTree = "<group>"; };
 		2DB06A61E7BCB2BAFD0ADDD5 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
 		2F6A945714279F60A1DBD6C1 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
@@ -130,6 +133,7 @@
 		E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		EB000B527C2E5966D0785AAD /* ImagePreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePreviewView.swift; sourceTree = "<group>"; };
 		EFF0CE8ED0308B58E3FB19F1 /* AuthenticationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationManager.swift; sourceTree = "<group>"; };
+		F163F980E2D393DDB7906046 /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
 		F2325251CBC4D1C43ED4C8A0 /* NanoChatApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NanoChatApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
 		F4E548298D554723BE7D2CB6 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
@@ -214,9 +218,11 @@
 				C1664515944F9D6C7344EB03 /* ModelPicker.swift */,
 				F49C46EDA04E8921804DD7CD /* ProjectsListView.swift */,
 				AFF2C7531A51EB90ACE36D42 /* ProviderPicker.swift */,
+				1E24B32547AC4420720DB585 /* RootView.swift */,
 				D463645C6B869F70AD5DECCA /* SearchView.swift */,
 				41DAA13C1EDF2A506F4365C4 /* ServerSettingsView.swift */,
 				E31D4367F8CCA8CF8F767ACB /* SettingsView.swift */,
+				F163F980E2D393DDB7906046 /* SidebarView.swift */,
 				F5B235F804536C49A57CE1FE /* StarredMessagesView.swift */,
 				0D09D8D3C6554AD4DF59CA6E /* WebSearchToggle.swift */,
 				2036CEDDAE2BAA0F4D1C241F /* Components */,
@@ -396,10 +402,12 @@
 				7EA0EC6545C172E36474D3A7 /* Project.swift in Sources */,
 				0DC367BB5B5494E5E61E0E34 /* ProjectsListView.swift in Sources */,
 				0E4B5F40A3174371A644CB82 /* ProviderPicker.swift in Sources */,
+				1EDED8A3F40367F6277F9795 /* RootView.swift in Sources */,
 				7794C06A0E4751B47E08BA1E /* SearchView.swift in Sources */,
 				66E727066C10DF1A76611646 /* SearchViewModel.swift in Sources */,
 				DBA553F6A52D9D3B47E1ACE6 /* ServerSettingsView.swift in Sources */,
 				A8F670966FA1B5AAF158D597 /* SettingsView.swift in Sources */,
+				3A81D82C12C905D2C192CD47 /* SidebarView.swift in Sources */,
 				B4446105961D7DC66826951C /* StarredMessagesView.swift in Sources */,
 				89E7CB8E1F80040557A6FEFC /* Theme.swift in Sources */,
 				D994A73562BE85CAD662BC5B /* ThemeManager.swift in Sources */,
