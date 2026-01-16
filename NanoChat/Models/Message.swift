@@ -82,8 +82,16 @@ final class MessageDocument {
     }
 }
 
-struct MessageResponse: Codable {
+struct MessageResponse: Codable, Identifiable, Hashable {
     let id: String
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+
+    static func == (lhs: MessageResponse, rhs: MessageResponse) -> Bool {
+        lhs.id == rhs.id
+    }
     let conversationId: String
     let role: String
     let content: String

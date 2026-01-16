@@ -38,5 +38,9 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(Theme.Colors.accent)
+        // Native iOS 26 liquid glass tab bar
+        .toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .toolbarColorScheme(.dark, for: .tabBar)
     }
 }

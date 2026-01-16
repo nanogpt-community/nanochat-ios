@@ -6,6 +6,7 @@ struct ChatView: View {
     let onMessageSent: (() -> Void)?
     @StateObject private var viewModel = ChatViewModel()
     @StateObject private var modelManager = ModelManager()
+    @StateObject private var multiSelectViewModel = MultiSelectViewModel<MessageResponse>()
     @ObservedObject private var audioPreferences = AudioPreferences.shared
     @State private var assistantManager = AssistantManager()
     @State private var messageText = ""
@@ -24,6 +25,7 @@ struct ChatView: View {
     @State private var showVideoSettings = false
     @State private var searchText = ""
     @State private var isSearchVisible = false
+    @State private var selectedDocument: MessageDocumentResponse?
 
 
     var body: some View {
@@ -64,7 +66,12 @@ struct ChatView: View {
                         })
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
-                    inputArea
+                    VStack(spacing: 0) {
+                        if multiSelectViewModel.isEditMode && multiSelectViewModel.hasSelection {
+                            messageBatchOperationsBar
+                        }
+                        inputArea
+                    }
                 }
                 .navigationTitle(conversation.title)
 
@@ -78,6 +85,10 @@ struct ChatView: View {
                     Task {
                         await loadData()
                     }
+                }
+                .onChange(of: viewModel.messages) { _, newValue in
+                    multiSelectViewModel.items = newValue
+                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems.intersection(Set(newValue.map { $0.id }))
                 }
                 .onChange(of: viewModel.messages.count) { _, _ in
                     scrollToLastMessage(proxy: proxy)
@@ -105,6 +116,14 @@ struct ChatView: View {
                 handleTranscription(transcription)
             } onError: { message in
                 voiceErrorMessage = message
+            }
+        }
+        .sheet(item: Binding<PreviewDocumentItem?>(
+            get: { selectedDocument.map { PreviewDocumentItem(document: $0) } },
+            set: { if $0 == nil { selectedDocument = nil } }
+        )) { item in
+            DocumentPreviewView(document: item.document) {
+                selectedDocument = nil
             }
         }
         .alert(
@@ -188,6 +207,15 @@ struct ChatView: View {
                                 Task {
                                     await viewModel.loadConversations()
                                     await viewModel.loadMessages(conversationId: conversation.id)
+                                }
+                            },
+                            onDocumentTap: { document in
+                                selectedDocument = document
+                            },
+                            isSelected: multiSelectViewModel.isSelected(message),
+                            onTap: {
+                                if multiSelectViewModel.isEditMode {
+                                    multiSelectViewModel.toggleSelection(message)
                                 }
                             }
                         )
@@ -342,22 +370,53 @@ struct ChatView: View {
         }
 
         ToolbarItem(placement: .primaryAction) {
-            HStack(spacing: Theme.Spacing.md) {
-                Button {
-                    withAnimation {
-                        isSearchVisible.toggle()
-                        if !isSearchVisible {
-                            searchText = ""
-                        }
+            if multiSelectViewModel.isEditMode {
+                HStack(spacing: Theme.Spacing.md) {
+                    Button {
+                        multiSelectViewModel.exitEditMode()
+                    } label: {
+                        Text("Cancel")
+                            .font(.subheadline)
                     }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(isSearchVisible ? Theme.Colors.secondary : Theme.Colors.textSecondary)
-                }
+                    .foregroundStyle(Theme.Colors.textSecondary)
 
-                if !assistantManager.assistants.isEmpty {
-                    assistantMenu(
-                        assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
+                    Text(multiSelectViewModel.selectionDescription)
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                }
+            } else {
+                HStack(spacing: Theme.Spacing.md) {
+                    Button {
+                        withAnimation {
+                            isSearchVisible.toggle()
+                            if !isSearchVisible {
+                                searchText = ""
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundStyle(isSearchVisible ? Theme.Colors.secondary : Theme.Colors.textSecondary)
+                    }
+
+                    Button {
+                        multiSelectViewModel.enterEditMode()
+                    } label: {
+                        Image(systemName: "checkmark.circle")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+
+                    Button {
+                        HapticManager.shared.tap()
+                        exportConversation()
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                    }
+
+                    if !assistantManager.assistants.isEmpty {
+                        assistantMenu(
+                            assistant: assistantManager.selectedAssistant ?? assistantManager.assistants[0])
+                    }
                 }
             }
         }
@@ -797,7 +856,7 @@ struct ChatView: View {
         else { return }
 
         // Haptic feedback on send
-        HapticManager.shared.tap()
+        HapticManager.shared.messageSent()
 
         // Clear follow-up suggestions when sending a new message
         viewModel.clearFollowUpSuggestions()
@@ -889,6 +948,115 @@ struct ChatView: View {
             isInputFocused = true
         }
     }
+
+    private func exportConversation() {
+        let markdown = ExportManager.shared.exportConversationToMarkdown(
+            conversation: conversation,
+            messages: viewModel.messages
+        )
+        let filename = ExportManager.shared.sanitizeFilename(conversation.title)
+        ExportManager.shared.presentShareSheet(
+            content: markdown,
+            fileName: filename,
+            format: .markdown
+        )
+    }
+
+    // MARK: - Message Batch Operations
+
+    private var messageBatchOperationsBar: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Button {
+                batchCopyMessages()
+            } label: {
+                Label("Copy", systemImage: "doc.on.doc")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.primary)
+
+            Button {
+                batchExportMessages()
+            } label: {
+                Label("Export", systemImage: "square.and.arrow.up")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.secondary)
+
+            Button {
+                Task {
+                    await batchToggleStar()
+                }
+            } label: {
+                Label("Star", systemImage: "star.fill")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.warning)
+        }
+        .padding()
+        .background(Theme.Colors.glassPane)
+        .overlay(
+            Rectangle()
+                .fill(Theme.Colors.glassBorder)
+                .frame(height: 1),
+            alignment: .top
+        )
+    }
+
+    private func batchCopyMessages() {
+        multiSelectViewModel.exportSelected { ids in
+            let selectedMessages = viewModel.messages.filter { ids.contains($0.id) }
+            let combinedContent = selectedMessages
+                .map { message in
+                    let role = message.role == "user" ? "You" : "Assistant"
+                    return "\(role): \(message.content)"
+                }
+                .joined(separator: "\n\n---\n\n")
+
+            UIPasteboard.general.string = combinedContent
+            HapticManager.shared.success()
+        }
+    }
+
+    private func batchExportMessages() {
+        multiSelectViewModel.exportSelected { ids in
+            let selectedMessages = viewModel.messages.filter { ids.contains($0.id) }
+
+            // Create a temporary conversation-like structure for export
+            let tempConversation = ConversationResponse(
+                id: conversation.id,
+                title: "\(conversation.title) (Selected Messages)",
+                userId: conversation.userId,
+                projectId: conversation.projectId,
+                pinned: conversation.pinned,
+                generating: false
+            )
+
+            let markdown = ExportManager.shared.exportConversationToMarkdown(
+                conversation: tempConversation,
+                messages: selectedMessages
+            )
+            let filename = ExportManager.shared.sanitizeFilename("\(conversation.title)-selected")
+            ExportManager.shared.presentShareSheet(
+                content: markdown,
+                fileName: filename,
+                format: .markdown
+            )
+        }
+    }
+
+    private func batchToggleStar() async {
+        await multiSelectViewModel.starSelected { ids in
+            for id in ids {
+                Task {
+                    try? await NanoChatAPI.shared.setMessageStarred(messageId: id, starred: true)
+                }
+            }
+        }
+        await viewModel.loadMessages(conversationId: conversation.id)
+    }
 }
 
 struct MessageBubble: View {
@@ -897,6 +1065,10 @@ struct MessageBubble: View {
     let onRegenerate: (() -> Void)?
     let onMessageUpdated: ((MessageResponse) -> Void)?
     let onBranch: (() -> Void)?
+    let onDocumentTap: ((MessageDocumentResponse) -> Void)?
+    let isSelected: Bool
+    let onTap: () -> Void
+
     @State private var isReasoningExpanded = false
     @State private var showCopyFeedback = false
     @State private var userRating: MessageRating?
@@ -914,27 +1086,28 @@ struct MessageBubble: View {
     @State private var selectedImage: ImagePreviewItem?
 
     var body: some View {
-        HStack(alignment: .top, spacing: Theme.Spacing.sm) {
-            // Avatar
-            Circle()
-                .fill(
-                    message.role == "user"
-                        ? Theme.Colors.userBubbleGradient
-                        : LinearGradient(
-                            colors: [Theme.Colors.secondary, Theme.Colors.primary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                )
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Image(systemName: message.role == "user" ? "person.fill" : "sparkles")
-                        .font(.system(size: 14))
-                        .foregroundStyle(.white)
-                )
+        ZStack(alignment: .topTrailing) {
+            HStack(alignment: .top, spacing: Theme.Spacing.sm) {
+                // Avatar
+                Circle()
+                    .fill(
+                        message.role == "user"
+                            ? Theme.Colors.userBubbleGradient
+                            : LinearGradient(
+                                colors: [Theme.Colors.secondary, Theme.Colors.primary],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                    )
+                    .frame(width: 32, height: 32)
+                    .overlay(
+                        Image(systemName: message.role == "user" ? "person.fill" : "sparkles")
+                            .font(.system(size: 14))
+                            .foregroundStyle(.white)
+                    )
 
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
-                // Header
+                VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                    // Header
                 HStack(spacing: Theme.Spacing.xs) {
                     Text(message.role == "user" ? "You" : "Assistant")
                         .font(.subheadline)
@@ -1074,31 +1247,41 @@ struct MessageBubble: View {
                 if let documents = message.documents, !documents.isEmpty {
                     VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                         ForEach(documents, id: \.storageId) { document in
-                            HStack(spacing: Theme.Spacing.sm) {
-                                Image(systemName: documentIcon(for: document.fileType))
-                                    .font(.title3)
-                                    .foregroundStyle(Theme.Colors.secondary)
+                            Button {
+                                HapticManager.shared.tap()
+                                onDocumentTap?(document)
+                            } label: {
+                                HStack(spacing: Theme.Spacing.sm) {
+                                    Image(systemName: documentIcon(for: document.fileType))
+                                        .font(.title3)
+                                        .foregroundStyle(Theme.Colors.secondary)
 
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(document.fileName ?? "Document")
-                                        .font(.caption)
-                                        .foregroundStyle(Theme.Colors.text)
-                                        .lineLimit(1)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(document.fileName ?? "Document")
+                                            .font(.caption)
+                                            .foregroundStyle(Theme.Colors.text)
+                                            .lineLimit(1)
 
-                                    Text(document.fileType.uppercased())
+                                        Text(document.fileType.uppercased())
+                                            .font(.caption2)
+                                            .foregroundStyle(Theme.Colors.textTertiary)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "chevron.right")
                                         .font(.caption2)
                                         .foregroundStyle(Theme.Colors.textTertiary)
                                 }
-
-                                Spacer()
+                                .padding(Theme.Spacing.sm)
+                                .background(Theme.Colors.glassPane)
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                                )
                             }
-                            .padding(Theme.Spacing.sm)
-                            .background(Theme.Colors.glassPane)
-                            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
-                                    .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
-                            )
+                            .buttonStyle(.plain)
                         }
                     }
                     .padding(.vertical, Theme.Spacing.xs)
@@ -1190,6 +1373,7 @@ struct MessageBubble: View {
                             .glassCard()
                             .contextMenu {
                                 Button {
+                                    HapticManager.shared.tap()
                                     startEditing()
                                 } label: {
                                     Label("Edit", systemImage: "pencil")
@@ -1197,6 +1381,7 @@ struct MessageBubble: View {
 
                                 if message.role == "assistant" {
                                     Button {
+                                        HapticManager.shared.tap()
                                         onRegenerate?()
                                     } label: {
                                         Label("Regenerate", systemImage: "arrow.clockwise")
@@ -1204,10 +1389,12 @@ struct MessageBubble: View {
                                 }
 
                                 Button {
+                                    HapticManager.shared.tap()
                                     UIPasteboard.general.string = message.content
                                     withAnimation {
                                         showCopyFeedback = true
                                     }
+                                    HapticManager.shared.success()
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                                         withAnimation {
                                             showCopyFeedback = false
@@ -1217,6 +1404,13 @@ struct MessageBubble: View {
                                     Label(
                                         showCopyFeedback ? "Copied!" : "Copy",
                                         systemImage: showCopyFeedback ? "checkmark" : "doc.on.doc")
+                                }
+
+                                Button {
+                                    HapticManager.shared.tap()
+                                    shareMessage()
+                                } label: {
+                                    Label("Share", systemImage: "square.and.arrow.up")
                                 }
                             }
                     }
@@ -1272,8 +1466,30 @@ struct MessageBubble: View {
                     }
                     .padding(.horizontal, Theme.Spacing.xs)
                 }
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onTap()
+            }
+            .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
+
+            // Selection indicator
+            if isSelected {
+                ZStack {
+                    Circle()
+                        .fill(Theme.Colors.secondary)
+                        .frame(width: 20, height: 20)
+
+                    Image(systemName: "checkmark")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                }
+                .padding(Theme.Spacing.xs)
+                .transition(.scale.combined(with: .opacity))
+            }
         }
         .padding(.vertical, Theme.Spacing.xs)
         .onAppear {
@@ -1282,6 +1498,13 @@ struct MessageBubble: View {
         .onChange(of: message.starred) { _, newValue in
             isStarred = newValue ?? false
         }
+        .gesture(
+            LongPressGesture(minimumDuration: 0.5)
+                .onEnded { _ in
+                    // Long press to enter edit mode is handled at parent level
+                    HapticManager.shared.longPressActivated()
+                }
+        )
         .alert(
             "Audio Error",
             isPresented: Binding(
@@ -1591,6 +1814,18 @@ struct MessageBubble: View {
     private var videoExtensions: Set<String> {
         ["mp4", "mov", "m4v", "webm"]
     }
+
+    private func shareMessage() {
+        let activityViewController = UIActivityViewController(
+            activityItems: [message.content],
+            applicationActivities: nil
+        )
+
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            rootViewController.present(activityViewController, animated: true)
+        }
+    }
 }
 
 struct VoiceRecorderSheet: View {
@@ -1781,6 +2016,13 @@ struct ScaleButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .animation(Theme.Animation.quick, value: configuration.isPressed)
     }
+}
+
+// MARK: - Document Preview Helper
+
+struct PreviewDocumentItem: Identifiable {
+    let id = UUID()
+    let document: MessageDocumentResponse
 }
 
 // MARK: - Typing Indicator

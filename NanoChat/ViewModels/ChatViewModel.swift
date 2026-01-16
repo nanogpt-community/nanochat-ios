@@ -152,6 +152,8 @@ final class ChatViewModel: ObservableObject {
                     !lastMessage.content.isEmpty,
                     !isStillGenerating
                 {
+                    // Haptic feedback when message is received
+                    HapticManager.shared.messageReceived()
                     break
                 }
             }

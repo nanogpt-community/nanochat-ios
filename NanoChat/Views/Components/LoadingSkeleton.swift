@@ -35,10 +35,11 @@ extension View {
 struct ConversationRowSkeleton: View {
     var body: some View {
         HStack(spacing: Theme.Spacing.md) {
-            // Avatar
+            // Avatar with glass effect
             Circle()
                 .fill(Theme.Colors.glassBackground)
                 .frame(width: 44, height: 44)
+                .glassEffect(in: .circle)
                 .shimmering()
 
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
@@ -48,9 +49,9 @@ struct ConversationRowSkeleton: View {
                         .fill(Theme.Colors.glassBackground)
                         .frame(height: 16)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.trailing, 60) // Simulate variable length
+                        .padding(.trailing, 60)
                         .shimmering()
-                    
+
                     Spacer()
                 }
 
@@ -62,7 +63,7 @@ struct ConversationRowSkeleton: View {
             }
         }
         .padding(Theme.Spacing.md)
-        .glassCard()
+        .glassEffect(in: .rect(cornerRadius: Theme.CornerRadius.lg))
     }
 }
 
@@ -80,27 +81,29 @@ struct ConversationListSkeleton: View {
 
 struct MessageSkeleton: View {
     let isUser: Bool
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.sm) {
-            // Avatar
+            // Avatar with glass effect
             Circle()
                 .fill(Theme.Colors.glassBackground)
                 .frame(width: 32, height: 32)
+                .glassEffect(in: .circle)
                 .shimmering()
-            
+
             VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
                 // Header
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Theme.Colors.glassBackground)
                     .frame(width: 60, height: 14)
                     .shimmering()
-                
-                // Content bubble
+
+                // Content bubble with glass effect
                 RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
                     .fill(Theme.Colors.glassBackground)
-                    .frame(height: Double.random(in: 40...80)) // Randomize height slightly
+                    .frame(height: Double.random(in: 40...80))
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassEffect(in: .rect(cornerRadius: Theme.CornerRadius.md))
                     .shimmering()
             }
         }
@@ -172,6 +175,109 @@ struct GlassListSkeleton: View {
             }
         }
         .padding(Theme.Spacing.lg)
+    }
+}
+
+struct StarredMessageRowSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            HStack(spacing: Theme.Spacing.xs) {
+                // Star icon with glass
+                Circle()
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(width: 14, height: 14)
+                    .glassEffect(in: .circle)
+                    .shimmering()
+
+                // Conversation title
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(height: 12)
+                    .frame(maxWidth: 150, alignment: .leading)
+                    .shimmering()
+
+                Spacer()
+            }
+
+            // Message content skeleton
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(height: 14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .shimmering()
+
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(height: 14)
+                    .frame(maxWidth: 200, alignment: .leading)
+                    .shimmering()
+            }
+            .padding(.leading, Theme.Spacing.xl)
+        }
+        .padding(Theme.Spacing.md)
+        .glassEffect(in: .rect(cornerRadius: Theme.CornerRadius.lg))
+    }
+}
+
+struct StarredMessagesSkeleton: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Theme.Spacing.xs) {
+                ForEach(0..<8, id: \.self) { _ in
+                    StarredMessageRowSkeleton()
+                        .padding(.horizontal, Theme.Spacing.lg)
+                }
+            }
+            .padding(.top, Theme.Spacing.xs)
+        }
+    }
+}
+
+struct AssistantRowSkeleton: View {
+    var body: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            // Avatar with glass effect
+            Circle()
+                .fill(Theme.Colors.glassBackground)
+                .frame(width: 44, height: 44)
+                .glassEffect(in: .circle)
+                .shimmering()
+
+            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+                // Name line
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(height: 16)
+                    .frame(maxWidth: 120, alignment: .leading)
+                    .shimmering()
+
+                // Description line
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.Colors.glassBackground)
+                    .frame(height: 12)
+                    .frame(maxWidth: 180, alignment: .leading)
+                    .shimmering()
+            }
+
+            Spacer()
+        }
+        .padding(Theme.Spacing.md)
+        .glassEffect(in: .rect(cornerRadius: Theme.CornerRadius.lg))
+    }
+}
+
+struct AssistantsListSkeleton: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: Theme.Spacing.xs) {
+                ForEach(0..<6, id: \.self) { _ in
+                    AssistantRowSkeleton()
+                        .padding(.horizontal, Theme.Spacing.lg)
+                }
+            }
+            .padding(.top, Theme.Spacing.xs)
+        }
     }
 }
 

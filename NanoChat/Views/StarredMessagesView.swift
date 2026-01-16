@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StarredMessagesView: View {
     @StateObject private var viewModel = ChatViewModel()
+    @StateObject private var multiSelectViewModel = MultiSelectViewModel<MessageResponse>()
     @State private var searchText = ""
     @State private var starringIds: Set<String> = []
 
@@ -26,8 +27,8 @@ struct StarredMessagesView: View {
             NavigationStack {
                 Group {
                     if viewModel.isLoadingStarred && viewModel.starredMessages.isEmpty {
-                        ProgressView()
-                            .tint(Theme.Colors.secondary)
+                        StarredMessagesSkeleton()
+                            .transition(.opacity)
                     } else if filteredStarredMessages.isEmpty {
                         ContentUnavailableView {
                             Label("No Starred Messages", systemImage: "star")
@@ -39,61 +40,149 @@ struct StarredMessagesView: View {
                     } else {
                         List {
                             ForEach(filteredStarredMessages, id: \.id) { message in
-                                if let conversation = conversation(for: message) {
-                                    NavigationLink(value: conversation) {
+                                ZStack(alignment: .topTrailing) {
+                                    if let conversation = conversation(for: message) {
+                                        NavigationLink(value: conversation) {
+                                            StarredMessageRow(
+                                                message: message,
+                                                conversationTitle: conversation.title,
+                                                isUpdating: starringIds.contains(message.id),
+                                                onUnstar: {
+                                                    Task { await unstar(message) }
+                                                },
+                                                isSelected: multiSelectViewModel.isSelected(message)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                        .opacity(multiSelectViewModel.isEditMode ? 0 : 1)
+                                        .onLongPressGesture {
+                                            multiSelectViewModel.enterEditMode()
+                                            multiSelectViewModel.toggleSelection(message)
+                                        }
+                                    } else {
                                         StarredMessageRow(
                                             message: message,
-                                            conversationTitle: conversation.title,
+                                            conversationTitle: conversationTitle(for: message),
                                             isUpdating: starringIds.contains(message.id),
                                             onUnstar: {
                                                 Task { await unstar(message) }
-                                            }
+                                            },
+                                            isSelected: multiSelectViewModel.isSelected(message)
                                         )
-                                    }
-                                } else {
-                                    StarredMessageRow(
-                                        message: message,
-                                        conversationTitle: conversationTitle(for: message),
-                                        isUpdating: starringIds.contains(message.id),
-                                        onUnstar: {
-                                            Task { await unstar(message) }
+                                        .onTapGesture {
+                                            if multiSelectViewModel.isEditMode {
+                                                multiSelectViewModel.toggleSelection(message)
+                                            } else {
+                                                viewModel.errorMessage = "Conversation not found."
+                                            }
                                         }
-                                    )
-                                    .onTapGesture {
-                                        viewModel.errorMessage = "Conversation not found."
+                                        .onLongPressGesture {
+                                            multiSelectViewModel.enterEditMode()
+                                            multiSelectViewModel.toggleSelection(message)
+                                        }
+                                    }
+
+                                    // Selection indicator
+                                    if multiSelectViewModel.isEditMode {
+                                        ZStack {
+                                            Circle()
+                                                .fill(multiSelectViewModel.isSelected(message) ? Theme.Colors.secondary : Color.clear)
+                                                .frame(width: 24, height: 24)
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                                                )
+
+                                            if multiSelectViewModel.isSelected(message) {
+                                                Image(systemName: "checkmark")
+                                                    .font(.caption)
+                                                    .fontWeight(.bold)
+                                                    .foregroundStyle(.white)
+                                            }
+                                        }
+                                        .padding(Theme.Spacing.sm)
+                                        .transition(.scale.combined(with: .opacity))
                                     }
                                 }
-                            }
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .listRowInsets(
-                                EdgeInsets(
-                                    top: Theme.Spacing.xs,
-                                    leading: Theme.Spacing.lg,
-                                    bottom: Theme.Spacing.xs,
-                                    trailing: Theme.Spacing.lg
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .listRowInsets(
+                                    EdgeInsets(
+                                        top: Theme.Spacing.xs,
+                                        leading: Theme.Spacing.lg,
+                                        bottom: Theme.Spacing.xs,
+                                        trailing: Theme.Spacing.lg
+                                    )
                                 )
-                            )
+                            }
                         }
                         .listStyle(.plain)
                     }
                 }
-                .navigationTitle("Starred")
-                .navigationBarTitleDisplayMode(.large)
+                .navigationTitle(multiSelectViewModel.isEditMode ? "Select Items" : "Starred")
+                .navigationBarTitleDisplayMode(multiSelectViewModel.isEditMode ? .inline : .large)
                 .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
                 .toolbarColorScheme(.dark, for: .navigationBar)
                 .navigationDestination(for: ConversationResponse.self) { conversation in
-                    ChatView(conversation: conversation, onMessageSent: nil)
+                    if !multiSelectViewModel.isEditMode {
+                        ChatView(conversation: conversation, onMessageSent: nil)
+                    }
                 }
                 .searchable(text: $searchText, prompt: "Search starred messages")
                 .tint(Theme.Colors.secondary)
+                .disabled(multiSelectViewModel.isEditMode)
+                .toolbar {
+                    if multiSelectViewModel.isEditMode {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                multiSelectViewModel.exitEditMode()
+                            }
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+
+                        ToolbarItem(placement: .principal) {
+                            Text(multiSelectViewModel.selectionDescription)
+                                .font(.subheadline)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+                                multiSelectViewModel.toggleSelectAll()
+                            } label: {
+                                Text(multiSelectViewModel.isAllSelected ? "Deselect All" : "Select All")
+                                    .font(.subheadline)
+                            }
+                            .foregroundStyle(Theme.Colors.secondary)
+                        }
+                    } else {
+                        ToolbarItem(placement: .primaryAction) {
+                            Button {
+                                multiSelectViewModel.enterEditMode()
+                            } label: {
+                                Image(systemName: "checkmark.circle")
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                            }
+                        }
+                    }
+                }
+                .safeAreaInset(edge: .bottom) {
+                    if multiSelectViewModel.isEditMode && multiSelectViewModel.hasSelection {
+                        batchOperationsBar
+                    }
+                }
                 .onAppear {
                     Task {
                         await viewModel.loadConversations()
                         await viewModel.loadStarredMessages()
                     }
                 }
+                .onChange(of: viewModel.starredMessages) { _, newValue in
+                    multiSelectViewModel.items = newValue
+                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems.intersection(Set(newValue.map { $0.id }))
+                }
                 .refreshable {
+                    HapticManager.shared.refreshTriggered()
                     await viewModel.loadConversations()
                     await viewModel.loadStarredMessages()
                 }
@@ -113,6 +202,99 @@ struct StarredMessagesView: View {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - Batch Operations Bar
+
+    private var batchOperationsBar: some View {
+        HStack(spacing: Theme.Spacing.md) {
+            Button {
+                Task {
+                    await batchUnstar()
+                }
+            } label: {
+                Label("Unstar", systemImage: "star.slash.fill")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.warning)
+
+            Button {
+                batchExport()
+            } label: {
+                Label("Export", systemImage: "square.and.arrow.up")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.secondary)
+
+            Button {
+                batchCopy()
+            } label: {
+                Label("Copy", systemImage: "doc.on.doc")
+                    .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(Theme.Colors.primary)
+        }
+        .padding()
+        .background(Theme.Colors.glassPane)
+        .overlay(
+            Rectangle()
+                .fill(Theme.Colors.glassBorder)
+                .frame(height: 1),
+            alignment: .top
+        )
+    }
+
+    // MARK: - Batch Operations
+
+    private func batchUnstar() async {
+        await multiSelectViewModel.starSelected { ids in
+            for id in ids {
+                if viewModel.starredMessages.contains(where: { $0.id == id }) {
+                    Task {
+                        try? await NanoChatAPI.shared.setMessageStarred(messageId: id, starred: false)
+                    }
+                }
+            }
+        }
+        await viewModel.loadStarredMessages()
+    }
+
+    private func batchExport() {
+        multiSelectViewModel.exportSelected { ids in
+            let selectedMessages = viewModel.starredMessages.filter { ids.contains($0.id) }
+
+            // Group messages by conversation
+            let grouped = Dictionary(grouping: selectedMessages) { $0.conversationId }
+
+            let items: [(conversation: ConversationResponse, messages: [MessageResponse])] = grouped.compactMapValues { messages in
+                messages
+            }.compactMap { (conversationId, messages) in
+                guard let conv = viewModel.conversations.first(where: { $0.id == conversationId }) else {
+                    return nil
+                }
+                return (conv, messages)
+            }
+
+            ExportManager.shared.presentShareSheetForMultiple(items: items)
+        }
+    }
+
+    private func batchCopy() {
+        multiSelectViewModel.exportSelected { ids in
+            let selectedMessages = viewModel.starredMessages.filter { ids.contains($0.id) }
+            let combinedContent = selectedMessages
+                .map { message in
+                    let role = message.role == "user" ? "You" : "Assistant"
+                    return "\(role): \(message.content)"
+                }
+                .joined(separator: "\n\n---\n\n")
+
+            UIPasteboard.general.string = combinedContent
+            HapticManager.shared.success()
         }
     }
 
@@ -160,6 +342,7 @@ struct StarredMessageRow: View {
     let conversationTitle: String
     let isUpdating: Bool
     let onUnstar: () -> Void
+    let isSelected: Bool
 
     var body: some View {
         HStack(spacing: Theme.Spacing.md) {
@@ -218,6 +401,8 @@ struct StarredMessageRow: View {
             .disabled(isUpdating)
         }
         .padding(Theme.Spacing.md)
+        .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
         .glassCard()
     }
 }

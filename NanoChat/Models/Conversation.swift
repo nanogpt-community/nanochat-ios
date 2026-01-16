@@ -42,7 +42,7 @@ final class Conversation {
     }
 }
 
-struct ConversationResponse: Codable, Hashable {
+struct ConversationResponse: Codable, Identifiable, Hashable {
     let id: String
     let title: String
     let userId: String

@@ -76,54 +76,64 @@ struct ImagePreviewView: View {
     }
 
     private var headerBar: some View {
-        HStack(spacing: Theme.Spacing.sm) {
-            Text(item.fileName.isEmpty ? "image" : item.fileName)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(Theme.Colors.text)
-                .lineLimit(1)
+        GlassEffectContainer {
+            HStack(spacing: Theme.Spacing.sm) {
+                // File name badge
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "photo")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.accent)
 
-            Spacer()
-
-            Button {
-                Task {
-                    await saveImage()
-                }
-            } label: {
-                if isSaving {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                        .tint(Theme.Colors.secondary)
-                        .frame(width: 32, height: 32)
-                } else {
-                    Image(systemName: "square.and.arrow.down")
-                        .font(.system(size: 16, weight: .semibold))
+                    Text(item.fileName.isEmpty ? "image" : item.fileName)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
                         .foregroundStyle(Theme.Colors.text)
-                        .frame(width: 32, height: 32)
+                        .lineLimit(1)
                 }
-            }
-            .buttonStyle(.plain)
-            .disabled(isSaving)
+                .padding(.horizontal, Theme.Spacing.md)
+                .padding(.vertical, Theme.Spacing.sm)
+                .glassEffect()
 
-            Button {
-                dismiss()
-            } label: {
-                Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.Colors.text)
-                    .frame(width: 32, height: 32)
+                Spacer()
+
+                // Save button
+                Button {
+                    Task {
+                        await saveImage()
+                    }
+                } label: {
+                    if isSaving {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                            .tint(Theme.Colors.accent)
+                            .frame(width: 36, height: 36)
+                            .glassEffect(in: .circle)
+                    } else {
+                        Image(systemName: "square.and.arrow.down")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.text)
+                            .frame(width: 36, height: 36)
+                            .glassEffect(in: .circle)
+                    }
+                }
+                .buttonStyle(.plain)
+                .disabled(isSaving)
+
+                // Close button
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.text)
+                        .frame(width: 36, height: 36)
+                        .glassEffect(in: .circle)
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, Theme.Spacing.lg)
+            .padding(.vertical, Theme.Spacing.sm)
         }
-        .padding(.horizontal, Theme.Spacing.lg)
-        .padding(.vertical, Theme.Spacing.sm)
-        .background(Theme.Colors.glassPane)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-        .overlay(
-            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                .stroke(Theme.Gradients.glass, lineWidth: 1)
-        )
-        .padding(.horizontal, Theme.Spacing.lg)
     }
 
     @MainActor

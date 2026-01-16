@@ -176,6 +176,14 @@ final class HapticManager {
     func success() { notification(.success) }
     func warning() { notification(.warning) }
     func error() { notification(.error) }
+
+    // Additional specific haptic patterns
+    func messageSent() { impact(.light) }
+    func messageReceived() { notification(.success) }
+    func scrollInteraction() { impact(.light) }
+    func refreshTriggered() { impact(.medium) }
+    func longPressActivated() { heavyTap() }
+    func selectionChanged() { selection() }
 }
 
 // MARK: - View Extensions
