@@ -30,6 +30,7 @@ struct AssistantsListView: View {
                             } label: {
                                 AssistantRow(assistant: assistant)
                             }
+                            .listRowBackground(Theme.Colors.sectionBackground)
                             .swipeActions(edge: .leading) {
                                 Button {
                                     HapticManager.shared.tap()
@@ -46,7 +47,8 @@ struct AssistantsListView: View {
                             }
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
+                    .background(Theme.Colors.backgroundStart)
                 }
             }
             .navigationTitle("Assistants")
@@ -172,11 +174,13 @@ struct AssistantDetailView: View {
             Section("Name") {
                 Text(assistant.name)
                     .font(.headline)
+                    .foregroundStyle(Theme.Colors.text)
                 if let description = assistant.description {
                     Text(description)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Section("System Prompt") {
                 Text(assistant.systemPrompt)
@@ -184,19 +188,24 @@ struct AssistantDetailView: View {
                     .foregroundStyle(Theme.Colors.text)
                     .textSelection(.enabled)
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Section("Settings") {
                 if let modelId = assistant.defaultModelId {
                     LabeledContent("Default Model", value: modelId)
+                        .foregroundStyle(Theme.Colors.text)
                 }
                 if let webSearchMode = assistant.defaultWebSearchMode {
                     LabeledContent("Web Search", value: webSearchMode)
+                        .foregroundStyle(Theme.Colors.text)
                 }
                 LabeledContent("Default", value: assistant.isDefault ? "Yes" : "No")
+                    .foregroundStyle(Theme.Colors.text)
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
         }
         .scrollContentBackground(.hidden)
-        .background(Theme.Gradients.background)
+        .background(Theme.Colors.backgroundStart)
         .navigationTitle(assistant.name)
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -222,14 +231,16 @@ struct NewAssistantView: View {
                     TextField("Description (optional)", text: $description)
                         .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
-                Section(header: Text("System Prompt"), footer: Text("Define the assistant's behavior and personality")) {
+                Section(header: Text("System Prompt"), footer: Text("Define the assistant's behavior and personality").foregroundStyle(Theme.Colors.textTertiary)) {
                     TextEditor(text: $systemPrompt)
                         .frame(minHeight: 150)
                         .foregroundStyle(Theme.Colors.text)
                         .scrollContentBackground(.hidden)
                         .background(Color.clear)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section("Configuration") {
                     Picker("Model", selection: $defaultModelId) {
@@ -237,14 +248,19 @@ struct NewAssistantView: View {
                         Text("GPT-4 Turbo").tag("gpt-4-turbo")
                         Text("Claude 3.5 Sonnet").tag("claude-3.5-sonnet")
                     }
+                    .foregroundStyle(Theme.Colors.text)
 
                     Picker("Web Search", selection: $defaultWebSearchMode) {
                         Text("Off").tag("off")
                         Text("Standard").tag("standard")
                         Text("Deep").tag("deep")
                     }
+                    .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("New Assistant")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -252,6 +268,7 @@ struct NewAssistantView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
@@ -266,6 +283,7 @@ struct NewAssistantView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty || systemPrompt.isEmpty)
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }

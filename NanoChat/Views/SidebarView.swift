@@ -4,14 +4,18 @@ struct SidebarView: View {
     @Binding var selectedConversation: ConversationResponse?
     @Binding var isPresented: Bool
     @ObservedObject var viewModel: ChatViewModel
+    var onNewChat: (() -> Void)?
     @State private var searchText = ""
     @State private var showSettings = false
-    
+
     // For navigation to other sections
     @State private var showAssistants = false
     @State private var showProjects = false
     @State private var showStarred = false
-    
+
+    // Multi-selection
+    @StateObject private var multiSelectViewModel = MultiSelectViewModel<ConversationResponse>()
+
     // Conversation Management State
     @State private var showingRenameDialog = false
     @State private var conversationToRename: ConversationResponse?
@@ -21,44 +25,116 @@ struct SidebarView: View {
     @State private var projects: [ProjectResponse] = []
     @State private var isLoadingProjects = false
     @State private var errorMessage: String?
-    
+    @State private var showingBatchMoveSheet = false
+
     var body: some View {
         ZStack(alignment: .leading) {
             // Dark Sidebar Background
-            Theme.Colors.glassSurface
+            Theme.Colors.backgroundStart
                 .ignoresSafeArea()
-            
+
             VStack(spacing: 0) {
-                // Header: Search & Navigation
-                VStack(spacing: 12) {
-                    // Search Bar
-                    HStack(spacing: 8) {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                        
-                        TextField("Search", text: $searchText)
-                            .textFieldStyle(.plain)
-                            .font(.system(size: 14))
+                // Header: Search & New Chat or Edit Mode
+                if multiSelectViewModel.isEditMode {
+                    // Edit mode header
+                    HStack {
+                        Button {
+                            multiSelectViewModel.exitEditMode()
+                        } label: {
+                            Text("Cancel")
+                                .font(Theme.font(size: 16))
+                                .foregroundStyle(Theme.Colors.accent)
+                        }
+
+                        Spacer()
+
+                        Text(multiSelectViewModel.selectionDescription)
+                            .font(Theme.font(size: 15, weight: .medium))
                             .foregroundStyle(Theme.Colors.text)
+
+                        Spacer()
+
+                        Button {
+                            multiSelectViewModel.toggleSelectAll()
+                        } label: {
+                            Text(multiSelectViewModel.isAllSelected ? "Deselect" : "Select All")
+                                .font(Theme.font(size: 16))
+                                .foregroundStyle(Theme.Colors.accent)
+                        }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Theme.Colors.glassBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    
-                    // Main Navigation Links (Compact)
-                    HStack(spacing: 4) {
-                        SidebarLink(icon: "sparkles", title: "Assistants", action: { showAssistants = true })
-                        SidebarLink(icon: "folder", title: "Projects", action: { showProjects = true })
-                        SidebarLink(icon: "star", title: "Starred", action: { showStarred = true })
+                    .padding(.horizontal, Theme.scaled(16))
+                    .padding(.top, Theme.scaled(16))
+                    .padding(.bottom, Theme.scaled(8))
+                } else {
+                    // Normal header
+                    HStack(spacing: Theme.scaled(12)) {
+                        // Search Bar
+                        HStack(spacing: Theme.scaled(8)) {
+                            Image(systemName: "magnifyingglass")
+                                .font(Theme.font(size: 16))
+                                .foregroundStyle(Theme.Colors.textTertiary)
+
+                            TextField("Search", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .font(Theme.font(size: 16))
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+                        .padding(.horizontal, Theme.scaled(12))
+                        .padding(.vertical, Theme.scaled(10))
+                        .background(Theme.Colors.glassSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(10)))
+
+                        // Edit Button
+                        Button {
+                            multiSelectViewModel.enterEditMode()
+                        } label: {
+                            Image(systemName: "checkmark.circle")
+                                .font(Theme.font(size: 20))
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+
+                        // New Chat Button
+                        Button {
+                            onNewChat?()
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                isPresented = false
+                            }
+                        } label: {
+                            Image(systemName: "square.and.pencil")
+                                .font(Theme.font(size: 18))
+                                .foregroundStyle(Theme.Colors.text)
+                        }
+                    }
+                    .padding(.horizontal, Theme.scaled(16))
+                    .padding(.top, Theme.scaled(16))
+                    .padding(.bottom, Theme.scaled(8))
+                }
+
+                // Navigation List Items
+                VStack(spacing: 2) {
+                    SidebarListItem(icon: "sparkles", title: "Assistants") {
+                        showAssistants = true
+                    }
+                    SidebarListItem(icon: "folder", title: "Projects") {
+                        showProjects = true
+                    }
+                    SidebarListItem(icon: "star", title: "Starred") {
+                        showStarred = true
                     }
                 }
-                .padding()
-                
+                .padding(.horizontal, 8)
+                .padding(.bottom, 4)
+
+                // Thin divider
+                Rectangle()
+                    .fill(Theme.Colors.border)
+                    .frame(height: 0.5)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 8)
+
                 // Conversations List
                 ScrollView {
-                    LazyVStack(spacing: 16, pinnedViews: .sectionHeaders) {
+                    LazyVStack(spacing: 4, pinnedViews: .sectionHeaders) {
                         if viewModel.isLoading && viewModel.conversations.isEmpty {
                             ProgressView()
                                 .tint(Theme.Colors.secondary)
@@ -79,43 +155,61 @@ struct SidebarView: View {
                                 ) {
                                     ForEach(conversations, id: \.id) { conversation in
                                         Button {
-                                            selectedConversation = conversation
-                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                                isPresented = false
+                                            if multiSelectViewModel.isEditMode {
+                                                multiSelectViewModel.toggleSelection(conversation)
+                                            } else {
+                                                selectedConversation = conversation
+                                                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                                    isPresented = false
+                                                }
                                             }
                                         } label: {
-                                            SidebarRow(conversation: conversation, isSelected: selectedConversation?.id == conversation.id)
+                                            SidebarRow(
+                                                conversation: conversation,
+                                                isSelected: selectedConversation?.id == conversation.id,
+                                                isSelectionMode: multiSelectViewModel.isEditMode,
+                                                isChecked: multiSelectViewModel.isSelected(conversation)
+                                            )
                                         }
                                         .buttonStyle(.plain)
                                         .contextMenu {
-                                            Button {
-                                                Task { await togglePin(conversation) }
-                                            } label: {
-                                                Label(conversation.pinned ? "Unpin" : "Pin", systemImage: conversation.pinned ? "pin.slash" : "pin")
-                                            }
-                                            
-                                            Button {
-                                                conversationToRename = conversation
-                                                newConversationTitle = conversation.title
-                                                showingRenameDialog = true
-                                            } label: {
-                                                Label("Rename", systemImage: "pencil")
-                                            }
-                                            
-                                            Button {
-                                                conversationToMove = conversation
-                                                showingMoveSheet = true
-                                                Task { await loadProjects() }
-                                            } label: {
-                                                Label("Move to Project", systemImage: "folder")
-                                            }
-                                            
-                                            Divider()
-                                            
-                                            Button(role: .destructive) {
-                                                Task { await viewModel.deleteConversation(id: conversation.id); await viewModel.loadConversations() }
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
+                                            if !multiSelectViewModel.isEditMode {
+                                                Button {
+                                                    Task { await togglePin(conversation) }
+                                                } label: {
+                                                    Label(conversation.pinned ? "Unpin" : "Pin", systemImage: conversation.pinned ? "pin.slash" : "pin")
+                                                }
+
+                                                Button {
+                                                    conversationToRename = conversation
+                                                    newConversationTitle = conversation.title
+                                                    showingRenameDialog = true
+                                                } label: {
+                                                    Label("Rename", systemImage: "pencil")
+                                                }
+
+                                                Button {
+                                                    conversationToMove = conversation
+                                                    showingMoveSheet = true
+                                                    Task { await loadProjects() }
+                                                } label: {
+                                                    Label("Move to Project", systemImage: "folder")
+                                                }
+
+                                                Button {
+                                                    multiSelectViewModel.enterEditMode()
+                                                    multiSelectViewModel.toggleSelection(conversation)
+                                                } label: {
+                                                    Label("Select", systemImage: "checkmark.circle")
+                                                }
+
+                                                Divider()
+
+                                                Button(role: .destructive) {
+                                                    Task { await viewModel.deleteConversation(id: conversation.id); await viewModel.loadConversations() }
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
                                             }
                                         }
                                     }
@@ -127,38 +221,83 @@ struct SidebarView: View {
                 }
                 
                 Spacer()
-                
-                // User Footer
-                VStack(spacing: 0) {
-                    Divider()
-                        .overlay(Theme.Colors.border)
-                    
+
+                // Batch Operations Bar (shown in edit mode with selections)
+                if multiSelectViewModel.isEditMode && multiSelectViewModel.hasSelection {
+                    HStack(spacing: 20) {
+                        // Move to Project
+                        Button {
+                            showingBatchMoveSheet = true
+                            Task { await loadProjects() }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "folder")
+                                    .font(.system(size: 20))
+                                Text("Move")
+                                    .font(.system(size: 11))
+                            }
+                            .foregroundStyle(Theme.Colors.text)
+                        }
+
+                        // Pin/Unpin
+                        Button {
+                            Task { await batchTogglePin() }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "pin")
+                                    .font(.system(size: 20))
+                                Text("Pin")
+                                    .font(.system(size: 11))
+                            }
+                            .foregroundStyle(Theme.Colors.text)
+                        }
+
+                        // Delete
+                        Button {
+                            Task { await batchDelete() }
+                        } label: {
+                            VStack(spacing: 4) {
+                                Image(systemName: "trash")
+                                    .font(.system(size: 20))
+                                Text("Delete")
+                                    .font(.system(size: 11))
+                            }
+                            .foregroundStyle(.red)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Theme.Colors.glassSurface)
+                } else {
+                    // User Footer
                     Button {
                         showSettings = true
                     } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "person.circle.fill")
-                                .resizable()
-                                .frame(width: 32, height: 32)
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("User")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundStyle(Theme.Colors.text)
-                                Text("Settings")
-                                    .font(.caption)
-                                    .foregroundStyle(Theme.Colors.textTertiary)
-                            }
-                            
+                        HStack(spacing: Theme.scaled(12)) {
+                            // User Avatar
+                            Circle()
+                                .fill(Theme.Colors.accent)
+                                .frame(width: Theme.scaled(32), height: Theme.scaled(32))
+                                .overlay(
+                                    Text("U")
+                                        .font(Theme.font(size: 14, weight: .semibold))
+                                        .foregroundStyle(.white)
+                                )
+
+                            Text("Settings")
+                                .font(Theme.font(size: 15))
+                                .foregroundStyle(Theme.Colors.text)
+
                             Spacer()
-                            
-                            Image(systemName: "ellipsis")
-                                .foregroundStyle(Theme.Colors.textTertiary)
+
+                            Image(systemName: "gearshape")
+                                .font(Theme.font(size: 16))
+                                .foregroundStyle(Theme.Colors.textSecondary)
                         }
-                        .padding()
-                        .background(Theme.Colors.glassSurface)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, Theme.scaled(16))
+                        .padding(.vertical, Theme.scaled(12))
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                 }
@@ -166,7 +305,7 @@ struct SidebarView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 Color.clear.frame(height: 1)
             }
-            .frame(width: 300) // Constrain width to match RootView offset
+            .frame(width: Theme.scaled(300))
         }
         .sheet(isPresented: $showAssistants) { AssistantsListView() }
         .sheet(isPresented: $showProjects) { ProjectsListView() }
@@ -197,6 +336,64 @@ struct SidebarView: View {
         .onAppear {
             Task { await viewModel.loadConversations() }
         }
+        .onChange(of: viewModel.conversations) { _, newValue in
+            multiSelectViewModel.items = newValue
+            multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems.intersection(Set(newValue.map { $0.id }))
+        }
+        .sheet(isPresented: $showingBatchMoveSheet) {
+            ProjectPickerView(
+                projects: projects,
+                selectedProjectId: nil,
+                isLoading: isLoadingProjects
+            ) { projectId in
+                Task { await batchMoveToProject(projectId) }
+            }
+            .presentationDetents([.medium, .large])
+        }
+    }
+
+    // MARK: - Batch Operations
+
+    private func batchDelete() async {
+        let idsToDelete = multiSelectViewModel.selectedItems
+        multiSelectViewModel.exitEditMode()
+
+        for id in idsToDelete {
+            await viewModel.deleteConversation(id: id)
+        }
+        await viewModel.loadConversations()
+        HapticManager.shared.warning()
+    }
+
+    private func batchTogglePin() async {
+        let idsToPin = multiSelectViewModel.selectedItems
+        multiSelectViewModel.exitEditMode()
+
+        for id in idsToPin {
+            do {
+                _ = try await NanoChatAPI.shared.toggleConversationPin(conversationId: id)
+            } catch {
+                // Continue with next
+            }
+        }
+        await viewModel.loadConversations()
+        HapticManager.shared.success()
+    }
+
+    private func batchMoveToProject(_ projectId: String?) async {
+        let idsToMove = multiSelectViewModel.selectedItems
+        showingBatchMoveSheet = false
+        multiSelectViewModel.exitEditMode()
+
+        for id in idsToMove {
+            do {
+                try await viewModel.setConversationProject(conversationId: id, projectId: projectId)
+            } catch {
+                // Continue with next
+            }
+        }
+        await viewModel.loadConversations()
+        HapticManager.shared.success()
     }
     
     // MARK: - Grouping Logic
@@ -301,26 +498,29 @@ struct SidebarView: View {
 
 // MARK: - Components
 
-struct SidebarLink: View {
+struct SidebarListItem: View {
     let icon: String
     let title: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 6) {
+            HStack(spacing: Theme.scaled(12)) {
                 Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .font(Theme.font(size: 18))
+                    .foregroundStyle(Theme.Colors.text)
+                    .frame(width: Theme.scaled(24))
+
                 Text(title)
-                    .font(.system(size: 10))
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .lineLimit(1)
+                    .font(Theme.font(size: 16))
+                    .foregroundStyle(Theme.Colors.text)
+
+                Spacer(minLength: 0)
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 8)
-            .background(Theme.Colors.glassBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .padding(.horizontal, Theme.scaled(12))
+            .padding(.vertical, Theme.scaled(12))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -329,28 +529,52 @@ struct SidebarLink: View {
 struct SidebarRow: View {
     let conversation: ConversationResponse
     let isSelected: Bool
-    
+    var isSelectionMode: Bool = false
+    var isChecked: Bool = false
+
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: Theme.scaled(10)) {
+            // Selection checkbox (shown in selection mode)
+            if isSelectionMode {
+                ZStack {
+                    Circle()
+                        .fill(isChecked ? Theme.Colors.accent : Color.clear)
+                        .frame(width: Theme.scaled(22), height: Theme.scaled(22))
+                        .overlay(
+                            Circle()
+                                .strokeBorder(isChecked ? Theme.Colors.accent : Theme.Colors.textTertiary, lineWidth: 2)
+                        )
+
+                    if isChecked {
+                        Image(systemName: "checkmark")
+                            .font(Theme.font(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .animation(.easeInOut(duration: 0.15), value: isChecked)
+            }
+
             Text(conversation.title)
-                .font(.system(size: 14))
-                .foregroundStyle(isSelected ? Theme.Colors.text : Theme.Colors.textSecondary)
+                .font(Theme.font(size: 15))
+                .foregroundStyle(Theme.Colors.text)
                 .lineLimit(1)
-            
-            Spacer()
-            
-            if conversation.pinned {
+
+            Spacer(minLength: 0)
+
+            if conversation.pinned && !isSelectionMode {
                 Image(systemName: "pin.fill")
-                    .font(.caption2)
+                    .font(Theme.font(size: 10))
                     .foregroundStyle(Theme.Colors.textTertiary)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, Theme.scaled(12))
+        .padding(.vertical, Theme.scaled(10))
         .background(
-            isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear
+            isChecked ? Theme.Colors.accent.opacity(0.15) : (isSelected ? Theme.Colors.glassSurface : Color.clear)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .padding(.horizontal, 8)
+        .contentShape(Rectangle())
+        .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(8)))
+        .padding(.horizontal, Theme.scaled(8))
     }
 }

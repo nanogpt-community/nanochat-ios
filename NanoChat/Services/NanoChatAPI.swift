@@ -235,6 +235,14 @@ final class NanoChatAPI: Sendable {
         return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
     }
 
+    func deleteMessage(messageId: String) async throws -> [String: Bool] {
+        let request = DeleteMessageRequest(
+            action: "delete",
+            messageId: messageId
+        )
+        return try await self.request(endpoint: "/api/db/messages", method: .post, body: request)
+    }
+
     func rateMessage(messageId: String, thumbs: MessageThumbsRating?) async throws -> MessageRatingResponse {
         let request = MessageRatingRequest(
             messageId: messageId,
@@ -301,7 +309,7 @@ final class NanoChatAPI: Sendable {
     /// Generates a message using SSE streaming for real-time token delivery
     /// - Returns: An AsyncThrowingStream of SSEEvent that yields events as they arrive
     func generateMessageStream(
-        message: String,
+        message: String?,
         modelId: String,
         conversationId: String? = nil,
         assistantId: String? = nil,
@@ -1407,6 +1415,16 @@ struct SetMessageStarredRequest: Codable {
     }
 }
 
+struct DeleteMessageRequest: Codable {
+    let action: String
+    let messageId: String
+
+    enum CodingKeys: String, CodingKey {
+        case action
+        case messageId = "messageId"
+    }
+}
+
 struct GenerateMessageRequest: Codable {
     let message: String
     let model_id: String
@@ -1425,7 +1443,7 @@ struct GenerateMessageRequest: Codable {
 
 /// Request body for the SSE streaming endpoint (no image_params/video_params/images as streaming doesn't support image generation)
 struct GenerateMessageStreamRequest: Codable {
-    let message: String
+    let message: String?  // Optional for regeneration (when conversation_id exists)
     let model_id: String
     let conversation_id: String?
     let assistant_id: String?

@@ -22,9 +22,10 @@ final class ModelManager: ObservableObject {
                let cachedModels = try? JSONDecoder().decode([UserModel].self, from: cachedData) {
                 print("Loaded models from cache")
                 self.allModels = cachedModels
+                loadHiddenModels()
                 self.updateGroupedModels()
                 self.selectDefaultModelIfNeeded()
-                
+
                 // Check if cache is fresh enough (e.g. 1 hour)
                 let lastFetch = UserDefaults.standard.double(forKey: "lastModelFetchTime")
                 let now = Date().timeIntervalSince1970

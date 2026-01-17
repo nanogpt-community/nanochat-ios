@@ -20,6 +20,7 @@
 		1F5D2B7469D2DA9C77DA0AEA /* AudioPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2610DEE19D1ECFCD6BB98B7A /* AudioPreferences.swift */; };
 		245767F4C7E23366BECD046A /* AudioRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F96ADF93A24182B7CEF0BF8C /* AudioRecorder.swift */; };
 		2903745958E926B21CE907B9 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4E548298D554723BE7D2CB6 /* GlassCard.swift */; };
+		3A58C547B0CDC92E1470B986 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BFCC361AECB2D6844B20EBF /* MarkdownText.swift */; };
 		3A81D82C12C905D2C192CD47 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F163F980E2D393DDB7906046 /* SidebarView.swift */; };
 		3F871C8B46CADCE1E616663E /* ChatViewComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C5914F1243A8C1699F1B7C0 /* ChatViewComponents.swift */; };
 		42138CD514B77EFF1A88EA72 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1CF1B3A9B46FB65CBD0460F /* Message.swift */; };
@@ -103,6 +104,7 @@
 		5615E88163B35595CF9E6F21 /* ModelInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelInfoView.swift; sourceTree = "<group>"; };
 		58F99ACB16DB3E0198AFAC29 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
 		5B7DF4D25A93694D5F44B3A5 /* AccountSettingsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsViewModel.swift; sourceTree = "<group>"; };
+		5BFCC361AECB2D6844B20EBF /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		5D74C00BB1A64E10350CB805 /* AudioPlaybackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlaybackManager.swift; sourceTree = "<group>"; };
 		601C29BEED0BEECB337F2ECB /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
 		63E1C991304BB9CF26FDAD68 /* AnalyticsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsViewModel.swift; sourceTree = "<group>"; };
@@ -160,6 +162,7 @@
 				FB219170DF3996FD2078F014 /* GlassList.swift */,
 				BE04DD0A4685ED39FE31DCEC /* GlassSheet.swift */,
 				1941464E6EB8C70B9CFE8277 /* LoadingSkeleton.swift */,
+				5BFCC361AECB2D6844B20EBF /* MarkdownText.swift */,
 				CE5444E2C13C7F73CDB7D303 /* ScaleButtonStyle.swift */,
 			);
 			path = Components;
@@ -396,6 +399,7 @@
 				9E2DBDBF967D55B679A9575C /* LiquidGlassModifiers.swift in Sources */,
 				6D0FDBBD74292A124093EEE3 /* LoadingSkeleton.swift in Sources */,
 				71237951A17BAC7477C12A2F /* MainTabView.swift in Sources */,
+				3A58C547B0CDC92E1470B986 /* MarkdownText.swift in Sources */,
 				42138CD514B77EFF1A88EA72 /* Message.swift in Sources */,
 				EB7CE8EEFFD68E3C2D37489A /* Model.swift in Sources */,
 				93B1F3ABBD120E8E38F1C20B /* ModelCapabilityBadge.swift in Sources */,

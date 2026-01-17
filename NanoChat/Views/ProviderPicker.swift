@@ -11,135 +11,134 @@ struct ProviderPicker: View {
     var body: some View {
         VStack(spacing: 0) {
             Text("Settings")
-                .font(.headline)
+                .font(Theme.font(size: 17, weight: .semibold))
                 .foregroundStyle(Theme.Colors.text)
-                .padding(.vertical, 12)
+                .padding(.vertical, Theme.scaled(12))
                 .frame(maxWidth: .infinity)
                 .background(Theme.Colors.glassBackground)
-            
+
             Divider()
-            
+
             ScrollView {
-                VStack(spacing: 24) {
-                    
+                VStack(spacing: Theme.scaled(24)) {
+
                     // MARK: - Web Search Section
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: Theme.scaled(12)) {
                         Text("Web Search")
-                            .font(.caption)
-                            .fontWeight(.semibold)
+                            .font(Theme.font(size: 12, weight: .semibold))
                             .foregroundStyle(Theme.Colors.textSecondary)
-                            .padding(.horizontal, 16)
-                        
+                            .padding(.horizontal, Theme.scaled(16))
+
                         // Search Mode Selector
-                        HStack(spacing: 8) {
+                        HStack(spacing: Theme.scaled(8)) {
                             ForEach(WebSearchMode.allCases) { mode in
                                 Button {
                                     withAnimation {
                                         webSearchMode = mode
                                     }
                                 } label: {
-                                    VStack(spacing: 2) {
+                                    VStack(spacing: Theme.scaled(2)) {
                                         Text(mode.displayName)
-                                            .font(.subheadline)
-                                            .fontWeight(.medium)
+                                            .font(Theme.font(size: 14, weight: .medium))
                                         if !mode.costDisplay.isEmpty {
                                             Text(mode.costDisplay)
-                                                .font(.caption2)
+                                                .font(Theme.font(size: 11))
                                                 .opacity(0.7)
                                         }
                                     }
-                                    .padding(.vertical, 8)
+                                    .padding(.vertical, Theme.scaled(8))
                                     .frame(maxWidth: .infinity)
                                     .background(
-                                        webSearchMode == mode 
-                                        ? Theme.Colors.accent.opacity(0.1) 
+                                        webSearchMode == mode
+                                        ? Theme.Colors.accent.opacity(0.1)
                                         : Theme.Colors.glassBackground
                                     )
                                     .foregroundStyle(
-                                        webSearchMode == mode 
-                                        ? Theme.Colors.accent 
+                                        webSearchMode == mode
+                                        ? Theme.Colors.accent
                                         : Theme.Colors.text
                                     )
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(8)))
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
+                                        RoundedRectangle(cornerRadius: Theme.scaled(8))
                                             .stroke(
-                                                webSearchMode == mode 
-                                                ? Theme.Colors.accent 
-                                                : Color.clear, 
+                                                webSearchMode == mode
+                                                ? Theme.Colors.accent
+                                                : Color.clear,
                                                 lineWidth: 1
                                             )
                                     )
+                                    .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.horizontal, 16)
-                        
+                        .padding(.horizontal, Theme.scaled(16))
+
                         // Search Provider Selector (Only if not off)
                         if webSearchMode != .off {
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: Theme.scaled(8)) {
                                 Text("Search Provider")
-                                    .font(.caption)
+                                    .font(Theme.font(size: 12))
                                     .foregroundStyle(Theme.Colors.textTertiary)
-                                    .padding(.horizontal, 16)
-                                
+                                    .padding(.horizontal, Theme.scaled(16))
+
                                 ScrollView(.horizontal, showsIndicators: false) {
-                                    HStack(spacing: 8) {
+                                    HStack(spacing: Theme.scaled(8)) {
                                         ForEach(WebSearchProvider.allCases) { provider in
                                             Button {
                                                 webSearchProvider = provider
                                             } label: {
-                                                HStack(spacing: 6) {
+                                                HStack(spacing: Theme.scaled(6)) {
                                                     Image(systemName: provider.iconName)
-                                                        .font(.caption)
+                                                        .font(Theme.font(size: 12))
                                                     Text(provider.displayName)
-                                                        .font(.caption)
+                                                        .font(Theme.font(size: 12))
                                                 }
-                                                .padding(.vertical, 6)
-                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, Theme.scaled(6))
+                                                .padding(.horizontal, Theme.scaled(12))
                                                 .background(
-                                                    webSearchProvider == provider 
-                                                    ? Theme.Colors.primary.opacity(0.1) 
+                                                    webSearchProvider == provider
+                                                    ? Theme.Colors.primary.opacity(0.1)
                                                     : Theme.Colors.glassBackground
                                                 )
                                                 .foregroundStyle(
-                                                    webSearchProvider == provider 
-                                                    ? Theme.Colors.primary 
+                                                    webSearchProvider == provider
+                                                    ? Theme.Colors.primary
                                                     : Theme.Colors.text
                                                 )
                                                 .clipShape(Capsule())
                                                 .overlay(
                                                     Capsule()
                                                         .stroke(
-                                                            webSearchProvider == provider 
-                                                            ? Theme.Colors.primary 
-                                                            : Theme.Colors.border, 
+                                                            webSearchProvider == provider
+                                                            ? Theme.Colors.primary
+                                                            : Theme.Colors.border,
                                                             lineWidth: 1
                                                         )
                                                 )
+                                                .contentShape(Capsule())
                                             }
                                             .buttonStyle(.plain)
                                         }
                                     }
-                                    .padding(.horizontal, 16)
+                                    .padding(.horizontal, Theme.scaled(16))
                                 }
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))
                         }
                     }
-                    .padding(.top, 16)
+                    .padding(.top, Theme.scaled(16))
 
                     Divider()
 
                     // MARK: - Model Provider Section
                     VStack(alignment: .leading, spacing: 0) {
                         Text("Model Provider")
-                            .font(.caption)
-                            .fontWeight(.semibold)
+                            .font(Theme.font(size: 12, weight: .semibold))
                             .foregroundStyle(Theme.Colors.textSecondary)
-                            .padding(.horizontal, 16)
-                            .padding(.bottom, 8)
+                            .padding(.horizontal, Theme.scaled(16))
+                            .padding(.bottom, Theme.scaled(8))
 
                         // Auto Option
                         Button {
@@ -147,24 +146,27 @@ struct ProviderPicker: View {
                         } label: {
                             HStack {
                                 Image(systemName: "server.rack")
+                                    .font(Theme.font(size: 16))
                                     .foregroundStyle(Theme.Colors.primary)
                                 Text("Auto (Recommended)")
-                                    .font(.body)
+                                    .font(Theme.font(size: 16))
                                     .foregroundStyle(Theme.Colors.text)
                                 Spacer()
                                 if selectedProviderId == nil {
                                     Image(systemName: "checkmark")
+                                        .font(Theme.font(size: 14))
                                         .foregroundStyle(Theme.Colors.accent)
                                 }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, Theme.scaled(16))
+                            .padding(.vertical, Theme.scaled(12))
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        
-                        Divider().padding(.leading, 16)
-                        
+
+                        Divider().padding(.leading, Theme.scaled(16))
+
                         // Providers List
                         ForEach(availableProviders) { provider in
                             Button {
@@ -172,48 +174,51 @@ struct ProviderPicker: View {
                             } label: {
                                 HStack {
                                     Image(systemName: "server.rack")
+                                        .font(Theme.font(size: 16))
                                         .foregroundStyle(Theme.Colors.primary)
-                                    
-                                    VStack(alignment: .leading, spacing: 2) {
+
+                                    VStack(alignment: .leading, spacing: Theme.scaled(2)) {
                                         Text(provider.provider.capitalized)
-                                            .font(.body)
+                                            .font(Theme.font(size: 16))
                                             .foregroundStyle(Theme.Colors.text)
                                         Text("\(formatPrice(provider.pricing.inputPer1kTokens)) input / \(formatPrice(provider.pricing.outputPer1kTokens)) output")
-                                            .font(.caption)
+                                            .font(Theme.font(size: 12))
                                             .foregroundStyle(Theme.Colors.textSecondary)
                                     }
-                                    
+
                                     Spacer()
-                                    
+
                                     if selectedProviderId == provider.provider {
                                         Image(systemName: "checkmark")
+                                            .font(Theme.font(size: 14))
                                             .foregroundStyle(Theme.Colors.accent)
                                     }
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 12)
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, Theme.scaled(16))
+                                .padding(.vertical, Theme.scaled(12))
                                 .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
-                            
-                            Divider().padding(.leading, 16)
+
+                            Divider().padding(.leading, Theme.scaled(16))
                         }
                     }
-                    
+
                     Text("5% markup on provider pricing")
-                        .font(.caption2)
+                        .font(Theme.font(size: 11))
                         .foregroundStyle(Theme.Colors.textTertiary)
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 16)
+                        .padding(.horizontal, Theme.scaled(16))
+                        .padding(.bottom, Theme.scaled(16))
                 }
             }
             .scrollIndicators(.hidden)
         }
-        .frame(maxHeight: 520)
+        .frame(maxHeight: Theme.scaled(520))
         .background(Theme.Colors.backgroundStart)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(16)))
         .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Theme.scaled(16))
     }
     
     private func formatPrice(_ price: Double) -> String {

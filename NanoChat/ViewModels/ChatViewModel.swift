@@ -31,6 +31,9 @@ final class ChatViewModel: ObservableObject {
     @Published var streamingMessageId: String?
     @Published var streamingConversationId: String?
 
+    // Message metadata storage (messageId -> metadata)
+    @Published var messageMetadata: [String: MessageMetadata] = [:]
+
     private let api = NanoChatAPI.shared
 
     func loadConversations() async {
@@ -233,7 +236,17 @@ final class ChatViewModel: ObservableObject {
                         streamingReasoning += reasoning
                     }
 
-                case .messageComplete(_, _, _):
+                case .messageComplete(let tokenCount, let costUsd, let responseTimeMs):
+                    // Store message metadata
+                    if let msgId = streamingMessageId {
+                        messageMetadata[msgId] = MessageMetadata(
+                            tokenCount: tokenCount,
+                            costUsd: costUsd,
+                            responseTimeMs: responseTimeMs,
+                            modelId: modelId
+                        )
+                    }
+
                     // Reload messages to get the final saved message from the server
                     if let convId = streamingConversationId {
                         await loadMessages(conversationId: convId)
@@ -427,5 +440,97 @@ final class ChatViewModel: ObservableObject {
 
     func removeStarredMessage(messageId: String) {
         starredMessages.removeAll { $0.id == messageId }
+    }
+
+    // MARK: - Regenerate Response
+
+    /// Regenerate a response without creating a new user message
+    /// The API will generate based on the existing conversation history
+    func regenerateResponse(
+        conversationId: String,
+        modelId: String,
+        assistantId: String? = nil,
+        webSearchEnabled: Bool = false,
+        webSearchMode: String? = nil,
+        webSearchProvider: String? = nil,
+        providerId: String? = nil
+    ) async {
+        isGenerating = true
+        streamingContent = ""
+        streamingReasoning = ""
+        streamingMessageId = nil
+        streamingConversationId = nil
+
+        do {
+            let stream = api.generateMessageStream(
+                message: nil,  // Nil message - API will regenerate based on last user message in conversation
+                modelId: modelId,
+                conversationId: conversationId,
+                assistantId: assistantId,
+                projectId: currentConversation?.projectId,
+                webSearchEnabled: webSearchEnabled,
+                webSearchMode: webSearchMode,
+                webSearchProvider: webSearchProvider,
+                providerId: providerId,
+                documents: nil,
+                reasoningEffort: nil
+            )
+
+            for try await event in stream {
+                switch event {
+                case .messageStart(let convId, let msgId):
+                    streamingConversationId = convId
+                    streamingMessageId = msgId
+
+                case .delta(let content, let reasoning):
+                    streamingContent += content
+                    if !reasoning.isEmpty {
+                        streamingReasoning += reasoning
+                    }
+
+                case .messageComplete(let tokenCount, let costUsd, let responseTimeMs):
+                    // Store message metadata
+                    if let msgId = streamingMessageId {
+                        messageMetadata[msgId] = MessageMetadata(
+                            tokenCount: tokenCount,
+                            costUsd: costUsd,
+                            responseTimeMs: responseTimeMs,
+                            modelId: modelId
+                        )
+                    }
+
+                    // Reload messages to get the final saved message from the server
+                    await loadMessages(conversationId: conversationId)
+                    await loadConversations()
+
+                    streamingMessageId = nil
+                    streamingConversationId = nil
+                    isGenerating = false
+                    streamingContent = ""
+                    streamingReasoning = ""
+
+                    HapticManager.shared.messageReceived()
+
+                case .error(let errorMsg):
+                    errorMessage = errorMsg
+                    streamingMessageId = nil
+                    streamingConversationId = nil
+                    isGenerating = false
+                    streamingContent = ""
+                    streamingReasoning = ""
+                }
+            }
+
+            if isGenerating {
+                isGenerating = false
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            streamingMessageId = nil
+            streamingConversationId = nil
+            isGenerating = false
+            streamingContent = ""
+            streamingReasoning = ""
+        }
     }
 }

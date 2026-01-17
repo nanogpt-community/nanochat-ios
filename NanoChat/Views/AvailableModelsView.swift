@@ -42,7 +42,7 @@ struct AvailableModelsView: View {
 
     var body: some View {
         ZStack {
-            Theme.Gradients.background
+            Theme.Colors.backgroundStart
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
@@ -67,12 +67,11 @@ struct AvailableModelsView: View {
                         }
                     }
                     .padding(Theme.Spacing.md)
-                    .padding(Theme.Spacing.md)
-                    .background(Theme.Colors.glassPane)
+                    .background(Theme.Colors.glassSurface)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                     .overlay(
                         RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                            .strokeBorder(Theme.Colors.border, lineWidth: 1)
                     )
 
                     // Filter Toggles
@@ -102,8 +101,7 @@ struct AvailableModelsView: View {
                     }
                 }
                 .padding()
-                .padding()
-                .background(Theme.Colors.glassPane)
+                .background(Theme.Colors.backgroundStart)
 
                 // List
                 ScrollView {

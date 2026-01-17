@@ -14,7 +14,8 @@ struct RootView: View {
             SidebarView(
                 selectedConversation: $selectedConversation,
                 isPresented: $showSidebar,
-                viewModel: viewModel
+                viewModel: viewModel,
+                onNewChat: createNewChat
             )
             
             // Chat Layer (Slides over)
@@ -53,7 +54,7 @@ struct RootView: View {
                          }
                 }
             }
-            .offset(x: showSidebar ? 300 : 0) // Slide right
+            .offset(x: showSidebar ? Theme.scaled(300) : 0) // Slide right
             .shadow(color: .black.opacity(0.1), radius: 10, x: -5, y: 0) // Shadow for depth
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: showSidebar)
             .gesture(
@@ -78,6 +79,10 @@ struct RootView: View {
     
     private func createNewChat() {
         Task {
+            // Load conversations first so we can check for existing empty chats
+            if viewModel.conversations.isEmpty {
+                await viewModel.loadConversations()
+            }
             await viewModel.createConversation()
             if let newConv = viewModel.currentConversation {
                 await MainActor.run {

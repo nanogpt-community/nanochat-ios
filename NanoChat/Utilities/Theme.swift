@@ -6,79 +6,63 @@ import AppKit
 #endif
 
 #if os(macOS)
-private let scaleFactor: CGFloat = 1.5
+private let scaleFactor: CGFloat = 1.4
 #else
 private let scaleFactor: CGFloat = {
     if ProcessInfo.processInfo.isiOSAppOnMac {
-        return 1.5
+        return 1.4
     }
     return 1.0
 }()
 #endif
 
 struct Theme {
-    // MARK: - Colors
+    /// Global scale factor for macOS compatibility
+    static let scale: CGFloat = scaleFactor
+
+    /// Scale a dimension for the current platform
+    static func scaled(_ value: CGFloat) -> CGFloat {
+        return value * scaleFactor
+    }
+
+    /// Create a scaled font
+    static func font(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        return Font.system(size: size * scaleFactor, weight: weight, design: design)
+    }
+    // MARK: - Colors (Sleek Black Theme)
     struct Colors {
-        #if os(iOS)
-        // Background
-        static let backgroundStart = Color(uiColor: .systemBackground)
-        static let backgroundEnd = Color(uiColor: .systemBackground)
-        
-        // Text
-        static let textTertiary = Color(uiColor: .tertiaryLabel)
-        
-        // Glass/Surfaces
-        static let glassBackground = Color(uiColor: .systemBackground)
-        static let glassSurface = Color(uiColor: .secondarySystemBackground)
-        static let userBubble = Color(uiColor: .systemGray5)
-        static let border = Color(uiColor: .separator)
-        
-        #elseif os(macOS)
-        // Background
-        static let backgroundStart = Color(nsColor: .windowBackgroundColor)
-        static let backgroundEnd = Color(nsColor: .windowBackgroundColor)
-        
-        // Text
-        static let textTertiary = Color(nsColor: .tertiaryLabelColor)
-        
-        // Glass/Surfaces
-        static let glassBackground = Color(nsColor: .windowBackgroundColor)
-        static let glassSurface = Color(nsColor: .controlBackgroundColor)
-        static let userBubble = Color(nsColor: .controlBackgroundColor) // Approximate
-        static let border = Color(nsColor: .separatorColor)
-        
-        #else
-        // Fallback for other platforms
+        // Background - Pure black for OLED-friendly dark theme
         static let backgroundStart = Color.black
         static let backgroundEnd = Color.black
-        static let textTertiary = Color.gray
+
+        // Text
+        static let text = Color.white
+        static let textSecondary = Color.white.opacity(0.7)
+        static let textTertiary = Color.white.opacity(0.5)
+
+        // Glass/Surfaces - Subtle dark surfaces
         static let glassBackground = Color.black
-        static let glassSurface = Color.gray.opacity(0.2)
-        static let userBubble = Color.gray.opacity(0.3)
-        static let border = Color.gray.opacity(0.5)
-        #endif
+        static let glassSurface = Color.white.opacity(0.08)
+        static let userBubble = Color.white.opacity(0.12)
+        static let border = Color.white.opacity(0.15)
 
         // Primary accents
-        static let primary = Color.primary
-        static let secondary = Color.secondary
+        static let primary = Color.white
+        static let secondary = Color.white.opacity(0.7)
         static let accent = Color.blue
 
-        // Gradient colors (Simplified/Removed for ChatGPT style)
+        // Gradient colors
         static let gradientStart = backgroundStart
         static let gradientEnd = backgroundEnd
 
-        // Text colors
-        static let text = Color.primary
-        static let textSecondary = Color.secondary
+        // Glass effect
+        static let glassBorder = Color.white.opacity(0.1)
+        static let glassShadow = Color.black.opacity(0.3)
 
-        // Glass effect (Made very subtle or transparent)
-        static let glassBorder = Color.clear
-        static let glassShadow = Color.black.opacity(0.1)
-        
         // Specific Glass Elements
-        static let glassPane = Material.bar
-        
-        // User message gradient (Solid now)
+        static let glassPane = Material.ultraThinMaterial
+
+        // User message gradient
         static let userBubbleGradient = LinearGradient(
             colors: [userBubble, userBubble],
             startPoint: .topLeading,
@@ -87,15 +71,19 @@ struct Theme {
 
         // Assistant message
         static let assistantBubble = Color.clear
-        
+
         // Status colors
         static let success = Color.green
         static let warning = Color.orange
         static let error = Color.red
-        
+
         // Aliases for compatibility
         static let textPrimary = text
         static let cardBackground = glassSurface
+
+        // List/Section backgrounds for consistent dark theme
+        static let listBackground = Color.black
+        static let sectionBackground = Color.white.opacity(0.06)
     }
     
     #if os(macOS)

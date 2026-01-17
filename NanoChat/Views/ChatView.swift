@@ -33,6 +33,7 @@ struct ChatView: View {
     @State private var searchText = ""
     @State private var isSearchVisible = false
     @State private var selectedDocument: MessageDocumentResponse?
+    @State private var showAssistantPicker = false
     
     @Environment(\.dismiss) private var dismiss // For back button behavior
     
@@ -131,75 +132,7 @@ struct ChatView: View {
                 }
             }
         }
-        .overlay(
-            ZStack {
-                if showModelPicker {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                showModelPicker = false
-                            }
-                        }
-                    
-                    VStack {
-                        // Filter groups if a provider is selected
-                        let groupsToShow: [ModelGroup] = {
-                            if let providerId = viewModel.selectedProviderId {
-                                let filtered = modelManager.groupedModels.filter {
-                                    $0.name.localizedCaseInsensitiveContains(providerId)
-                                }
-                                return filtered.isEmpty ? modelManager.groupedModels : filtered
-                            }
-                            return modelManager.groupedModels
-                        }()
-                        
-                        ModelPicker(
-                            groupedModels: groupsToShow,
-                            selectedModelId: modelManager.selectedModel?.modelId
-                        ) { selectedModel in
-                            modelManager.selectModel(selectedModel)
-                            UserDefaults.standard.set(selectedModel.modelId, forKey: "lastUsedModel")
-                            withAnimation { showModelPicker = false }
-                        }
-                        .padding(.top, 60) // Offset from top
-                        Spacer()
-                    }
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                }
-                
-                if showProviderPicker {
-                    Color.black.opacity(0.3)
-                        .ignoresSafeArea()
-                        .onTapGesture {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                showProviderPicker = false
-                            }
-                        }
-                    
-                    VStack {
-                        Spacer()
-                        ProviderPicker(
-                            availableProviders: viewModel.availableProviders,
-                            selectedProviderId: viewModel.selectedProviderId,
-                            onSelectProvider: { providerId in
-                                viewModel.selectProvider(providerId: providerId)
-                                if let modelId = modelManager.selectedModel?.modelId, let providerId = providerId {
-                                    modelManager.saveLastProvider(for: modelId, providerId: providerId)
-                                }
-                                withAnimation { showProviderPicker = false }
-                            },
-                            webSearchMode: $webSearchMode,
-                            webSearchProvider: $webSearchProvider
-                        )
-                        .padding(.bottom, 80) // Offset from bottom input
-                    }
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showModelPicker)
-            .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showProviderPicker)
-        )
+        .overlay(pickerOverlays)
         .sheet(isPresented: $showVoiceRecorder) {
             VoiceRecorderSheet(
                 audioPreferences: audioPreferences,
@@ -235,55 +168,343 @@ struct ChatView: View {
     }
     
     private var chatHeader: some View {
-        HStack {
-            if isPushed {
+        HStack(spacing: Theme.scaled(12)) {
+            if multiSelectViewModel.isEditMode {
+                // Edit mode header
+                Button {
+                    multiSelectViewModel.exitEditMode()
+                } label: {
+                    Text("Cancel")
+                        .font(Theme.font(size: 16))
+                        .foregroundStyle(Theme.Colors.accent)
+                }
+
+                Spacer()
+
+                Text(multiSelectViewModel.selectionDescription)
+                    .font(Theme.font(size: 15, weight: .medium))
+                    .foregroundStyle(Theme.Colors.text)
+
+                Spacer()
+
+                Button {
+                    multiSelectViewModel.toggleSelectAll()
+                } label: {
+                    Text(multiSelectViewModel.isAllSelected ? "Deselect All" : "Select All")
+                        .font(Theme.font(size: 16))
+                        .foregroundStyle(Theme.Colors.accent)
+                }
+            } else if isPushed {
                 Button {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(Theme.font(size: 18, weight: .medium))
                         .foregroundStyle(Theme.Colors.text)
                 }
-                .padding(.leading, Theme.Spacing.md)
+
+                Spacer()
+
+                // Model Selector Pill
+                modelSelectorPill
+
+                Spacer()
+
+                // More menu with edit option
+                Menu {
+                    Button {
+                        multiSelectViewModel.enterEditMode()
+                    } label: {
+                        Label("Select Messages", systemImage: "checkmark.circle")
+                    }
+
+                    Button {
+                        withAnimation { isSearchVisible.toggle() }
+                    } label: {
+                        Label("Search", systemImage: "magnifyingglass")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(Theme.font(size: 22))
+                        .foregroundStyle(Theme.Colors.text)
+                }
             } else {
-                // Hamburger Menu
+                // Sidebar Toggle (Hamburger Menu)
                 Button {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         showSidebar.toggle()
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal")
-                        .font(.system(size: 24))
-                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .font(Theme.font(size: 22, weight: .medium))
+                        .foregroundStyle(Theme.Colors.text)
                 }
-                .padding(.leading, Theme.Spacing.md)
-            }
-            
-            Spacer()
-            
-            // Model Selector (Centered)
-            if let selectedModel = modelManager.selectedModel {
-                modelSelector(model: selectedModel)
-            }
-            
-            Spacer()
-            
-            // New Chat Button
-            if !isPushed {
+
+                // Model Selector Pill (Centered)
+                modelSelectorPill
+
+                Spacer()
+
+                // Right side action buttons
+                // More menu
+                Menu {
+                    Button {
+                        multiSelectViewModel.enterEditMode()
+                    } label: {
+                        Label("Select Messages", systemImage: "checkmark.circle")
+                    }
+
+                    Button {
+                        withAnimation { isSearchVisible.toggle() }
+                    } label: {
+                        Label("Search", systemImage: "magnifyingglass")
+                    }
+
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                            showAssistantPicker = true
+                        }
+                    } label: {
+                        Label("Change Assistant", systemImage: "person.circle")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(Theme.font(size: 22))
+                        .foregroundStyle(Theme.Colors.text)
+                }
+
+                // New Chat Button
                 Button {
                     onNewChat?()
                 } label: {
                     Image(systemName: "square.and.pencil")
-                        .font(.system(size: 24))
-                        .foregroundStyle(Theme.Colors.textSecondary)
+                        .font(Theme.font(size: 20))
+                        .foregroundStyle(Theme.Colors.text)
                 }
-                .padding(.trailing, Theme.Spacing.md)
-            } else {
-                Color.clear.frame(width: 24, height: 24).padding(.trailing, Theme.Spacing.md)
             }
         }
-        .padding(.vertical, Theme.Spacing.sm)
-        .background(Theme.Colors.backgroundStart.opacity(0.95))
+        .padding(.horizontal, Theme.scaled(16))
+        .padding(.vertical, Theme.scaled(12))
+        .background(Theme.Colors.backgroundStart)
+        .animation(.easeInOut(duration: 0.2), value: multiSelectViewModel.isEditMode)
+    }
+
+    private var modelSelectorPill: some View {
+        Button {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                showModelPicker = true
+            }
+        } label: {
+            HStack(spacing: Theme.scaled(6)) {
+                if let selectedModel = modelManager.selectedModel {
+                    Text(selectedModel.name ?? selectedModel.modelId)
+                        .font(Theme.font(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.text)
+                        .lineLimit(1)
+                } else {
+                    Text("Select Model")
+                        .font(Theme.font(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.Colors.text)
+                }
+
+                Image(systemName: "chevron.down")
+                    .font(Theme.font(size: 10, weight: .bold))
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .rotationEffect(showModelPicker ? .degrees(180) : .degrees(0))
+            }
+            .padding(.horizontal, Theme.scaled(12))
+            .padding(.vertical, Theme.scaled(8))
+            .background(Theme.Colors.glassSurface)
+            .clipShape(Capsule())
+        }
+    }
+
+    @ViewBuilder
+    private var pickerOverlays: some View {
+        ZStack {
+            if showModelPicker {
+                modelPickerOverlay
+            }
+
+            if showProviderPicker {
+                providerPickerOverlay
+            }
+
+            if showAssistantPicker {
+                assistantPickerOverlay
+            }
+        }
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showModelPicker)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showProviderPicker)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showAssistantPicker)
+    }
+
+    @ViewBuilder
+    private var modelPickerOverlay: some View {
+        Color.black.opacity(0.4)
+            .ignoresSafeArea()
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showModelPicker = false
+                }
+            }
+
+        VStack {
+            ModelPicker(
+                groupedModels: filteredModelGroups,
+                selectedModelId: modelManager.selectedModel?.modelId,
+                onSelect: { selectedModel in
+                    modelManager.selectModel(selectedModel)
+                    UserDefaults.standard.set(selectedModel.modelId, forKey: "lastUsedModel")
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showModelPicker = false
+                    }
+                },
+                onDismiss: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        showModelPicker = false
+                    }
+                }
+            )
+            .padding(.top, Theme.scaled(60))
+            Spacer()
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
+    }
+
+    private var filteredModelGroups: [ModelGroup] {
+        if let providerId = viewModel.selectedProviderId {
+            let filtered = modelManager.groupedModels.filter {
+                $0.name.localizedCaseInsensitiveContains(providerId)
+            }
+            return filtered.isEmpty ? modelManager.groupedModels : filtered
+        }
+        return modelManager.groupedModels
+    }
+
+    @ViewBuilder
+    private var providerPickerOverlay: some View {
+        Color.black.opacity(0.3)
+            .ignoresSafeArea()
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showProviderPicker = false
+                }
+            }
+
+        VStack {
+            Spacer()
+            ProviderPicker(
+                availableProviders: viewModel.availableProviders,
+                selectedProviderId: viewModel.selectedProviderId,
+                onSelectProvider: { providerId in
+                    viewModel.selectProvider(providerId: providerId)
+                    if let modelId = modelManager.selectedModel?.modelId, let providerId = providerId {
+                        modelManager.saveLastProvider(for: modelId, providerId: providerId)
+                    }
+                    withAnimation { showProviderPicker = false }
+                },
+                webSearchMode: $webSearchMode,
+                webSearchProvider: $webSearchProvider
+            )
+            .padding(.bottom, 80)
+        }
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    @ViewBuilder
+    private var assistantPickerOverlay: some View {
+        Color.black.opacity(0.3)
+            .ignoresSafeArea()
+            .onTapGesture {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showAssistantPicker = false
+                }
+            }
+
+        VStack {
+            // Inline assistant picker
+            VStack(spacing: 0) {
+                Text("Select Assistant")
+                    .font(Theme.font(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.text)
+                    .padding(.vertical, Theme.scaled(12))
+                    .frame(maxWidth: .infinity)
+                    .background(Theme.Colors.glassBackground)
+
+                Divider()
+
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(assistantManager.assistants) { assistant in
+                            Button {
+                                assistantManager.selectAssistant(assistant)
+                                withAnimation { showAssistantPicker = false }
+                            } label: {
+                                HStack(spacing: Theme.scaled(12)) {
+                                    Image(systemName: assistant.isDefault ? "person.circle.fill" : "person.circle")
+                                        .font(Theme.font(size: 24))
+                                        .foregroundStyle(assistant.isDefault ? Theme.Colors.accent : Theme.Colors.textSecondary)
+
+                                    VStack(alignment: .leading, spacing: Theme.scaled(4)) {
+                                        HStack(spacing: Theme.scaled(6)) {
+                                            Text(assistant.name)
+                                                .font(Theme.font(size: 16))
+                                                .foregroundStyle(Theme.Colors.text)
+
+                                            if assistant.isDefault {
+                                                Text("Default")
+                                                    .font(Theme.font(size: 11))
+                                                    .padding(.horizontal, Theme.scaled(6))
+                                                    .padding(.vertical, Theme.scaled(2))
+                                                    .background(Theme.Colors.accent.opacity(0.2))
+                                                    .foregroundStyle(Theme.Colors.accent)
+                                                    .clipShape(Capsule())
+                                            }
+                                        }
+
+                                        if let description = assistant.description, !description.isEmpty {
+                                            Text(description)
+                                                .font(Theme.font(size: 13))
+                                                .foregroundStyle(Theme.Colors.textSecondary)
+                                                .lineLimit(1)
+                                        }
+                                    }
+
+                                    Spacer()
+
+                                    if assistantManager.selectedAssistant?.id == assistant.id {
+                                        Image(systemName: "checkmark")
+                                            .font(Theme.font(size: 16))
+                                            .foregroundStyle(Theme.Colors.accent)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, Theme.scaled(16))
+                                .padding(.vertical, Theme.scaled(12))
+                                .background(
+                                    assistantManager.selectedAssistant?.id == assistant.id ? Theme.Colors.secondary.opacity(0.1) : Color.clear
+                                )
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Divider().padding(.leading, Theme.scaled(16))
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+            }
+            .frame(maxHeight: Theme.scaled(350))
+            .background(Theme.Colors.backgroundStart)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(16)))
+            .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+            .padding(.horizontal, Theme.scaled(16))
+            .padding(.top, Theme.scaled(60))
+
+            Spacer()
+        }
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     private var backgroundView: some View {
@@ -350,11 +571,15 @@ struct ChatView: View {
                                 selectedDocument = document
                             },
                             isSelected: multiSelectViewModel.isSelected(message),
+                            isSelectionMode: multiSelectViewModel.isEditMode,
                             onTap: {
-                                if multiSelectViewModel.isEditMode {
-                                    multiSelectViewModel.toggleSelection(message)
-                                }
-                            }
+                                multiSelectViewModel.toggleSelection(message)
+                            },
+                            onLongPress: {
+                                multiSelectViewModel.enterEditMode()
+                                multiSelectViewModel.toggleSelection(message)
+                            },
+                            metadata: viewModel.messageMetadata[message.id]
                         )
                         .id(message.id)
                         .transition(
@@ -431,23 +656,38 @@ struct ChatView: View {
 
     private var regenerateHandler: () -> Void {
         return {
-            if let lastUserMessage = viewModel.messages.last(where: { $0.role == "user" }),
-                let model = modelManager.selectedModel
-            {
-                Task {
-                    await viewModel.sendMessage(
-                        message: lastUserMessage.content.isEmpty
-                            ? "Generated Image" : lastUserMessage.content,
-                        modelId: model.modelId,
-                        conversationId: conversation.id,
-                        webSearchEnabled: viewModel.webSearchEnabled,
-                        webSearchMode: viewModel.webSearchEnabled
-                            ? viewModel.webSearchMode.rawValue : nil,
-                        webSearchProvider: viewModel.webSearchEnabled
-                            ? viewModel.webSearchProvider.rawValue : nil,
-                        providerId: viewModel.selectedProviderId
-                    )
+            // Find the last assistant message to regenerate
+            guard let lastAssistantMessage = viewModel.messages.last(where: { $0.role == "assistant" }),
+                  let _ = viewModel.messages.last(where: { $0.role == "user" }),
+                  let model = modelManager.selectedModel
+            else { return }
+
+            Task {
+                // Delete the old assistant message first
+                do {
+                    _ = try await NanoChatAPI.shared.deleteMessage(messageId: lastAssistantMessage.id)
+                    // Remove from local messages array
+                    await MainActor.run {
+                        viewModel.messages.removeAll { $0.id == lastAssistantMessage.id }
+                    }
+                } catch {
+                    print("Failed to delete message for regeneration: \(error)")
+                    // Continue anyway - the new message will be added
                 }
+
+                // Generate a new response (without creating a new user message)
+                // The API will see the conversation ending with the user message
+                await viewModel.regenerateResponse(
+                    conversationId: conversation.id,
+                    modelId: model.modelId,
+                    assistantId: assistantManager.selectedAssistant?.id,
+                    webSearchEnabled: viewModel.webSearchEnabled,
+                    webSearchMode: viewModel.webSearchEnabled
+                        ? viewModel.webSearchMode.rawValue : nil,
+                    webSearchProvider: viewModel.webSearchEnabled
+                        ? viewModel.webSearchProvider.rawValue : nil,
+                    providerId: viewModel.selectedProviderId
+                )
             }
         }
     }
@@ -551,15 +791,15 @@ struct ChatView: View {
                     }
                 } label: {
                     Image(systemName: "plus")
-                        .font(.system(size: 20, weight: .medium))
+                        .font(Theme.font(size: 20, weight: .medium))
                         .foregroundStyle(Theme.Colors.textSecondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: Theme.scaled(36), height: Theme.scaled(36))
                         .background(Theme.Colors.glassSurface)
                         .clipShape(Circle())
                 }
                 .highPriorityGesture(TapGesture().onEnded {
                     // This is a workaround if Menu doesn't trigger nicely,
-                    // but usually Menu works. 
+                    // but usually Menu works.
                     // However, we have an existing AttachmentButton. Let's use it but style it.
                 })
                 // actually let's use the AttachmentButton but hide it inside this plus
@@ -573,28 +813,20 @@ struct ChatView: View {
                     }
                     .opacity(0.01) // Invisible hit target over the plus button
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, Theme.scaled(6))
 
-                // Text Field with Search/Model Tools
-                VStack(spacing: 0) {
-                    TextField("Message", text: $messageText, axis: .vertical)
-                        .textFieldStyle(.plain)
-                        .focused($isInputFocused)
-                        .foregroundStyle(Theme.Colors.text)
-                        .padding(.vertical, 10)
-                        .padding(.horizontal, 12)
-                        .frame(minHeight: 44)
-                        .lineLimit(1...6)
-                }
-                .background(Theme.Colors.glassSurface)
-                .clipShape(RoundedRectangle(cornerRadius: 22)) // Pill shape
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22)
-                        .stroke(
-                            isInputFocused ? Theme.Colors.border : Color.clear,
-                            lineWidth: 1
-                        )
-                )
+                // Text Field
+                TextField("Ask anything", text: $messageText, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .focused($isInputFocused)
+                    .font(Theme.font(size: 16))
+                    .foregroundStyle(Theme.Colors.text)
+                    .padding(.vertical, Theme.scaled(12))
+                    .padding(.horizontal, Theme.scaled(16))
+                    .frame(minHeight: Theme.scaled(44))
+                    .lineLimit(1...6)
+                    .background(Theme.Colors.glassSurface)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(22)))
 
                 // Search/Provider Toggle
                 Button {
@@ -603,11 +835,11 @@ struct ChatView: View {
                     }
                 } label: {
                      Image(systemName: viewModel.webSearchEnabled ? "globe" : "server.rack")
-                        .font(.system(size: 18))
+                        .font(Theme.font(size: 18))
                         .foregroundStyle(viewModel.webSearchEnabled ? Theme.Colors.accent : Theme.Colors.textSecondary)
-                        .frame(width: 32, height: 32)
+                        .frame(width: Theme.scaled(36), height: Theme.scaled(36))
                 }
-                .padding(.bottom, 6)
+                .padding(.bottom, Theme.scaled(6))
 
                 // Voice / Send Button
                 if messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty && !viewModel.isGenerating {
@@ -615,11 +847,11 @@ struct ChatView: View {
                          showVoiceRecorder = true
                      } label: {
                          Image(systemName: "waveform") // ChatGPT style voice icon
-                             .font(.system(size: 20))
+                             .font(Theme.font(size: 20))
                              .foregroundStyle(Theme.Colors.text)
-                             .frame(width: 32, height: 32)
+                             .frame(width: Theme.scaled(36), height: Theme.scaled(36))
                      }
-                     .padding(.bottom, 6)
+                     .padding(.bottom, Theme.scaled(6))
                 } else {
                     sendButton
                         .padding(.bottom, 6)
@@ -633,48 +865,6 @@ struct ChatView: View {
             // Rectangle()
             //    .fill(Theme.Colors.glassPane)
             //    .ignoresSafeArea()
-        }
-    }
-
-    @ViewBuilder
-    private func modelSelector(model: UserModel) -> some View {
-        Button {
-            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                showModelPicker = true
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Text(model.name ?? model.modelId)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.Colors.text)
-                
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Theme.Colors.textTertiary)
-                    .rotationEffect(showModelPicker ? .degrees(180) : .degrees(0))
-            }
-            .padding(.vertical, 4)
-        }
-    }
-
-    @ViewBuilder
-    private func modelSelectorLabel(model: UserModel) -> some View {
-        HStack {
-            Text(model.name ?? model.modelId)
-                .font(Theme.Typography.subheadline)
-                .foregroundStyle(Theme.Colors.text)
-
-            Spacer()
-
-            ModelCapabilityBadges(
-                capabilities: model.capabilities, subscriptionIncluded: model.subscriptionIncluded
-            )
-            .font(Theme.Typography.caption)
-
-            if modelManager.selectedModel?.id == model.id {
-                Image(systemName: "checkmark")
-                    .foregroundStyle(Theme.Colors.secondary)
-            }
         }
     }
 
@@ -773,6 +963,7 @@ struct ChatView: View {
                 message: currentMessage,
                 modelId: model.modelId,
                 conversationId: conversation.id,
+                assistantId: assistantManager.selectedAssistant?.id,
                 webSearchEnabled: isImageModel || isVideoModel ? false : webSearchEnabled,  // Disable search for gen models
                 webSearchMode: isImageModel || isVideoModel ? nil : webSearchModeString,
                 webSearchProvider: isImageModel || isVideoModel ? nil : webSearchProviderString,
@@ -927,7 +1118,10 @@ struct MessageBubble: View {
     let onBranch: (() -> Void)?
     let onDocumentTap: ((MessageDocumentResponse) -> Void)?
     let isSelected: Bool
+    let isSelectionMode: Bool
     let onTap: () -> Void
+    let onLongPress: () -> Void
+    var metadata: MessageMetadata?
 
     @State private var isReasoningExpanded = false
     @State private var showCopyFeedback = false
@@ -969,12 +1163,14 @@ struct MessageBubble: View {
             }
             .contentShape(Rectangle())
             .onTapGesture {
-                onTap()
+                if isSelectionMode {
+                    onTap()
+                }
             }
-            .background(isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear)
-            
-            // Selection indicator
-            if isSelected {
+            .background(isSelected ? Theme.Colors.accent.opacity(0.15) : Color.clear)
+
+            // Selection indicator (shown in selection mode)
+            if isSelectionMode {
                 selectionIndicator
             }
         }
@@ -988,8 +1184,9 @@ struct MessageBubble: View {
         .gesture(
             LongPressGesture(minimumDuration: 0.5)
                 .onEnded { _ in
-                    // Long press to enter edit mode is handled at parent level
-                    HapticManager.shared.longPressActivated()
+                    if !isSelectionMode {
+                        onLongPress()
+                    }
                 }
         )
         .alert(
@@ -1027,28 +1224,17 @@ struct MessageBubble: View {
         }
     }
     
+    @ViewBuilder
     private var headerView: some View {
-        // Minimal header, just star button if needed, or hidden mostly
-        // ChatGPT style: No "You" or "Assistant" text usually.
-        HStack {
-            if message.role == "assistant" {
-               Text("Assistant")
-                   .font(.caption)
-                   .fontWeight(.semibold)
-                   .foregroundStyle(Theme.Colors.text)
-            }
-            
-            Spacer()
-            
-            // Star button only visible if starred or maybe on tap?
-            // Keeping it simple for now
-            if isStarred {
-                 Image(systemName: "star.fill")
-                     .font(.caption2)
-                     .foregroundStyle(Theme.Colors.secondary)
+        // ChatGPT style: No header text, just show star indicator if starred
+        if isStarred {
+            HStack {
+                Spacer()
+                Image(systemName: "star.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.Colors.accent)
             }
         }
-        .padding(.bottom, 2)
     }
     
     private func toggleStarred() {
@@ -1080,20 +1266,21 @@ struct MessageBubble: View {
     private var selectionIndicator: some View {
         ZStack {
             Circle()
-                .fill(Theme.Colors.secondary)
+                .fill(isSelected ? Theme.Colors.accent : Color.clear)
                 .frame(width: 24, height: 24)
                 .overlay(
                     Circle()
-                        .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                        .strokeBorder(isSelected ? Theme.Colors.accent : Theme.Colors.textTertiary, lineWidth: 2)
                 )
 
-            Image(systemName: "checkmark")
-                .font(.caption)
-                .fontWeight(.bold)
-                .foregroundStyle(.white)
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.white)
+            }
         }
         .padding(Theme.Spacing.sm)
-        .transition(.scale.combined(with: .opacity))
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
     
     @ViewBuilder
@@ -1269,52 +1456,29 @@ struct MessageBubble: View {
                 }
             }
         } else if !displayContent.isEmpty {
-            Text(displayContent)
-                .font(Theme.Typography.body)
-                .foregroundStyle(Theme.Colors.text)
-                .textSelection(.enabled)
-                .padding(message.role == "user" ? 12 : 0)
-                .background(
-                    message.role == "user"
-                        ? Theme.Colors.userBubble
-                        : Color.clear
-                )
-                .clipShape(
-                    RoundedRectangle(cornerRadius: message.role == "user" ? 18 : 0)
-                )
-                .frame(maxWidth: .infinity, alignment: message.role == "user" ? .trailing : .leading)
+            if message.role == "user" {
+                // User messages: plain text in bubble
+                Text(displayContent)
+                    .font(Theme.Typography.body)
+                    .foregroundStyle(Theme.Colors.text)
+                    .textSelection(.enabled)
+                    .padding(12)
+                    .background(Theme.Colors.userBubble)
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            } else {
+                // Assistant messages: markdown rendering
+                MarkdownText(displayContent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
     
     @ViewBuilder
     private var footerView: some View {
         if !isEditing {
-            HStack(spacing: 12) {
+            HStack(spacing: Theme.scaled(8)) {
                 if message.role == "assistant" {
-                    Button {
-                        UIPasteboard.general.string = message.content
-                        showCopyFeedback = true
-                        HapticManager.shared.success()
-                        
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                            showCopyFeedback = false
-                        }
-                    } label: {
-                        Image(systemName: showCopyFeedback ? "checkmark" : "doc.on.doc")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Button {
-                        onRegenerate?()
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.caption)
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                    }
-                    .buttonStyle(.plain)
-                    
                     // TTS Button
                     Button {
                         if audioPlayback.isPlaying && audioPlayback.currentMessageId == message.id {
@@ -1328,28 +1492,107 @@ struct MessageBubble: View {
                                 .scaleEffect(0.5)
                         } else {
                             Image(systemName: (audioPlayback.isPlaying && audioPlayback.currentMessageId == message.id) ? "stop.fill" : "speaker.wave.2")
-                                .font(.caption)
+                                .font(Theme.font(size: 12))
                                 .foregroundStyle(Theme.Colors.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
-                    
+
+                    // Model name and metadata
+                    if let modelId = message.modelId {
+                        Text(modelId.components(separatedBy: "/").last ?? modelId)
+                            .font(Theme.font(size: 11))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+
+                    if let meta = metadata {
+                        Text(meta.formattedCost)
+                            .font(Theme.font(size: 11))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+
+                        Text(meta.formattedTokens)
+                            .font(Theme.font(size: 11))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+
+                        if meta.tokensPerSecond > 0 {
+                            Text(meta.formattedSpeed)
+                                .font(Theme.font(size: 11))
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                        }
+                    }
+
+                    // Star Button
+                    Button {
+                        toggleStarred()
+                    } label: {
+                        if isStarring {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        } else {
+                            Image(systemName: isStarred ? "star.fill" : "star")
+                                .font(Theme.font(size: 12))
+                                .foregroundStyle(isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
+                    // Copy Button
+                    Button {
+                        UIPasteboard.general.string = message.content
+                        showCopyFeedback = true
+                        HapticManager.shared.success()
+
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showCopyFeedback = false
+                        }
+                    } label: {
+                        Image(systemName: showCopyFeedback ? "checkmark" : "doc.on.doc")
+                            .font(Theme.font(size: 12))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+
+                    // Regenerate Button
+                    Button {
+                        onRegenerate?()
+                    } label: {
+                        Image(systemName: "arrow.clockwise")
+                            .font(Theme.font(size: 12))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                    }
+                    .buttonStyle(.plain)
+
                     Spacer()
                 } else {
                     Spacer()
-                    
+
+                    // Star Button for user messages
+                    Button {
+                        toggleStarred()
+                    } label: {
+                        if isStarring {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        } else {
+                            Image(systemName: isStarred ? "star.fill" : "star")
+                                .font(Theme.font(size: 12))
+                                .foregroundStyle(isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+
                     Button {
                         isEditing = true
                         editedContent = message.content
                     } label: {
                         Image(systemName: "pencil")
-                            .font(.caption)
+                            .font(Theme.font(size: 12))
                             .foregroundStyle(Theme.Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.top, 4)
+            .padding(.top, Theme.scaled(4))
         }
     }
     

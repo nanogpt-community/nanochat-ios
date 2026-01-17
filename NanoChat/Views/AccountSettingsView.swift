@@ -26,9 +26,11 @@ struct AccountSettingsView: View {
                         modelPreferencesSection
                         karakeepSection
                     }
-                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
+                    .background(Theme.Colors.backgroundStart)
                 }
             }
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Account Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -36,6 +38,7 @@ struct AccountSettingsView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }
@@ -55,11 +58,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Hide Personal Information")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Blur your name and avatar in the sidebar")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.contextMemoryEnabled },
@@ -69,11 +75,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Context Memory")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Compress long conversations for better context retention")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.persistentMemoryEnabled },
@@ -83,11 +92,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Persistent Memory")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Remember facts about you across different conversations")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.youtubeTranscriptsEnabled },
@@ -97,11 +109,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("YouTube Transcripts")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Automatically fetch YouTube video transcripts ($0.01 each)")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.webScrapingEnabled },
@@ -111,11 +126,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Web Scraping")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Automatically scrape web page content when URLs are detected")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.mcpEnabled },
@@ -125,11 +143,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Nano-GPT MCP")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Supports Vision, YouTube Transcripts, Web Scraping, Nano-GPT Balance, Image Generation, and Model Lists")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Toggle(isOn: Binding(
                 get: { viewModel.followUpQuestionsEnabled },
@@ -139,11 +160,14 @@ struct AccountSettingsView: View {
             )) {
                 VStack(alignment: .leading) {
                     Text("Follow-up Questions")
+                        .foregroundStyle(Theme.Colors.text)
                     Text("Show suggested follow-up questions after each response")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
             }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
         }
     }
 
@@ -154,7 +178,9 @@ struct AccountSettingsView: View {
                 AvailableModelsView(modelManager: modelManager)
             } label: {
                 Label("Available Models", systemImage: "list.bullet.rectangle.portrait")
+                    .foregroundStyle(Theme.Colors.text)
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             // Title Generation Model
             Picker("Chat Title Generation", selection: Binding(
@@ -174,6 +200,8 @@ struct AccountSettingsView: View {
                     Text(model.name ?? model.modelId).tag(model.modelId)
                 }
             }
+            .foregroundStyle(Theme.Colors.text)
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             // Follow-up Questions Model
             Picker("Follow-up Questions", selection: Binding(
@@ -193,6 +221,8 @@ struct AccountSettingsView: View {
                     Text(model.name ?? model.modelId).tag(model.modelId)
                 }
             }
+            .foregroundStyle(Theme.Colors.text)
+            .listRowBackground(Theme.Colors.sectionBackground)
         }
     }
 
@@ -201,20 +231,24 @@ struct AccountSettingsView: View {
             VStack(alignment: .leading) {
                 Text("Karakeep URL")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.Colors.textSecondary)
                 TextField("https://karakeep.example.com", text: $viewModel.karakeepUrl)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.URL)
+                    .foregroundStyle(Theme.Colors.text)
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             VStack(alignment: .leading) {
                 Text("API Key")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Theme.Colors.textSecondary)
                 SecureField("Enter your Karakeep API key", text: $viewModel.karakeepApiKey)
                     .textFieldStyle(.roundedBorder)
+                    .foregroundStyle(Theme.Colors.text)
             }
+            .listRowBackground(Theme.Colors.sectionBackground)
 
             Button {
                 Task {
@@ -226,13 +260,16 @@ struct AccountSettingsView: View {
             } label: {
                 if viewModel.isUpdating {
                     ProgressView()
+                        .tint(Theme.Colors.text)
                 } else {
                     Text("Save Settings")
                         .frame(maxWidth: .infinity)
                 }
             }
             .buttonStyle(.borderedProminent)
+            .tint(Theme.Colors.accent)
             .disabled(viewModel.isUpdating)
+            .listRowBackground(Theme.Colors.sectionBackground)
         }
     }
 }

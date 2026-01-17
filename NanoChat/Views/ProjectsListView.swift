@@ -47,11 +47,14 @@ struct ProjectsListView: View {
                             } label: {
                                 ProjectRow(project: project)
                             }
+                            .listRowBackground(Theme.Colors.sectionBackground)
                         }
                     }
-                    .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
+                    .background(Theme.Colors.backgroundStart)
                 }
             }
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Projects")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -224,15 +227,16 @@ struct ProjectDetailView: View {
                                     .font(.title)
                                     .foregroundStyle(.white)
                             )
-                        
+
                         VStack(alignment: .leading) {
                             Text(project.name)
                                 .font(.title2)
                                 .fontWeight(.bold)
+                                .foregroundStyle(Theme.Colors.text)
                             if let description = project.description, !description.isEmpty {
                                 Text(description)
                                     .font(.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
                             }
                         }
                     }
@@ -242,14 +246,19 @@ struct ProjectDetailView: View {
 
                 Section("Details") {
                     LabeledContent("Role", value: project.role.capitalized)
+                        .foregroundStyle(Theme.Colors.text)
                     LabeledContent("Shared", value: project.isShared ? "Yes" : "No")
+                        .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 if let systemPrompt = project.systemPrompt, !systemPrompt.isEmpty {
                     Section("System Prompt") {
                         Text(systemPrompt)
+                            .foregroundStyle(Theme.Colors.text)
                             .textSelection(.enabled)
                     }
+                    .listRowBackground(Theme.Colors.sectionBackground)
                 }
 
                 Section("Conversations") {
@@ -258,18 +267,23 @@ struct ProjectDetailView: View {
                     } label: {
                         Label("New Chat", systemImage: "plus")
                     }
+                    .foregroundStyle(Theme.Colors.accent)
                     .disabled(isCreatingConversation)
+                    .listRowBackground(Theme.Colors.sectionBackground)
 
                     if isLoadingConversations {
                         ProgressView().frame(maxWidth: .infinity)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else if conversations.isEmpty {
                         Text("No conversations yet")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else {
                         ForEach(conversations, id: \.id) { conversation in
                             NavigationLink(value: conversation) {
                                 ProjectConversationRow(conversation: conversation)
                             }
+                            .listRowBackground(Theme.Colors.sectionBackground)
                         }
                     }
                 }
@@ -281,13 +295,17 @@ struct ProjectDetailView: View {
                         } label: {
                             Label("Add Member", systemImage: "person.badge.plus")
                         }
+                        .foregroundStyle(Theme.Colors.accent)
+                        .listRowBackground(Theme.Colors.sectionBackground)
                     }
 
                     if isLoadingMembers {
                         ProgressView().frame(maxWidth: .infinity)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else if members.isEmpty {
                         Text("No members yet")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else {
                         ForEach(members, id: \.id) { member in
                             ProjectMemberRow(member: member)
@@ -300,6 +318,7 @@ struct ProjectDetailView: View {
                                         }
                                     }
                                 }
+                                .listRowBackground(Theme.Colors.sectionBackground)
                         }
                     }
                 }
@@ -311,16 +330,21 @@ struct ProjectDetailView: View {
                         } label: {
                             Label("Upload File", systemImage: "doc.badge.plus")
                         }
+                        .foregroundStyle(Theme.Colors.accent)
                         .disabled(isUploadingFile)
+                        .listRowBackground(Theme.Colors.sectionBackground)
                     }
 
                     if isUploadingFile {
                         ProgressView("Uploading...")
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else if isLoadingFiles {
                         ProgressView().frame(maxWidth: .infinity)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else if files.isEmpty {
                         Text("No files uploaded")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .listRowBackground(Theme.Colors.sectionBackground)
                     } else {
                         ForEach(files, id: \.id) { file in
                             ProjectFileRow(file: file, onOpen: { fileToPreview = file })
@@ -333,16 +357,21 @@ struct ProjectDetailView: View {
                                         }
                                     }
                                 }
+                                .listRowBackground(Theme.Colors.sectionBackground)
                         }
                     }
                 }
-                
+
                 Section("Metadata") {
                     LabeledContent("Created", value: project.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .foregroundStyle(Theme.Colors.text)
                     LabeledContent("Updated", value: project.updatedAt.formatted(date: .abbreviated, time: .shortened))
+                        .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
-            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle(project.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -805,13 +834,19 @@ struct EditProjectView: View {
             Form {
                 Section("Details") {
                     TextField("Project name", text: $name)
+                        .foregroundStyle(Theme.Colors.text)
                     TextField("Description (optional)", text: $description)
+                        .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section("System Prompt") {
                     TextEditor(text: $systemPrompt)
                         .frame(minHeight: 120)
+                        .foregroundStyle(Theme.Colors.text)
+                        .scrollContentBackground(.hidden)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section("Color") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))]) {
@@ -832,12 +867,16 @@ struct EditProjectView: View {
                     }
                     .padding(.vertical)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Edit Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
@@ -851,6 +890,7 @@ struct EditProjectView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty)
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }
@@ -871,18 +911,24 @@ struct AddProjectMemberView: View {
                     TextField("Email address", text: $email)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.emailAddress)
-                    
+                        .foregroundStyle(Theme.Colors.text)
+
                     Picker("Role", selection: $role) {
                         Text("Editor").tag(ProjectMemberRole.editor)
                         Text("Viewer").tag(ProjectMemberRole.viewer)
                     }
+                    .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Add Member")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
@@ -890,6 +936,7 @@ struct AddProjectMemberView: View {
                         dismiss()
                     }
                     .disabled(email.isEmpty)
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }
@@ -914,13 +961,19 @@ struct NewProjectView: View {
             Form {
                 Section("Details") {
                     TextField("Project name", text: $name)
+                        .foregroundStyle(Theme.Colors.text)
                     TextField("Description (optional)", text: $description)
+                        .foregroundStyle(Theme.Colors.text)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section("System Prompt") {
                     TextEditor(text: $systemPrompt)
                         .frame(minHeight: 120)
+                        .foregroundStyle(Theme.Colors.text)
+                        .scrollContentBackground(.hidden)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section("Color") {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 44))]) {
@@ -941,12 +994,16 @@ struct NewProjectView: View {
                     }
                     .padding(.vertical)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("New Project")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Create") {
@@ -960,6 +1017,7 @@ struct NewProjectView: View {
                         dismiss()
                     }
                     .disabled(name.isEmpty)
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }

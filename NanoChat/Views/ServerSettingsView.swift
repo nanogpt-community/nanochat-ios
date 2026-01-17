@@ -11,20 +11,26 @@ struct ServerSettingsView: View {
                     TextField("Server URL", text: $authManager.baseURL)
                         .autocapitalization(.none)
                         .keyboardType(.URL)
+                        .foregroundStyle(Theme.Colors.text)
                 } header: {
                     Text("Connection")
                 } footer: {
                     Text("Enter the URL of your NanoChat server")
+                        .foregroundStyle(Theme.Colors.textTertiary)
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
 
                 Section {
                     Text("The server URL should point to your NanoChat backend instance")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 } header: {
                     Text("Help")
                 }
+                .listRowBackground(Theme.Colors.sectionBackground)
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Server Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -33,6 +39,7 @@ struct ServerSettingsView: View {
                         authManager.saveCredentials()
                         dismiss()
                     }
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
         }

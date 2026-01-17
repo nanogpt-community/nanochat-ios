@@ -11,132 +11,159 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                // Account Section
-                Section("Account") {
-                    HStack(spacing: Theme.Spacing.md) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.system(size: 40))
-                            .foregroundStyle(Theme.Colors.primary)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Authenticated")
-                                .font(.headline)
-                                .foregroundStyle(Theme.Colors.text)
-
-                            Text("API Key configured")
-                                .font(.caption)
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(Theme.Colors.success)
-                    }
-                    .padding(.vertical, 4)
-
-                    Button {
-                        HapticManager.shared.tap()
-                        showingAccountSettings = true
-                    } label: {
-                        Label("Account Settings", systemImage: "person.text.rectangle")
-                            .foregroundStyle(Theme.Colors.text)
-                    }
-
-                    NavigationLink {
-                        AnalyticsView()
-                    } label: {
-                        Label("Analytics", systemImage: "chart.bar.xaxis")
-                            .foregroundStyle(Theme.Colors.text)
-                    }
-                }
-
-                // Configuration Section
-                Section("Configuration") {
-                    SettingsRow(
-                        icon: "server.rack",
-                        iconColor: Theme.Colors.primary,
-                        title: "Server URL",
-                        value: authManager.baseURL
-                    )
-
-                    SettingsRow(
-                        icon: "key.fill",
-                        iconColor: Theme.Colors.secondary,
-                        title: "API Key",
-                        value: String(authManager.apiKey.prefix(16)) + "..."
-                    )
-
-                    NavigationLink {
-                        AudioSettingsView(audioPreferences: audioPreferences)
-                    } label: {
-                        Label("Audio Settings", systemImage: "waveform")
-                            .foregroundStyle(Theme.Colors.text)
-                    }
-
-                    Button {
-                        HapticManager.shared.tap()
-                        authManager.isAuthenticated = false
-                    } label: {
-                        Label("Update Credentials", systemImage: "arrow.triangle.2.circlepath")
-                            .foregroundStyle(Theme.Colors.text)
-                    }
-                }
-
-                // Appearance Section
-                Section("Appearance") {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header with close button
                     HStack {
-                        Label("Theme", systemImage: "paintbrush.fill")
-                            .foregroundStyle(Theme.Colors.text)
-                        
                         Spacer()
-
-                        Picker("", selection: $themeManager.currentTheme) {
-                            Text("System").tag(ThemeManager.Theme.system)
-                            Text("Light").tag(ThemeManager.Theme.light)
-                            Text("Dark").tag(ThemeManager.Theme.dark)
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                                .frame(width: 30, height: 30)
+                                .background(Theme.Colors.glassSurface)
+                                .clipShape(Circle())
                         }
-                        .pickerStyle(.menu)
-                        .tint(Theme.Colors.secondary)
                     }
-                }
+                    .padding(.horizontal, Theme.scaled(20))
+                    .padding(.top, Theme.scaled(16))
 
-                // About Section
-                Section("About") {
-                    SettingsRow(
-                        icon: "info.circle.fill",
-                        iconColor: Theme.Colors.textSecondary,
-                        title: "Version",
-                        value: Bundle.main.fullVersion
-                    )
+                    // Profile Section
+                    VStack(spacing: Theme.scaled(12)) {
+                        // Avatar
+                        Circle()
+                            .fill(Theme.Colors.accent)
+                            .frame(width: Theme.scaled(80), height: Theme.scaled(80))
+                            .overlay(
+                                Text("NC")
+                                    .font(Theme.font(size: 28, weight: .semibold))
+                                    .foregroundStyle(.white)
+                            )
 
-                    Link(destination: URL(string: "https://github.com/nanogpt-community/nanochat")!) {
-                        HStack {
-                            Label("Documentation", systemImage: "book.fill")
+                        // Name
+                        Text("NanoChat User")
+                            .font(Theme.font(size: 20, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.text)
+
+                        // Edit Profile Button
+                        Button {
+                            showingAccountSettings = true
+                        } label: {
+                            Text("Edit profile")
+                                .font(Theme.font(size: 14))
                                 .foregroundStyle(Theme.Colors.text)
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.caption)
-                                .foregroundStyle(Theme.Colors.textTertiary)
+                                .padding(.horizontal, Theme.scaled(16))
+                                .padding(.vertical, Theme.scaled(8))
+                                .background(Theme.Colors.glassSurface)
+                                .clipShape(Capsule())
                         }
                     }
-                }
+                    .padding(.vertical, Theme.scaled(24))
 
-                // Actions Section
-                Section {
-                    Button(role: .destructive) {
-                        HapticManager.shared.warning()
-                        showingLogoutAlert = true
-                    } label: {
-                        Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right.fill")
+                    // Settings Sections
+                    VStack(spacing: 8) {
+                        // Account Section
+                        SettingsSection(title: "Account") {
+                            SettingsMenuItem(icon: "envelope", title: "Server URL", subtitle: authManager.baseURL)
+                            SettingsMenuItem(icon: "plus.circle", title: "API Key", subtitle: String(authManager.apiKey.prefix(12)) + "...")
+                            SettingsMenuButton(icon: "arrow.triangle.2.circlepath", title: "Update Credentials") {
+                                authManager.isAuthenticated = false
+                            }
+                        }
+
+                        // Configuration Section
+                        SettingsSection(title: "Configuration") {
+                            SettingsMenuNavLink(icon: "waveform", title: "Audio Settings") {
+                                AudioSettingsView(audioPreferences: audioPreferences)
+                            }
+                            SettingsMenuNavLink(icon: "chart.bar.xaxis", title: "Analytics") {
+                                AnalyticsView()
+                            }
+                        }
+
+                        // Appearance Section
+                        SettingsSection(title: "Appearance") {
+                            HStack {
+                                Image(systemName: "moon.fill")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(Theme.Colors.text)
+                                    .frame(width: 28)
+
+                                Text("Theme")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Theme.Colors.text)
+
+                                Spacer()
+
+                                Picker("", selection: $themeManager.currentTheme) {
+                                    Text("System").tag(ThemeManager.Theme.system)
+                                    Text("Light").tag(ThemeManager.Theme.light)
+                                    Text("Dark").tag(ThemeManager.Theme.dark)
+                                }
+                                .pickerStyle(.menu)
+                                .tint(Theme.Colors.textSecondary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                        }
+
+                        // About Section
+                        SettingsSection(title: "About") {
+                            SettingsMenuItem(icon: "info.circle", title: "Version", subtitle: Bundle.main.fullVersion)
+
+                            Link(destination: URL(string: "https://github.com/nanogpt-community/nanochat")!) {
+                                HStack {
+                                    Image(systemName: "book")
+                                        .font(.system(size: 18))
+                                        .foregroundStyle(Theme.Colors.text)
+                                        .frame(width: 28)
+
+                                    Text("Documentation")
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(Theme.Colors.text)
+
+                                    Spacer()
+
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                            }
+                        }
+
+                        // Sign Out
+                        Button {
+                            showingLogoutAlert = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .font(.system(size: 18))
+                                    .foregroundStyle(.red)
+                                    .frame(width: 28)
+
+                                Text("Sign Out")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(.red)
+
+                                Spacer()
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 14)
+                            .background(Theme.Colors.glassSurface)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
                     }
                 }
+                .padding(.bottom, 32)
             }
-            .listStyle(.insetGrouped)
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
+            .background(Theme.Colors.backgroundStart)
+            .navigationBarHidden(true)
             .alert("Sign Out", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Sign Out", role: .destructive) {
@@ -150,6 +177,124 @@ struct SettingsView: View {
             .sheet(isPresented: $showingAccountSettings) {
                 AccountSettingsView(modelManager: modelManager)
             }
+        }
+    }
+}
+
+// MARK: - Settings Section Component
+
+struct SettingsSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(Theme.font(size: 13, weight: .medium))
+                .foregroundStyle(Theme.Colors.textTertiary)
+                .padding(.horizontal, Theme.scaled(16))
+                .padding(.bottom, Theme.scaled(8))
+
+            VStack(spacing: 0) {
+                content
+            }
+            .background(Theme.Colors.glassSurface)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(12)))
+        }
+        .padding(.horizontal, Theme.scaled(16))
+    }
+}
+
+// MARK: - Settings Menu Item
+
+struct SettingsMenuItem: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .font(Theme.font(size: 18))
+                .foregroundStyle(Theme.Colors.text)
+                .frame(width: Theme.scaled(28))
+
+            Text(title)
+                .font(Theme.font(size: 16))
+                .foregroundStyle(Theme.Colors.text)
+
+            Spacer()
+
+            Text(subtitle)
+                .font(Theme.font(size: 14))
+                .foregroundStyle(Theme.Colors.textSecondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, Theme.scaled(16))
+        .padding(.vertical, Theme.scaled(14))
+    }
+}
+
+// MARK: - Settings Menu Button
+
+struct SettingsMenuButton: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Image(systemName: icon)
+                    .font(Theme.font(size: 18))
+                    .foregroundStyle(Theme.Colors.text)
+                    .frame(width: Theme.scaled(28))
+
+                Text(title)
+                    .font(Theme.font(size: 16))
+                    .foregroundStyle(Theme.Colors.text)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(Theme.font(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
+            .padding(.horizontal, Theme.scaled(16))
+            .padding(.vertical, Theme.scaled(14))
+        }
+    }
+}
+
+// MARK: - Settings Menu Navigation Link
+
+struct SettingsMenuNavLink<Destination: View>: View {
+    let icon: String
+    let title: String
+    @ViewBuilder let destination: Destination
+
+    var body: some View {
+        NavigationLink {
+            destination
+        } label: {
+            HStack {
+                Image(systemName: icon)
+                    .font(Theme.font(size: 18))
+                    .foregroundStyle(Theme.Colors.text)
+                    .frame(width: Theme.scaled(28))
+
+                Text(title)
+                    .font(Theme.font(size: 16))
+                    .foregroundStyle(Theme.Colors.text)
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(Theme.font(size: 14, weight: .medium))
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
+            .padding(.horizontal, Theme.scaled(16))
+            .padding(.vertical, Theme.scaled(14))
         }
     }
 }
@@ -185,11 +330,13 @@ struct AudioSettingsView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Speed")
+                                .foregroundStyle(Theme.Colors.text)
                             Spacer()
                             Text(String(format: "%.2fx", audioPreferences.ttsSpeed))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.Colors.textSecondary)
                         }
                         Slider(value: $audioPreferences.ttsSpeed, in: 0.5...2.0, step: 0.05)
+                            .tint(Theme.Colors.accent)
                     }
                 }
 
@@ -211,14 +358,17 @@ struct AudioSettingsView: View {
                     Toggle(isOn: $audioPreferences.autoSendTranscription) {
                         VStack(alignment: .leading) {
                             Text("Auto-send transcription")
+                                .foregroundStyle(Theme.Colors.text)
                             Text("Send immediately after transcription finishes.")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.Colors.textSecondary)
                         }
                     }
+                    .tint(Theme.Colors.accent)
                 }
             }
-            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
             .navigationTitle("Audio Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -226,33 +376,9 @@ struct AudioSettingsView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .foregroundStyle(Theme.Colors.accent)
                 }
             }
-        }
-    }
-}
-
-// MARK: - Settings Row Component
-
-struct SettingsRow: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let value: String
-
-    var body: some View {
-        HStack {
-            Label {
-                Text(title).foregroundStyle(Theme.Colors.text)
-            } icon: {
-                Image(systemName: icon).foregroundStyle(iconColor)
-            }
-
-            Spacer()
-
-            Text(value)
-                .foregroundStyle(Theme.Colors.textSecondary)
-                .lineLimit(1)
         }
     }
 }

@@ -231,3 +231,39 @@ enum MessageRole: String, Codable {
     case assistant = "assistant"
     case system = "system"
 }
+
+// MARK: - Message Metadata
+
+struct MessageMetadata: Codable, Equatable {
+    let tokenCount: Int
+    let costUsd: Double
+    let responseTimeMs: Int
+    let modelId: String?
+
+    var tokensPerSecond: Double {
+        guard responseTimeMs > 0 else { return 0 }
+        return Double(tokenCount) / (Double(responseTimeMs) / 1000.0)
+    }
+
+    var formattedCost: String {
+        if costUsd < 0.001 {
+            return String(format: "$%.6f", costUsd)
+        } else if costUsd < 0.01 {
+            return String(format: "$%.5f", costUsd)
+        } else {
+            return String(format: "$%.4f", costUsd)
+        }
+    }
+
+    var formattedTokens: String {
+        return "\(tokenCount) tokens"
+    }
+
+    var formattedSpeed: String {
+        let speed = tokensPerSecond
+        if speed > 0 {
+            return String(format: "%.1f t/s", speed)
+        }
+        return ""
+    }
+}
