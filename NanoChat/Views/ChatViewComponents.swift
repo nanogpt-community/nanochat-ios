@@ -108,35 +108,101 @@ struct VoiceRecorderSheet: View {
     @ObservedObject var audioPreferences: AudioPreferences
     let onTranscription: (String) -> Void
     let onError: (String) -> Void
-    
-    @State private var isRecording = false
-    
+
+    @ObservedObject private var audioRecorder = AudioRecorder.shared
+    @State private var isTranscribing = false
+    @State private var hasPermission = false
+
     var body: some View {
         VStack(spacing: 20) {
-            Text(isRecording ? "Listening..." : "Tap to speak")
-                .font(Theme.Typography.title3)
-                .foregroundStyle(Theme.Colors.text)
-            
-            Button {
-                isRecording.toggle()
-                // Mock behavior for now as actual recording logic isn't available
-                if !isRecording {
-                    onTranscription("This is a simulated voice transcription.")
-                    dismiss()
+            if isTranscribing {
+                Text("Transcribing...")
+                    .font(Theme.Typography.title3)
+                    .foregroundStyle(Theme.Colors.text)
+
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: Theme.Colors.primary))
+                    .scaleEffect(1.5)
+            } else {
+                Text(audioRecorder.isRecording ? "Listening..." : "Tap to speak")
+                    .font(Theme.Typography.title3)
+                    .foregroundStyle(Theme.Colors.text)
+
+                if audioRecorder.isRecording {
+                    Text(formatTime(audioRecorder.elapsedTime))
+                        .font(Theme.Typography.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(isRecording ? Theme.Colors.error : Theme.Colors.primary)
-                        .frame(width: 80, height: 80)
-                    
-                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
+
+                Button {
+                    Task {
+                        await toggleRecording()
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(audioRecorder.isRecording ? Theme.Colors.error : Theme.Colors.primary)
+                            .frame(width: 80, height: 80)
+
+                        Image(systemName: audioRecorder.isRecording ? "stop.fill" : "mic.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(.white)
+                    }
                 }
+                .disabled(!hasPermission)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Colors.glassBackground)
+        .task {
+            hasPermission = await audioRecorder.requestPermission()
+            if !hasPermission {
+                onError("Microphone access is required for voice input. Please enable it in Settings.")
+                dismiss()
+            }
+        }
+    }
+
+    private func toggleRecording() async {
+        if audioRecorder.isRecording {
+            isTranscribing = true
+            guard let recordingURL = await audioRecorder.stopRecording() else {
+                isTranscribing = false
+                onError("Recording failed. Please try again.")
+                dismiss()
+                return
+            }
+
+            do {
+                let response = try await NanoChatAPI.shared.transcribeAudio(
+                    fileURL: recordingURL,
+                    model: audioPreferences.sttModel,
+                    language: audioPreferences.sttLanguage
+                )
+
+                if let transcription = response.transcription, !transcription.isEmpty {
+                    onTranscription(transcription)
+                } else {
+                    onError("No speech detected. Please try again.")
+                }
+            } catch {
+                onError("Transcription failed: \(error.localizedDescription)")
+            }
+
+            isTranscribing = false
+            dismiss()
+        } else {
+            do {
+                try audioRecorder.startRecording()
+            } catch {
+                onError("Could not start recording: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%d:%02d", minutes, seconds)
     }
 }

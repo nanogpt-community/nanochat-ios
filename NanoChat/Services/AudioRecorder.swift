@@ -3,6 +3,8 @@ import Foundation
 
 @MainActor
 final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
+    static let shared = AudioRecorder()
+
     @Published var isRecording = false
     @Published var elapsedTime: TimeInterval = 0
     @Published var lastRecordingURL: URL?
