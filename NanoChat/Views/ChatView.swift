@@ -143,8 +143,19 @@ struct ChatView: View {
                         }
                     
                     VStack {
+                        // Filter groups if a provider is selected
+                        let groupsToShow: [ModelGroup] = {
+                            if let providerId = viewModel.selectedProviderId {
+                                let filtered = modelManager.groupedModels.filter {
+                                    $0.name.localizedCaseInsensitiveContains(providerId)
+                                }
+                                return filtered.isEmpty ? modelManager.groupedModels : filtered
+                            }
+                            return modelManager.groupedModels
+                        }()
+                        
                         ModelPicker(
-                            groupedModels: modelManager.groupedModels,
+                            groupedModels: groupsToShow,
                             selectedModelId: modelManager.selectedModel?.modelId
                         ) { selectedModel in
                             modelManager.selectModel(selectedModel)
@@ -946,6 +957,7 @@ struct MessageBubble: View {
                 VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: Theme.Spacing.xs) {
                     headerView
                     mediaAttachmentsView
+                    videoAttachmentView
                     reasoningView
                     messageContentView
                     footerView
@@ -1092,9 +1104,11 @@ struct MessageBubble: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
                         ForEach(images, id: \.url) { image in
                             Button {
-                                selectedImage = ImagePreviewItem(url: URL(string: image.url)!, fileName: image.fileName ?? "Image")
+                                if let url = resolveURL(image.url) {
+                                    selectedImage = ImagePreviewItem(url: url, fileName: image.fileName ?? "Image")
+                                }
                             } label: {
-                                AsyncImage(url: URL(string: image.url)) { phase in
+                                AsyncImage(url: resolveURL(image.url)) { phase in
                                     switch phase {
                                     case .empty:
                                         ProgressView()
@@ -1141,6 +1155,57 @@ struct MessageBubble: View {
             .padding(.bottom, 4)
         }
     }
+
+    @ViewBuilder
+    private var videoAttachmentView: some View {
+        if let url = videoURL {
+            VideoPlayerView(url: url)
+                .padding(.bottom, 8)
+        }
+    }
+
+    private var videoURL: URL? {
+        // First check for markdown pattern [Video Result](url) like the web app does
+        if let match = message.content.range(of: #"\[Video Result\]\((.*?)\)"#, options: .regularExpression) {
+            let urlRange = message.content[match]
+            // Extract URL from within parentheses
+            if let openParen = urlRange.firstIndex(of: "("),
+               let closeParen = urlRange.lastIndex(of: ")") {
+                let urlStart = urlRange.index(after: openParen)
+                let urlString = String(urlRange[urlStart..<closeParen])
+                if let url = URL(string: urlString) {
+                    return url
+                }
+            }
+        }
+
+        // Fallback: check for raw video URLs in content
+        let types = [".mp4", ".mov", ".webm"]
+        let words = message.content.components(separatedBy: .whitespacesAndNewlines)
+
+        for word in words {
+            let cleanWord = word.trimmingCharacters(in: .punctuationCharacters)
+
+            if let url = URL(string: cleanWord),
+               url.scheme?.lowercased().hasPrefix("http") == true,
+               types.contains(where: { cleanWord.lowercased().hasSuffix($0) }) {
+                return url
+            }
+        }
+        return nil
+    }
+
+    private func resolveURL(_ urlString: String) -> URL? {
+        if urlString.lowercased().hasPrefix("http") {
+            return URL(string: urlString)
+        }
+        // Handle relative URL
+        let baseURL = APIConfiguration.shared.baseURL
+        // Ensure no double slash or missing slash
+        let cleanBase = baseURL.hasSuffix("/") ? String(baseURL.dropLast()) : baseURL
+        let cleanPath = urlString.hasPrefix("/") ? urlString : "/" + urlString
+        return URL(string: cleanBase + cleanPath)
+    }
     
     @ViewBuilder
     private var reasoningView: some View {
@@ -1161,6 +1226,22 @@ struct MessageBubble: View {
         }
     }
     
+    /// Content with video markdown stripped out when video is displayed separately
+    private var displayContent: String {
+        var content = message.content
+
+        // Strip [Video Result](url) markdown pattern since we display video separately
+        if videoURL != nil {
+            content = content.replacingOccurrences(
+                of: #"\[Video Result\]\([^)]*\)"#,
+                with: "",
+                options: .regularExpression
+            ).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        return content
+    }
+
     @ViewBuilder
     private var messageContentView: some View {
         if isEditing {
@@ -1171,14 +1252,14 @@ struct MessageBubble: View {
                     .cornerRadius(8)
                     .frame(minHeight: 100)
                     .foregroundStyle(Theme.Colors.text)
-                
+
                 HStack {
                     Button("Cancel") {
                         isEditing = false
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Theme.Colors.textSecondary)
-                    
+
                     Button("Save") {
                         saveEdit()
                     }
@@ -1187,8 +1268,8 @@ struct MessageBubble: View {
                     .disabled(isSaving)
                 }
             }
-        } else {
-            Text(message.content)
+        } else if !displayContent.isEmpty {
+            Text(displayContent)
                 .font(Theme.Typography.body)
                 .foregroundStyle(Theme.Colors.text)
                 .textSelection(.enabled)
@@ -1459,5 +1540,21 @@ struct VoiceRecorderSheet: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.Colors.glassBackground)
+    }
+}
+
+struct VideoPlayerView: View {
+    let url: URL
+    @State private var player: AVPlayer?
+    
+    var body: some View {
+        VideoPlayer(player: player)
+            .onAppear {
+                if player == nil {
+                    player = AVPlayer(url: url)
+                }
+            }
+            .frame(height: 200)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }

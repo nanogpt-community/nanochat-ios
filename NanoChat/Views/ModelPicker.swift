@@ -19,68 +19,80 @@ struct ModelPicker: View {
             
             Divider()
             
-            ScrollView {
-                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                    ForEach(groupedModels) { group in
-                        Section(header: 
-                            Text(group.name)
-                                .font(.caption)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(Theme.Colors.textSecondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 8)
-                                .background(Theme.Colors.glassBackground)
-                        ) {
-                            ForEach(group.models) { model in
-                                Button {
-                                    onSelect(model)
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(model.name ?? model.modelId)
-                                                .font(.body)
-                                                .foregroundStyle(Theme.Colors.text)
-                                            
-                                            ModelCapabilityBadges(
-                                                capabilities: model.capabilities,
-                                                subscriptionIncluded: model.subscriptionIncluded
-                                            )
-                                            .font(.caption2)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        if selectedModelId == model.modelId {
-                                            Image(systemName: "checkmark")
-                                                .font(.body)
-                                                .foregroundStyle(Theme.Colors.accent)
-                                        }
-                                        
-                                        // Info Button
-                                        Button {
-                                            infoModel = model
-                                        } label: {
-                                            Image(systemName: "info.circle")
-                                                .foregroundStyle(Theme.Colors.textTertiary)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                        ForEach(groupedModels) { group in
+                            Section(header: 
+                                Text(group.name)
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.Colors.textSecondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding(.horizontal, 16)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        selectedModelId == model.modelId ? Theme.Colors.secondary.opacity(0.1) : Color.clear
-                                    )
+                                    .padding(.vertical, 8)
+                                    .background(Theme.Colors.glassBackground)
+                            ) {
+                                ForEach(group.models) { model in
+                                    Button {
+                                        onSelect(model)
+                                    } label: {
+                                        HStack(spacing: 12) {
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(model.name ?? model.modelId)
+                                                    .font(.body)
+                                                    .foregroundStyle(Theme.Colors.text)
+                                                
+                                                ModelCapabilityBadges(
+                                                    capabilities: model.capabilities,
+                                                    subscriptionIncluded: model.subscriptionIncluded
+                                                )
+                                                .font(.caption2)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if selectedModelId == model.modelId {
+                                                Image(systemName: "checkmark")
+                                                    .font(.body)
+                                                    .foregroundStyle(Theme.Colors.accent)
+                                            }
+                                            
+                                            // Info Button
+                                            Button {
+                                                infoModel = model
+                                            } label: {
+                                                Image(systemName: "info.circle")
+                                                    .foregroundStyle(Theme.Colors.textTertiary)
+                                            }
+                                            .buttonStyle(.plain)
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 12)
+                                        .background(
+                                            selectedModelId == model.modelId ? Theme.Colors.secondary.opacity(0.1) : Color.clear
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                    .id(model.modelId)
+                                    
+                                    Divider().padding(.leading, 16)
                                 }
-                                .buttonStyle(.plain)
-                                
-                                Divider().padding(.leading, 16)
+                            }
+                        }
+                    }
+                }
+                .scrollIndicators(.hidden)
+                .onAppear {
+                    if let selectedId = selectedModelId {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            withAnimation {
+                                proxy.scrollTo(selectedId, anchor: .center)
                             }
                         }
                     }
                 }
             }
-            .scrollIndicators(.hidden)
         }
         .frame(maxHeight: 400) // Constraint height for dropdown feel
         .background(Theme.Colors.backgroundStart)

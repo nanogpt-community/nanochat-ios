@@ -23,170 +23,160 @@ struct SidebarView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        ZStack {
-            // Darker background for sidebar (Drawer style)
+        ZStack(alignment: .leading) {
+            // Dark Sidebar Background
             Theme.Colors.glassSurface
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                // Search
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(Theme.Colors.textTertiary)
-                    TextField("Search", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .foregroundStyle(Theme.Colors.text)
+                // Header: Search & Navigation
+                VStack(spacing: 12) {
+                    // Search Bar
+                    HStack(spacing: 8) {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.Colors.textTertiary)
+                        
+                        TextField("Search", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.Colors.text)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Theme.Colors.glassBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    
+                    // Main Navigation Links (Compact)
+                    HStack(spacing: 4) {
+                        SidebarLink(icon: "sparkles", title: "Assistants", action: { showAssistants = true })
+                        SidebarLink(icon: "folder", title: "Projects", action: { showProjects = true })
+                        SidebarLink(icon: "star", title: "Starred", action: { showStarred = true })
+                    }
                 }
-                .padding(Theme.Spacing.md)
-                .background(Theme.Colors.glassBackground) // Slightly lighter/darker
-                .clipShape(RoundedRectangle(cornerRadius: 10))
                 .padding()
                 
-                // Main Navigation Links
-                VStack(spacing: Theme.Spacing.xs) {
-                    SidebarLink(icon: "sparkles", title: "Assistants", color: .primary) {
-                        showAssistants = true
-                    }
-                    
-                    SidebarLink(icon: "folder", title: "Projects", color: .primary) {
-                        showProjects = true
-                    }
-                    
-                    SidebarLink(icon: "star", title: "Starred", color: .primary) {
-                        showStarred = true
-                    }
-                }
-                .padding(.horizontal)
-                .padding(.bottom, Theme.Spacing.md)
-
                 // Conversations List
                 ScrollView {
-                    LazyVStack(spacing: Theme.Spacing.xs) {
+                    LazyVStack(spacing: 16, pinnedViews: .sectionHeaders) {
                         if viewModel.isLoading && viewModel.conversations.isEmpty {
                             ProgressView()
                                 .tint(Theme.Colors.secondary)
                                 .padding()
                         } else {
-                            // Section Header for Recent
-                            HStack {
-                                Text("Recent")
-                                    .font(Theme.Typography.caption)
-                                    .foregroundStyle(Theme.Colors.textTertiary)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
-                            .padding(.top, Theme.Spacing.sm)
+                            let grouped = groupConversations(filteredConversations)
                             
-                            ForEach(filteredConversations, id: \.id) { conversation in
-                                Button {
-                                    selectedConversation = conversation
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                                        isPresented = false
-                                    }
-                                } label: {
-                                    SidebarRow(conversation: conversation, isSelected: selectedConversation?.id == conversation.id)
-                                }
-                                .buttonStyle(.plain)
-                                .contextMenu {
-                                    Button {
-                                        Task {
-                                            await togglePin(conversation)
+                            ForEach(grouped, id: \.0) { group, conversations in
+                                Section(header: 
+                                    Text(group.rawValue)
+                                        .font(.caption)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 4)
+                                        //.background(Theme.Colors.glassSurface.opacity(0.9)) // Sticky header bg
+                                ) {
+                                    ForEach(conversations, id: \.id) { conversation in
+                                        Button {
+                                            selectedConversation = conversation
+                                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                                isPresented = false
+                                            }
+                                        } label: {
+                                            SidebarRow(conversation: conversation, isSelected: selectedConversation?.id == conversation.id)
                                         }
-                                    } label: {
-                                        Label(
-                                            conversation.pinned ? "Unpin" : "Pin",
-                                            systemImage: conversation.pinned ? "pin.slash" : "pin"
-                                        )
-                                    }
-                                    
-                                    Button {
-                                        showingRenameDialog = true
-                                        conversationToRename = conversation
-                                        newConversationTitle = conversation.title
-                                    } label: {
-                                        Label("Rename", systemImage: "pencil")
-                                    }
-                                    
-                                    Button {
-                                        conversationToMove = conversation
-                                        showingMoveSheet = true
-                                        Task {
-                                            await loadProjects()
+                                        .buttonStyle(.plain)
+                                        .contextMenu {
+                                            Button {
+                                                Task { await togglePin(conversation) }
+                                            } label: {
+                                                Label(conversation.pinned ? "Unpin" : "Pin", systemImage: conversation.pinned ? "pin.slash" : "pin")
+                                            }
+                                            
+                                            Button {
+                                                conversationToRename = conversation
+                                                newConversationTitle = conversation.title
+                                                showingRenameDialog = true
+                                            } label: {
+                                                Label("Rename", systemImage: "pencil")
+                                            }
+                                            
+                                            Button {
+                                                conversationToMove = conversation
+                                                showingMoveSheet = true
+                                                Task { await loadProjects() }
+                                            } label: {
+                                                Label("Move to Project", systemImage: "folder")
+                                            }
+                                            
+                                            Divider()
+                                            
+                                            Button(role: .destructive) {
+                                                Task { await viewModel.deleteConversation(id: conversation.id); await viewModel.loadConversations() }
+                                            } label: {
+                                                Label("Delete", systemImage: "trash")
+                                            }
                                         }
-                                    } label: {
-                                        Label("Move to Project", systemImage: "folder")
-                                    }
-                                    
-                                    Divider()
-                                    
-                                    Button(role: .destructive) {
-                                        Task {
-                                            await viewModel.deleteConversation(id: conversation.id)
-                                            // Refresh list logic if needed, viewModel usually handles it via published property
-                                            await viewModel.loadConversations()
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
                                     }
                                 }
                             }
                         }
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 80) // Space for user footer
+                    .padding(.bottom, 80)
                 }
                 
                 Spacer()
                 
-                // User / Settings Footer
-                Button {
-                    showSettings = true
-                } label: {
-                    HStack(spacing: Theme.Spacing.md) {
-                        Image(systemName: "person.circle.fill")
-                            .resizable()
-                            .frame(width: 32, height: 32)
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                        
-                        Text("User Settings")
-                            .font(Theme.Typography.subheadline)
-                            .fontWeight(.medium)
-                            .foregroundStyle(Theme.Colors.text)
-                        
-                        Spacer()
-                        
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(Theme.Colors.textTertiary)
+                // User Footer
+                VStack(spacing: 0) {
+                    Divider()
+                        .overlay(Theme.Colors.border)
+                    
+                    Button {
+                        showSettings = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.circle.fill")
+                                .resizable()
+                                .frame(width: 32, height: 32)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("User")
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .foregroundStyle(Theme.Colors.text)
+                                Text("Settings")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "ellipsis")
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                        }
+                        .padding()
+                        .background(Theme.Colors.glassSurface)
                     }
-                    .padding()
-                    .background(Theme.Colors.glassBackground)
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 Color.clear.frame(height: 1)
             }
+            .frame(width: 300) // Constrain width to match RootView offset
         }
-        .sheet(isPresented: $showAssistants) {
-            AssistantsListView()
-        }
-        .sheet(isPresented: $showProjects) {
-            ProjectsListView()
-        }
-        .sheet(isPresented: $showStarred) {
-            StarredMessagesView()
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
+        .sheet(isPresented: $showAssistants) { AssistantsListView() }
+        .sheet(isPresented: $showProjects) { ProjectsListView() }
+        .sheet(isPresented: $showStarred) { StarredMessagesView() }
+        .sheet(isPresented: $showSettings) { SettingsView() }
         .alert("Rename Conversation", isPresented: $showingRenameDialog) {
             Button("Cancel", role: .cancel) {}
             Button("Rename") {
                 if let conversation = conversationToRename, !newConversationTitle.isEmpty {
-                    Task {
-                        await renameConversation(
-                            conversation, newTitle: newConversationTitle)
-                    }
+                    Task { await renameConversation(conversation, newTitle: newConversationTitle) }
                 }
             }
         } message: {
@@ -199,18 +189,62 @@ struct SidebarView: View {
                 isLoading: isLoadingProjects
             ) { projectId in
                 if let conversation = conversationToMove {
-                    Task {
-                        await moveConversation(conversation, to: projectId)
-                    }
+                    Task { await moveConversation(conversation, to: projectId) }
                 }
             }
             .presentationDetents([.medium, .large])
         }
         .onAppear {
-            Task {
-                await viewModel.loadConversations()
+            Task { await viewModel.loadConversations() }
+        }
+    }
+    
+    // MARK: - Grouping Logic
+    
+    enum DateGroup: String, CaseIterable, Comparable {
+        case today = "Today"
+        case yesterday = "Yesterday"
+        case previous7Days = "Previous 7 Days"
+        case previous30Days = "Previous 30 Days"
+        case older = "Older"
+        
+        var sortOrder: Int {
+            switch self {
+            case .today: return 0
+            case .yesterday: return 1
+            case .previous7Days: return 2
+            case .previous30Days: return 3
+            case .older: return 4
             }
         }
+        
+        static func < (lhs: DateGroup, rhs: DateGroup) -> Bool {
+            return lhs.sortOrder < rhs.sortOrder
+        }
+    }
+    
+    private func groupConversations(_ conversations: [ConversationResponse]) -> [(DateGroup, [ConversationResponse])] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        let grouped = Dictionary(grouping: conversations) { conversation -> DateGroup in
+            if calendar.isDateInToday(conversation.updatedAt) {
+                return .today
+            } else if calendar.isDateInYesterday(conversation.updatedAt) {
+                return .yesterday
+            } else if let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now),
+                      conversation.updatedAt > sevenDaysAgo {
+                return .previous7Days
+            } else if let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now),
+                      conversation.updatedAt > thirtyDaysAgo {
+                return .previous30Days
+            } else {
+                return .older
+            }
+        }
+        
+        return grouped.sorted { $0.key < $1.key }
+            .map { ($0.key, $0.value.sorted { $0.updatedAt > $1.updatedAt }) }
     }
     
     private var filteredConversations: [ConversationResponse] {
@@ -220,7 +254,7 @@ struct SidebarView: View {
         return viewModel.conversations.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
     }
     
-    // MARK: - Helper Methods
+    // MARK: - Actions
     
     private func togglePin(_ conversation: ConversationResponse) async {
         HapticManager.shared.tap()
@@ -235,10 +269,7 @@ struct SidebarView: View {
     private func renameConversation(_ conversation: ConversationResponse, newTitle: String) async {
         HapticManager.shared.tap()
         do {
-            try await NanoChatAPI.shared.updateConversationTitle(
-                conversationId: conversation.id,
-                title: newTitle
-            )
+            try await NanoChatAPI.shared.updateConversationTitle(conversationId: conversation.id, title: newTitle)
             await viewModel.loadConversations()
         } catch {
             errorMessage = error.localizedDescription
@@ -248,7 +279,6 @@ struct SidebarView: View {
     private func loadProjects() async {
         isLoadingProjects = true
         defer { isLoadingProjects = false }
-
         do {
             projects = try await NanoChatAPI.shared.getProjects()
         } catch {
@@ -256,14 +286,10 @@ struct SidebarView: View {
         }
     }
     
-    private func moveConversation(_ conversation: ConversationResponse, to projectId: String?) async
-    {
+    private func moveConversation(_ conversation: ConversationResponse, to projectId: String?) async {
         HapticManager.shared.tap()
         do {
-            try await viewModel.setConversationProject(
-                conversationId: conversation.id,
-                projectId: projectId
-            )
+            try await viewModel.setConversationProject(conversationId: conversation.id, projectId: projectId)
             showingMoveSheet = false
             conversationToMove = nil
             await viewModel.loadConversations()
@@ -273,29 +299,28 @@ struct SidebarView: View {
     }
 }
 
+// MARK: - Components
+
 struct SidebarLink: View {
     let icon: String
     let title: String
-    let color: Color
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: Theme.Spacing.md) {
+            VStack(spacing: 6) {
                 Image(systemName: icon)
-                    .foregroundStyle(color)
-                    .frame(width: 20)
-                
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.Colors.textSecondary)
                 Text(title)
-                    .font(Theme.Typography.subheadline)
-                    .foregroundStyle(Theme.Colors.text)
-                
-                Spacer()
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .lineLimit(1)
             }
-            .padding(.vertical, Theme.Spacing.md)
-            .padding(.horizontal, Theme.Spacing.md)
-            .background(Color.clear) // Clean background
-            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(Theme.Colors.glassBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
         .buttonStyle(.plain)
     }
@@ -306,32 +331,26 @@ struct SidebarRow: View {
     let isSelected: Bool
     
     var body: some View {
-        HStack(spacing: Theme.Spacing.md) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(conversation.title)
-                    .font(Theme.Typography.subheadline)
-                    .foregroundStyle(isSelected ? Theme.Colors.text : Theme.Colors.textSecondary)
-                    .lineLimit(1)
-                
-                if conversation.pinned {
-                    HStack(spacing: 4) {
-                        Image(systemName: "pin.fill")
-                            .font(.caption2)
-                        Text("Pinned")
-                            .font(.caption2)
-                    }
-                    .foregroundStyle(Theme.Colors.secondary)
-                }
-            }
+        HStack(spacing: 8) {
+            Text(conversation.title)
+                .font(.system(size: 14))
+                .foregroundStyle(isSelected ? Theme.Colors.text : Theme.Colors.textSecondary)
+                .lineLimit(1)
             
             Spacer()
+            
+            if conversation.pinned {
+                Image(systemName: "pin.fill")
+                    .font(.caption2)
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            }
         }
-        .padding(.vertical, Theme.Spacing.md)
-        .padding(.horizontal, Theme.Spacing.md)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(
-            isSelected ? Theme.Colors.secondary.opacity(0.2) : Color.clear
+            isSelected ? Theme.Colors.secondary.opacity(0.1) : Color.clear
         )
-        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-        .contentShape(Rectangle())
+        .clipShape(RoundedRectangle(cornerRadius: 6))
+        .padding(.horizontal, 8)
     }
 }

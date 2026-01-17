@@ -10,19 +10,6 @@ struct AnalyticsView: View {
             Theme.Gradients.background
                 .ignoresSafeArea()
 
-            Circle()
-                .fill(
-                    RadialGradient(
-                        colors: [Theme.Colors.primary.opacity(0.12), .clear],
-                        center: .topTrailing,
-                        startRadius: 0,
-                        endRadius: 320
-                    )
-                )
-                .frame(width: 380, height: 380)
-                .offset(x: 140, y: -120)
-                .ignoresSafeArea()
-
             ScrollView {
                 VStack(spacing: Theme.Spacing.lg) {
                     if viewModel.isLoading && viewModel.stats.isEmpty {
@@ -45,7 +32,6 @@ struct AnalyticsView: View {
         }
         .navigationTitle("Analytics")
         .navigationBarTitleDisplayMode(.large)
-        .liquidGlassNavigationBar()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {

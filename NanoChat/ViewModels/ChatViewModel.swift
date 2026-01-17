@@ -76,6 +76,20 @@ final class ChatViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        // Reuse existing empty "New Chat" if available
+        if title == nil {
+            if let latest = conversations.first,
+               latest.title == "New Chat",
+               latest.projectId == projectId {
+                
+                // Verify it has no messages to be safe
+                if let msgs = try? await api.getMessages(conversationId: latest.id), msgs.isEmpty {
+                    currentConversation = latest
+                    return
+                }
+            }
+        }
+
         do {
             let newConversation: ConversationResponse
             if let title = title {
