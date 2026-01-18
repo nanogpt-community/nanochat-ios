@@ -14,7 +14,7 @@ struct AuthenticationView: View {
                 // Background
                 Theme.Gradients.background
                     .ignoresSafeArea()
-                
+
                 // Decorative glow circles
                 Circle()
                     .fill(
@@ -28,7 +28,7 @@ struct AuthenticationView: View {
                     .frame(width: 400, height: 400)
                     .offset(x: -100, y: -200)
                     .blur(radius: 60)
-                
+
                 Circle()
                     .fill(
                         RadialGradient(
@@ -41,7 +41,7 @@ struct AuthenticationView: View {
                     .frame(width: 300, height: 300)
                     .offset(x: 150, y: 300)
                     .blur(radius: 40)
-                
+
                 VStack(spacing: Theme.Spacing.xxl) {
                     Spacer()
 
@@ -53,7 +53,7 @@ struct AuthenticationView: View {
                                 .fill(Theme.Colors.secondary.opacity(0.3))
                                 .frame(width: 100, height: 100)
                                 .blur(radius: 30)
-                            
+
                             Circle()
                                 .fill(Theme.Gradients.primary)
                                 .frame(width: 90, height: 90)
@@ -62,7 +62,9 @@ struct AuthenticationView: View {
                                         .font(.system(size: 40))
                                         .foregroundStyle(.white)
                                 )
-                                .shadow(color: Theme.Colors.primary.opacity(0.5), radius: 20, x: 0, y: 10)
+                                .shadow(
+                                    color: Theme.Colors.primary.opacity(0.5), radius: 20, x: 0,
+                                    y: 10)
                         }
                         .scaleEffect(logoScale)
                         .opacity(logoOpacity)
@@ -145,14 +147,17 @@ struct AuthenticationView: View {
                                     if authManager.apiKey.isEmpty {
                                         Theme.Colors.glassBackground
                                     } else {
-                                        Theme.Gradients.primary
+                                        Theme.Colors.accent
                                     }
                                 }
                             )
-                            .foregroundStyle(authManager.apiKey.isEmpty ? Theme.Colors.textTertiary : .white)
+                            .foregroundStyle(
+                                authManager.apiKey.isEmpty ? Theme.Colors.textTertiary : .white
+                            )
                             .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                             .shadow(
-                                color: authManager.apiKey.isEmpty ? .clear : Theme.Colors.primary.opacity(0.4),
+                                color: authManager.apiKey.isEmpty
+                                    ? .clear : Theme.Colors.accent.opacity(0.4),
                                 radius: 12,
                                 x: 0,
                                 y: 6

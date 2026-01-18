@@ -15,8 +15,8 @@ struct ModelPicker: View {
         }
         return groupedModels.compactMap { group in
             let filtered = group.models.filter { model in
-                (model.name ?? model.modelId).localizedCaseInsensitiveContains(searchText) ||
-                model.modelId.localizedCaseInsensitiveContains(searchText)
+                (model.name ?? model.modelId).localizedCaseInsensitiveContains(searchText)
+                    || model.modelId.localizedCaseInsensitiveContains(searchText)
             }
             if filtered.isEmpty { return nil }
             return ModelGroup(name: group.name, models: filtered)
@@ -24,61 +24,63 @@ struct ModelPicker: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            headerView
+        GeometryReader { geometry in
+            VStack(spacing: 0) {
+                // Header
+                headerView
 
-            // Search Bar
-            searchBar
-                .padding(.horizontal, Theme.scaled(16))
-                .padding(.vertical, Theme.scaled(12))
+                // Search Bar
+                searchBar
+                    .padding(.horizontal, Theme.scaled(16))
+                    .padding(.vertical, Theme.scaled(12))
 
-            Divider()
-                .background(Theme.Colors.border)
+                Divider()
+                    .background(Theme.Colors.border)
 
-            // Models List
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredGroups) { group in
-                            // Provider Section Header
-                            providerHeader(group.name)
+                // Models List
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(spacing: 0) {
+                            ForEach(filteredGroups) { group in
+                                // Provider Section Header
+                                providerHeader(group.name)
 
-                            // Models in this group
-                            ForEach(group.models) { model in
-                                ModelRow(
-                                    model: model,
-                                    isSelected: selectedModelId == model.modelId,
-                                    onSelect: {
-                                        onSelect(model)
-                                    },
-                                    onInfo: {
-                                        infoModel = model
-                                    }
-                                )
-                                .id(model.modelId)
+                                // Models in this group
+                                ForEach(group.models) { model in
+                                    ModelRow(
+                                        model: model,
+                                        isSelected: selectedModelId == model.modelId,
+                                        onSelect: {
+                                            onSelect(model)
+                                        },
+                                        onInfo: {
+                                            infoModel = model
+                                        }
+                                    )
+                                    .id(model.modelId)
+                                }
                             }
                         }
+                        .padding(.bottom, Theme.scaled(20))
                     }
-                    .padding(.bottom, Theme.scaled(20))
-                }
-                .scrollIndicators(.hidden)
-                .onAppear {
-                    if let selectedId = selectedModelId {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            withAnimation {
-                                proxy.scrollTo(selectedId, anchor: .center)
+                    .scrollIndicators(.hidden)
+                    .onAppear {
+                        if let selectedId = selectedModelId {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                withAnimation {
+                                    proxy.scrollTo(selectedId, anchor: .center)
+                                }
                             }
                         }
                     }
                 }
             }
+            .frame(maxHeight: geometry.size.height * 0.75)
+            .background(Theme.Colors.backgroundStart)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(20)))
+            .shadow(color: Color.black.opacity(0.3), radius: 30, x: 0, y: 15)
+            .padding(.horizontal, Theme.scaled(16))
         }
-        .frame(maxHeight: Theme.scaled(500))
-        .background(Theme.Colors.backgroundStart)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(20)))
-        .shadow(color: Color.black.opacity(0.3), radius: 30, x: 0, y: 15)
-        .padding(.horizontal, Theme.scaled(16))
         .sheet(item: $infoModel) { model in
             ModelInfoView(model: model)
                 .presentationDetents([.large])
@@ -199,7 +201,11 @@ struct ModelRow: View {
                 // Selection indicator
                 ZStack {
                     Circle()
-                        .strokeBorder(isSelected ? Theme.Colors.accent : Theme.Colors.textTertiary.opacity(0.5), lineWidth: 2)
+                        .strokeBorder(
+                            isSelected
+                                ? Theme.Colors.accent : Theme.Colors.textTertiary.opacity(0.5),
+                            lineWidth: 2
+                        )
                         .frame(width: Theme.scaled(22), height: Theme.scaled(22))
 
                     if isSelected {
@@ -234,7 +240,9 @@ struct ModelRow: View {
                         }
 
                         if model.subscriptionIncluded == true {
-                            capabilityPill(icon: "checkmark.seal.fill", text: "Free", color: Theme.Colors.success)
+                            capabilityPill(
+                                icon: "checkmark.seal.fill", text: "Free",
+                                color: Theme.Colors.success)
                         }
                     }
                 }
@@ -251,7 +259,14 @@ struct ModelRow: View {
             }
             .padding(.horizontal, Theme.scaled(20))
             .padding(.vertical, Theme.scaled(14))
-            .background(isSelected ? Theme.Colors.accent.opacity(0.1) : Color.clear)
+            .background(isSelected ? Theme.Colors.accent.opacity(0.25) : Color.clear)
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.scaled(8))
+                    .strokeBorder(
+                        isSelected ? Theme.Colors.accent.opacity(0.5) : Color.clear, lineWidth: 1
+                    )
+                    .padding(.horizontal, Theme.scaled(8))
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
