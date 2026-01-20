@@ -74,7 +74,7 @@ struct AuthenticationView: View {
                                 .font(.system(size: 38, weight: .bold, design: .rounded))
                                 .foregroundStyle(Theme.Colors.text)
 
-                            Text("AI-powered conversations")
+                            Text("iOS client for NanoChat web app")
                                 .font(.subheadline)
                                 .foregroundStyle(Theme.Colors.textSecondary)
                         }
@@ -87,23 +87,31 @@ struct AuthenticationView: View {
                     VStack(spacing: Theme.Spacing.xl) {
                         // Server URL Field
                         VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                            Text("Server URL")
+                            Text("NanoChat Server URL")
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .foregroundStyle(Theme.Colors.textSecondary)
 
-                            TextField("https://t3.0xgingi.xyz", text: $authManager.baseURL)
-                                .textFieldStyle(.plain)
-                                .padding(Theme.Spacing.md)
-                                .background(.ultraThinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
-                                        .stroke(Theme.Colors.glassBorder, lineWidth: 1)
-                                )
-                                .autocapitalization(.none)
-                                .keyboardType(.URL)
-                                .foregroundStyle(Theme.Colors.text)
+                            TextField(
+                                "https://t3.0xgingi.xyz", text: $authManager.baseURL
+                            )
+                            .textFieldStyle(.plain)
+                            .padding(Theme.Spacing.md)
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                                    .stroke(Theme.Colors.glassBorder, lineWidth: 1)
+                            )
+                            .autocapitalization(.none)
+                            .keyboardType(.URL)
+                            .foregroundStyle(Theme.Colors.text)
+
+                            Text(
+                                "Enter the URL where your NanoChat instance is hosted, not the NanoGPT API URL"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textTertiary)
                         }
 
                         // API Key Field
@@ -124,9 +132,11 @@ struct AuthenticationView: View {
                                 )
                                 .foregroundStyle(Theme.Colors.text)
 
-                            Text("Generate an API key in the web app settings")
-                                .font(.caption)
-                                .foregroundStyle(Theme.Colors.textTertiary)
+                            Text(
+                                "Generate a NanoChat API key from your NanoChat web app settings (not from nano-gpt.com)"
+                            )
+                            .font(.caption)
+                            .foregroundStyle(Theme.Colors.textTertiary)
                         }
 
                         // Connect Button
