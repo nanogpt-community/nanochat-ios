@@ -51,7 +51,7 @@ APIConfiguration.shared.save(baseURL: "https://your-server.com")
 
 ### API Key
 
-Generate an API key from the [NanoChat](https://github.com/nanogpt-community/nanochat) web app under Settings > API Keys.
+Generate an API key from the [NanoChat](https://github.com/nanogpt-community/nanochat) web app under Settings > developer.
 
 ## Development
 
