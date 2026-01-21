@@ -1,6 +1,7 @@
-# NanoChat iOS App
+# NanoChat iOS
 
-A native iOS application for [NanoChat](https://github.com/nanogpt-community/nanochat), built with SwiftUI and the Liquid Glass design system.
+A native iOS app for [NanoChat](https://github.com/nanogpt-community/nanochat)
+
 
 ## Download
 
@@ -8,13 +9,28 @@ A native iOS application for [NanoChat](https://github.com/nanogpt-community/nan
 
 ## Features
 
-- **Liquid Glass UI** - Modern, translucent interface with iOS 26's Liquid Glass design
-- **NanoChat Integration** - Real-time chat with [NanoChat](https://github.com/nanogpt-community/nanochat)
-- **Multiple Assistants** - Create and manage custom AI assistants
+### Chat
+- Real-time streaming responses
+- Multi-model support with provider selection
+- Web search integration (Linkup, Tavily, Serper, SearXNG)
+- Image and document attachments
+- Voice input with audio recording
+- Text-to-speech playback
+- Markdown rendering with syntax highlighting
+- Follow-up question suggestions
+- Message starring and search
+- Batch message operations
+
+### Organization
+- **Conversations** - Chat history with pinning support
 - **Projects** - Organize conversations into projects
-- **Secure Authentication** - API key-based authentication
-- **SwiftData** - Local data persistence with SwiftData
-- **Background Sync** - Automatic synchronization with NanoChat backend
+- **Assistants** - Create and manage custom AI assistants
+- **Starred Messages** - Quick access to important messages
+
+### Security
+- API key stored in Keychain
+- Bearer token authentication
+- Local data persistence with SwiftData
 
 ## Requirements
 
@@ -27,11 +43,12 @@ A native iOS application for [NanoChat](https://github.com/nanogpt-community/nan
 1. **Clone the repository**
    ```bash
    git clone https://github.com/nanogpt-community/nanochat-ios
+   cd nanochat-ios
    ```
 
 2. **Open in Xcode**
    ```bash
-   open nanochat-ios/NanoChat.xcodeproj
+   open NanoChatApp.xcodeproj
    ```
 
 3. **Build and Run**
@@ -40,25 +57,37 @@ A native iOS application for [NanoChat](https://github.com/nanogpt-community/nan
 
 ## Configuration
 
-### Server URL
-
-Default: `https://t3.0xgingi.xyz`
-
-Change in Settings or use:
-```swift
-APIConfiguration.shared.save(baseURL: "https://your-server.com")
-```
-
 ### API Key
 
-Generate an API key from the [NanoChat](https://github.com/nanogpt-community/nanochat) web app under Settings > developer.
+1. Go to your NanoChat web app (Public instance at t3.0xgingi.xyz or selfhost it yourself)
+2. Navigate to Settings > Developer
+3. Generate an API key
+4. Enter the key in the iOS app login screen
 
-## Development
+### Server URL
 
-### Adding New Features
+Default server: `https://t3.0xgingi.xyz`
 
-1. Create model in `Models/`
-2. Add API methods in `Services/NanoChatAPI.swift`
-3. Create view model in `ViewModels/`
-4. Build UI in `Views/`
-5. Apply Liquid Glass styling
+You can connect to a self-hosted NanoChat server by entering your server URL on the login screen.
+
+## Architecture
+
+The app follows **MVVM architecture** with:
+
+- **Models** - SwiftData models for local persistence
+- **ViewModels** - `@Observable` classes managing state
+- **Views** - SwiftUI views with Liquid Glass styling
+- **Services** - Singleton services for API, audio, storage
+
+### Key Components
+
+| Component | Purpose |
+|-----------|---------|
+| `NanoChatAPI` | HTTP client for all API calls |
+| `AuthenticationManager` | User authentication state |
+| `ChatViewModel` | Chat functionality and streaming |
+| `ModelManager` | AI model and provider management |
+| `AssistantManager` | Assistant CRUD operations |
+| `KeychainManager` | Secure credential storage |
+| `AudioRecorder` | Voice input recording |
+| `AudioPlaybackManager` | TTS audio playback |
