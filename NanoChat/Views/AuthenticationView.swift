@@ -139,22 +139,55 @@ struct AuthenticationView: View {
                             .foregroundStyle(Theme.Colors.textTertiary)
                         }
 
+                        // Error Message
+                        if let errorMessage = authManager.errorMessage {
+                            HStack(spacing: Theme.Spacing.sm) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(Theme.Colors.error)
+                                Text(errorMessage)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Theme.Colors.error)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(Theme.Spacing.md)
+                            .background(Theme.Colors.error.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
+                                    .stroke(Theme.Colors.error.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+
                         // Connect Button
                         Button(action: {
                             HapticManager.shared.tap()
-                            authManager.saveCredentials()
+                            Task {
+                                await authManager.validateAndSaveCredentials()
+                                if authManager.isAuthenticated {
+                                    HapticManager.shared.success()
+                                } else {
+                                    HapticManager.shared.error()
+                                }
+                            }
                         }) {
                             HStack(spacing: Theme.Spacing.sm) {
-                                Text("Connect")
-                                    .font(.headline)
-                                Image(systemName: "arrow.right")
-                                    .font(.subheadline.weight(.semibold))
+                                if authManager.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Text("Connect")
+                                        .font(.headline)
+                                    Image(systemName: "arrow.right")
+                                        .font(.subheadline.weight(.semibold))
+                                }
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, Theme.Spacing.md)
                             .background(
                                 Group {
-                                    if authManager.apiKey.isEmpty {
+                                    if authManager.apiKey.isEmpty || authManager.isLoading {
                                         Theme.Colors.glassBackground
                                     } else {
                                         Theme.Colors.accent
@@ -162,11 +195,12 @@ struct AuthenticationView: View {
                                 }
                             )
                             .foregroundStyle(
-                                authManager.apiKey.isEmpty ? Theme.Colors.textTertiary : .white
+                                authManager.apiKey.isEmpty || authManager.isLoading
+                                    ? Theme.Colors.textTertiary : .white
                             )
                             .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
                             .shadow(
-                                color: authManager.apiKey.isEmpty
+                                color: (authManager.apiKey.isEmpty || authManager.isLoading)
                                     ? .clear : Theme.Colors.accent.opacity(0.4),
                                 radius: 12,
                                 x: 0,
@@ -174,7 +208,7 @@ struct AuthenticationView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .disabled(authManager.apiKey.isEmpty)
+                        .disabled(authManager.apiKey.isEmpty || authManager.isLoading)
                     }
                     .padding(Theme.Spacing.xl)
                     .background(.ultraThinMaterial)
