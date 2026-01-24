@@ -1,19 +1,26 @@
 import SwiftUI
+
 #if canImport(UIKit)
-import UIKit
+    import UIKit
 #elseif canImport(AppKit)
-import AppKit
+    import AppKit
+#endif
+
+#if canImport(UIKit)
+    typealias PlatformColor = UIColor
+#elseif canImport(AppKit)
+    typealias PlatformColor = NSColor
 #endif
 
 #if os(macOS)
-private let scaleFactor: CGFloat = 1.4
+    private let scaleFactor: CGFloat = 1.4
 #else
-private let scaleFactor: CGFloat = {
-    if ProcessInfo.processInfo.isiOSAppOnMac {
-        return 1.4
-    }
-    return 1.0
-}()
+    private let scaleFactor: CGFloat = {
+        if ProcessInfo.processInfo.isiOSAppOnMac {
+            return 1.4
+        }
+        return 1.0
+    }()
 #endif
 
 struct Theme {
@@ -26,29 +33,89 @@ struct Theme {
     }
 
     /// Create a scaled font
-    static func font(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+    static func font(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default)
+        -> Font
+    {
         return Font.system(size: size * scaleFactor, weight: weight, design: design)
     }
-    // MARK: - Colors (Sleek Black Theme)
+
+    #if canImport(UIKit)
+        fileprivate static func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
+            Color(
+                UIColor { trait in
+                    trait.userInterfaceStyle == .dark ? dark : light
+                })
+        }
+    #elseif canImport(AppKit)
+        fileprivate static func dynamicColor(light: PlatformColor, dark: PlatformColor) -> Color {
+            Color(
+                NSColor(name: nil) { appearance in
+                    appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? dark : light
+                })
+        }
+    #endif
+
+    // MARK: - Colors (Dynamic Light/Dark Theme)
     struct Colors {
-        // Background - Pure black for OLED-friendly dark theme
-        static let backgroundStart = Color.black
-        static let backgroundEnd = Color.black
+        private static let lightBackgroundStart = PlatformColor(
+            red: 0.965, green: 0.971, blue: 0.988, alpha: 1.0)
+        private static let lightBackgroundEnd = PlatformColor(
+            red: 0.929, green: 0.941, blue: 0.973, alpha: 1.0)
+        private static let lightText = PlatformColor(red: 0.06, green: 0.07, blue: 0.09, alpha: 1.0)
+
+        private static let lightPrimary = PlatformColor.systemBlue
+        private static let darkPrimary = PlatformColor.white
+
+        private static let lightGlassBackground = PlatformColor.white.withAlphaComponent(0.72)
+        private static let darkGlassBackground = PlatformColor.black
+
+        private static let lightGlassSurface = PlatformColor.black.withAlphaComponent(0.05)
+        private static let darkGlassSurface = PlatformColor.white.withAlphaComponent(0.08)
+
+        private static let lightUserBubble = PlatformColor.black.withAlphaComponent(0.06)
+        private static let darkUserBubble = PlatformColor.white.withAlphaComponent(0.12)
+
+        private static let lightBorder = PlatformColor.black.withAlphaComponent(0.12)
+        private static let darkBorder = PlatformColor.white.withAlphaComponent(0.15)
+
+        private static let lightGlassBorder = PlatformColor.black.withAlphaComponent(0.08)
+        private static let darkGlassBorder = PlatformColor.white.withAlphaComponent(0.1)
+
+        private static let lightGlassShadow = PlatformColor.black.withAlphaComponent(0.12)
+        private static let darkGlassShadow = PlatformColor.black.withAlphaComponent(0.3)
+
+        private static let lightInsetBackground = PlatformColor.black.withAlphaComponent(0.08)
+        private static let darkInsetBackground = PlatformColor.black.withAlphaComponent(0.2)
+
+        // Background
+        static let backgroundStart = Theme.dynamicColor(light: lightBackgroundStart, dark: .black)
+        static let backgroundEnd = Theme.dynamicColor(light: lightBackgroundEnd, dark: .black)
 
         // Text
-        static let text = Color.white
-        static let textSecondary = Color.white.opacity(0.7)
-        static let textTertiary = Color.white.opacity(0.5)
+        static let text = Theme.dynamicColor(light: lightText, dark: .white)
+        static let textSecondary = Theme.dynamicColor(
+            light: lightText.withAlphaComponent(0.7),
+            dark: PlatformColor.white.withAlphaComponent(0.7)
+        )
+        static let textTertiary = Theme.dynamicColor(
+            light: lightText.withAlphaComponent(0.5),
+            dark: PlatformColor.white.withAlphaComponent(0.5)
+        )
 
-        // Glass/Surfaces - Subtle dark surfaces
-        static let glassBackground = Color.black
-        static let glassSurface = Color.white.opacity(0.08)
-        static let userBubble = Color.white.opacity(0.12)
-        static let border = Color.white.opacity(0.15)
+        // Glass/Surfaces
+        static let glassBackground = Theme.dynamicColor(
+            light: lightGlassBackground, dark: darkGlassBackground)
+        static let glassSurface = Theme.dynamicColor(
+            light: lightGlassSurface, dark: darkGlassSurface)
+        static let userBubble = Theme.dynamicColor(light: lightUserBubble, dark: darkUserBubble)
+        static let border = Theme.dynamicColor(light: lightBorder, dark: darkBorder)
 
         // Primary accents
-        static let primary = Color.white
-        static let secondary = Color.white.opacity(0.7)
+        static let primary = Theme.dynamicColor(light: lightPrimary, dark: darkPrimary)
+        static let secondary = Theme.dynamicColor(
+            light: lightText.withAlphaComponent(0.7),
+            dark: PlatformColor.white.withAlphaComponent(0.7)
+        )
         static let accent = Color.blue
 
         // Gradient colors
@@ -56,11 +123,15 @@ struct Theme {
         static let gradientEnd = backgroundEnd
 
         // Glass effect
-        static let glassBorder = Color.white.opacity(0.1)
-        static let glassShadow = Color.black.opacity(0.3)
+        static let glassBorder = Theme.dynamicColor(light: lightGlassBorder, dark: darkGlassBorder)
+        static let glassShadow = Theme.dynamicColor(light: lightGlassShadow, dark: darkGlassShadow)
 
         // Specific Glass Elements
         static let glassPane = Material.ultraThinMaterial
+
+        // Inset surfaces (code blocks, reasoning chips, etc.)
+        static let insetBackground = Theme.dynamicColor(
+            light: lightInsetBackground, dark: darkInsetBackground)
 
         // User message gradient
         static let userBubbleGradient = LinearGradient(
@@ -81,22 +152,25 @@ struct Theme {
         static let textPrimary = text
         static let cardBackground = glassSurface
 
-        // List/Section backgrounds for consistent dark theme
-        static let listBackground = Color.black
-        static let sectionBackground = Color.white.opacity(0.06)
+        // List/Section backgrounds
+        static let listBackground = Theme.dynamicColor(light: lightBackgroundStart, dark: .black)
+        static let sectionBackground = Theme.dynamicColor(
+            light: PlatformColor.black.withAlphaComponent(0.04),
+            dark: PlatformColor.white.withAlphaComponent(0.06)
+        )
     }
-    
+
     #if os(macOS)
-    static let imageScaleFactor: CGFloat = 1.5
+        static let imageScaleFactor: CGFloat = 1.5
     #else
-    static let imageScaleFactor: CGFloat = {
-        if ProcessInfo.processInfo.isiOSAppOnMac {
-            return 1.5
-        }
-        return 1.0
-    }()
+        static let imageScaleFactor: CGFloat = {
+            if ProcessInfo.processInfo.isiOSAppOnMac {
+                return 1.5
+            }
+            return 1.0
+        }()
     #endif
-    
+
     typealias Radius = CornerRadius
 
     // MARK: - Typography
@@ -104,13 +178,18 @@ struct Theme {
         static let title = Font.system(size: 24 * scaleFactor, weight: .bold, design: .rounded)
         static let title2 = Font.system(size: 22 * scaleFactor, weight: .semibold, design: .rounded)
         static let title3 = Font.system(size: 20 * scaleFactor, weight: .semibold, design: .rounded)
-        static let headline = Font.system(size: 18 * scaleFactor, weight: .semibold, design: .rounded)
-        static let subheadline = Font.system(size: 15 * scaleFactor, weight: .regular, design: .rounded)
+        static let headline = Font.system(
+            size: 18 * scaleFactor, weight: .semibold, design: .rounded)
+        static let subheadline = Font.system(
+            size: 15 * scaleFactor, weight: .regular, design: .rounded)
         static let body = Font.system(size: 16 * scaleFactor, weight: .regular, design: .rounded)
         static let caption = Font.system(size: 14 * scaleFactor, weight: .medium, design: .rounded)
-        static let caption2 = Font.system(size: 12 * scaleFactor, weight: .regular, design: .rounded)
-        
-        static func system(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        static let caption2 = Font.system(
+            size: 12 * scaleFactor, weight: .regular, design: .rounded)
+
+        static func system(
+            size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default
+        ) -> Font {
             return Font.system(size: size * scaleFactor, weight: weight, design: design)
         }
     }
@@ -134,26 +213,26 @@ struct Theme {
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )
-        
+
         static let glass = LinearGradient(
-             colors: [
-                 Color.clear,
-                 Color.clear,
-                 Color.clear
-             ],
-             startPoint: .topLeading,
-             endPoint: .bottomTrailing
-         )
-         
-         static let shimmer = LinearGradient(
-             colors: [
-                 Color.primary.opacity(0.0),
-                 Color.primary.opacity(0.05),
-                 Color.primary.opacity(0.0)
-             ],
-             startPoint: .leading,
-             endPoint: .trailing
-         )
+            colors: [
+                Color.clear,
+                Color.clear,
+                Color.clear,
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+
+        static let shimmer = LinearGradient(
+            colors: [
+                Color.primary.opacity(0.0),
+                Color.primary.opacity(0.05),
+                Color.primary.opacity(0.0),
+            ],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
     }
 
     // MARK: - Spacing
@@ -174,7 +253,7 @@ struct Theme {
         static let xl: CGFloat = 24 * scaleFactor
         static let full: CGFloat = 9999
     }
-    
+
     // MARK: - Animation
     struct Animation {
         static let quick: SwiftUI.Animation = .easeOut(duration: 0.15)
@@ -182,13 +261,13 @@ struct Theme {
         static let smooth: SwiftUI.Animation = .easeInOut(duration: 0.35)
         static let spring: SwiftUI.Animation = .spring(response: 0.4, dampingFraction: 0.75)
         static let bouncy: SwiftUI.Animation = .spring(response: 0.5, dampingFraction: 0.6)
-        
+
         // For staggered animations
         static func staggered(index: Int, baseDelay: Double = 0.05) -> SwiftUI.Animation {
             .easeOut(duration: 0.3).delay(Double(index) * baseDelay)
         }
     }
-    
+
     // MARK: - Shadows
     struct Shadows {
         static func glow(color: Color = Colors.primary, radius: CGFloat = 10) -> some View {
@@ -203,24 +282,24 @@ struct Theme {
 @MainActor
 final class HapticManager {
     static let shared = HapticManager()
-    
+
     private init() {}
-    
+
     func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle = .medium) {
         let generator = UIImpactFeedbackGenerator(style: style)
         generator.impactOccurred()
     }
-    
+
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(type)
     }
-    
+
     func selection() {
         let generator = UISelectionFeedbackGenerator()
         generator.selectionChanged()
     }
-    
+
     // Convenience methods
     func lightTap() { impact(.light) }
     func tap() { impact(.medium) }

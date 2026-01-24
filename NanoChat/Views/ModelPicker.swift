@@ -66,9 +66,12 @@ struct ModelPicker: View {
                     .scrollIndicators(.hidden)
                     .onAppear {
                         if let selectedId = selectedModelId {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                withAnimation {
-                                    proxy.scrollTo(selectedId, anchor: .center)
+                            Task {
+                                try? await Task.sleep(nanoseconds: 100_000_000)
+                                await MainActor.run {
+                                    withAnimation {
+                                        proxy.scrollTo(selectedId, anchor: .center)
+                                    }
                                 }
                             }
                         }
@@ -290,7 +293,7 @@ struct ModelRow: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        Theme.Colors.backgroundStart.ignoresSafeArea()
 
         ModelPicker(
             groupedModels: [],

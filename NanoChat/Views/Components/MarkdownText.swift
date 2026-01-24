@@ -55,14 +55,20 @@ struct MarkdownText: View {
             if line.hasPrefix("```") {
                 if inCodeBlock {
                     // End of code block
-                    blocks.append(ContentBlock(type: .codeBlock(language: codeBlockLanguage), content: codeBlockContent.trimmingCharacters(in: .newlines)))
+                    blocks.append(
+                        ContentBlock(
+                            type: .codeBlock(language: codeBlockLanguage),
+                            content: codeBlockContent.trimmingCharacters(in: .newlines)))
                     codeBlockContent = ""
                     codeBlockLanguage = nil
                     inCodeBlock = false
                 } else {
                     // Start of code block
                     if !currentText.isEmpty {
-                        blocks.append(ContentBlock(type: .text, content: currentText.trimmingCharacters(in: .newlines)))
+                        blocks.append(
+                            ContentBlock(
+                                type: .text, content: currentText.trimmingCharacters(in: .newlines))
+                        )
                         currentText = ""
                     }
                     // Extract language if specified
@@ -79,12 +85,16 @@ struct MarkdownText: View {
 
         // Add any remaining text
         if !currentText.isEmpty {
-            blocks.append(ContentBlock(type: .text, content: currentText.trimmingCharacters(in: .newlines)))
+            blocks.append(
+                ContentBlock(type: .text, content: currentText.trimmingCharacters(in: .newlines)))
         }
 
         // Handle unclosed code block
         if inCodeBlock && !codeBlockContent.isEmpty {
-            blocks.append(ContentBlock(type: .codeBlock(language: codeBlockLanguage), content: codeBlockContent.trimmingCharacters(in: .newlines)))
+            blocks.append(
+                ContentBlock(
+                    type: .codeBlock(language: codeBlockLanguage),
+                    content: codeBlockContent.trimmingCharacters(in: .newlines)))
         }
 
         return blocks
@@ -94,7 +104,11 @@ struct MarkdownText: View {
 
     @ViewBuilder
     private func renderInlineMarkdown(_ text: String) -> some View {
-        if let attributedString = try? AttributedString(markdown: text, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)) {
+        if let attributedString = try? AttributedString(
+            markdown: text,
+            options: AttributedString.MarkdownParsingOptions(
+                interpretedSyntax: .inlineOnlyPreservingWhitespace))
+        {
             Text(attributedString)
                 .font(Theme.Typography.body)
                 .foregroundStyle(textColor)
@@ -149,7 +163,7 @@ struct CodeBlockView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(Color.black.opacity(0.3))
+            .background(Theme.Colors.insetBackground)
 
             // Code content
             ScrollView(.horizontal, showsIndicators: false) {
@@ -174,17 +188,18 @@ struct CodeBlockView: View {
 
             MarkdownText("Here is some `inline code` in a sentence.")
 
-            MarkdownText("""
-            Here is a code block:
+            MarkdownText(
+                """
+                Here is a code block:
 
-            ```swift
-            func hello() {
-                print("Hello, World!")
-            }
-            ```
+                ```swift
+                func hello() {
+                    print("Hello, World!")
+                }
+                ```
 
-            And more text after.
-            """)
+                And more text after.
+                """)
 
             MarkdownText("Check out [this link](https://example.com) for more info.")
         }

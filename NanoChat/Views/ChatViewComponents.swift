@@ -1,10 +1,10 @@
-import SwiftUI
 import AVFoundation
+import SwiftUI
 
 struct PreviewDocumentItem: Identifiable {
     let id: String
     let document: MessageDocumentResponse
-    
+
     init(document: MessageDocumentResponse) {
         self.id = document.storageId
         self.document = document
@@ -16,7 +16,7 @@ struct SuggestionChip: View {
     let text: String
     let color: Color
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
@@ -36,7 +36,7 @@ struct SuggestionChip: View {
 
 struct TypingIndicator: View {
     @State private var numberOfDots = 0
-    
+
     var body: some View {
         HStack(spacing: 4) {
             ForEach(0..<3) { index in
@@ -60,7 +60,7 @@ struct TypingIndicator: View {
 struct StreamingMessageBubble: View {
     let content: String
     let reasoning: String?
-    
+
     var body: some View {
         HStack(alignment: .top, spacing: Theme.Spacing.md) {
             Circle()
@@ -77,23 +77,23 @@ struct StreamingMessageBubble: View {
                         .font(Theme.Typography.system(size: 14))
                         .foregroundStyle(.white)
                 )
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 Text("Assistant")
                     .font(Theme.Typography.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.Colors.text)
-                
+
                 if let reasoning = reasoning, !reasoning.isEmpty {
                     Text(reasoning)
                         .font(.system(.caption, design: .monospaced))
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .padding(8)
-                        .background(Color.black.opacity(0.2))
+                        .background(Theme.Colors.insetBackground)
                         .cornerRadius(8)
                 }
-                
-                Text(content + " ▋") // Cursor effect
+
+                Text(content + " ▋")  // Cursor effect
                     .font(Theme.Typography.body)
                     .foregroundStyle(Theme.Colors.text)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -141,7 +141,10 @@ struct VoiceRecorderSheet: View {
                 } label: {
                     ZStack {
                         Circle()
-                            .fill(audioRecorder.isRecording ? Theme.Colors.error : Theme.Colors.primary)
+                            .fill(
+                                audioRecorder.isRecording
+                                    ? Theme.Colors.error : Theme.Colors.primary
+                            )
                             .frame(width: 80, height: 80)
 
                         Image(systemName: audioRecorder.isRecording ? "stop.fill" : "mic.fill")
@@ -157,7 +160,8 @@ struct VoiceRecorderSheet: View {
         .task {
             hasPermission = await audioRecorder.requestPermission()
             if !hasPermission {
-                onError("Microphone access is required for voice input. Please enable it in Settings.")
+                onError(
+                    "Microphone access is required for voice input. Please enable it in Settings.")
                 dismiss()
             }
         }

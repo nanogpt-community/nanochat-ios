@@ -72,16 +72,19 @@ struct ConversationsListView: View {
                                         }
                                         .buttonStyle(.plain)
                                         .background(
-                                            multiSelectViewModel.isSelected(conversation) ?
-                                                Theme.Colors.secondary.opacity(0.1) : Color.clear
+                                            multiSelectViewModel.isSelected(conversation)
+                                                ? Theme.Colors.secondary.opacity(0.1) : Color.clear
                                         )
-                                        .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.md))
+                                        .clipShape(
+                                            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                                        )
                                         .listRowBackground(Color.clear)
                                         .listRowSeparator(.hidden)
                                         .listRowInsets(
                                             EdgeInsets(
                                                 top: Theme.Spacing.xs, leading: Theme.Spacing.lg,
-                                                bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg)
+                                                bottom: Theme.Spacing.xs, trailing: Theme.Spacing.lg
+                                            )
                                         )
                                         .onLongPressGesture {
                                             if !multiSelectViewModel.isEditMode {
@@ -94,11 +97,16 @@ struct ConversationsListView: View {
                                         if multiSelectViewModel.isEditMode {
                                             ZStack {
                                                 Circle()
-                                                    .fill(multiSelectViewModel.isSelected(conversation) ? Theme.Colors.secondary : Color.clear)
+                                                    .fill(
+                                                        multiSelectViewModel.isSelected(
+                                                            conversation)
+                                                            ? Theme.Colors.secondary : Color.clear
+                                                    )
                                                     .frame(width: 24, height: 24)
                                                     .overlay(
                                                         Circle()
-                                                            .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
+                                                            .strokeBorder(
+                                                                Theme.Gradients.glass, lineWidth: 1)
                                                     )
 
                                                 if multiSelectViewModel.isSelected(conversation) {
@@ -116,7 +124,8 @@ struct ConversationsListView: View {
                                         Button(role: .destructive) {
                                             HapticManager.shared.warning()
                                             Task {
-                                                await viewModel.deleteConversation(id: conversation.id)
+                                                await viewModel.deleteConversation(
+                                                    id: conversation.id)
                                             }
                                         } label: {
                                             Label("Delete", systemImage: "trash.fill")
@@ -168,7 +177,8 @@ struct ConversationsListView: View {
                                         } label: {
                                             Label(
                                                 conversation.pinned ? "Unpin" : "Pin",
-                                                systemImage: conversation.pinned ? "pin.slash" : "pin"
+                                                systemImage: conversation.pinned
+                                                    ? "pin.slash" : "pin"
                                             )
                                         }
 
@@ -200,7 +210,8 @@ struct ConversationsListView: View {
 
                                         Button(role: .destructive) {
                                             Task {
-                                                await viewModel.deleteConversation(id: conversation.id)
+                                                await viewModel.deleteConversation(
+                                                    id: conversation.id)
                                             }
                                         } label: {
                                             Label("Delete", systemImage: "trash")
@@ -211,7 +222,7 @@ struct ConversationsListView: View {
                             .listStyle(.plain)
                         }
                     }
-                    
+
                     // Error Banner overlay
                     if let error = viewModel.errorMessage {
                         VStack {
@@ -235,8 +246,7 @@ struct ConversationsListView: View {
                 }
                 .navigationTitle(multiSelectViewModel.isEditMode ? "Select Items" : "Chats")
                 .navigationBarTitleDisplayMode(multiSelectViewModel.isEditMode ? .inline : .large)
-                .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-                .toolbarColorScheme(.dark, for: .navigationBar)
+                .liquidGlassNavigationBar()
                 .navigationDestination(for: ConversationResponse.self) { conversation in
                     if !multiSelectViewModel.isEditMode {
                         ChatView(
@@ -270,8 +280,11 @@ struct ConversationsListView: View {
                             Button {
                                 multiSelectViewModel.toggleSelectAll()
                             } label: {
-                                Text(multiSelectViewModel.isAllSelected ? "Deselect All" : "Select All")
-                                    .font(.subheadline)
+                                Text(
+                                    multiSelectViewModel.isAllSelected
+                                        ? "Deselect All" : "Select All"
+                                )
+                                .font(.subheadline)
                             }
                             .foregroundStyle(Theme.Colors.secondary)
                         }
@@ -292,7 +305,8 @@ struct ConversationsListView: View {
                                             .fill(Theme.Gradients.primary)
                                             .frame(width: 36, height: 36)
                                             .shadow(
-                                                color: Theme.Colors.primary.opacity(0.4), radius: 6, x: 0,
+                                                color: Theme.Colors.primary.opacity(0.4), radius: 6,
+                                                x: 0,
                                                 y: 3)
 
                                         Image(systemName: "plus")
@@ -317,7 +331,8 @@ struct ConversationsListView: View {
                 .onChange(of: viewModel.conversations) { _, newValue in
                     multiSelectViewModel.items = newValue
                     // Remove selected items that no longer exist
-                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems.intersection(Set(newValue.map { $0.id }))
+                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems
+                        .intersection(Set(newValue.map { $0.id }))
                 }
                 .refreshable {
                     HapticManager.shared.refreshTriggered()
@@ -438,18 +453,19 @@ struct ConversationsListView: View {
     }
 
     private func batchMoveToProject(_ projectId: String?) async {
-        await multiSelectViewModel.moveToProject(using: { ids, targetProjectId in
-            for id in ids {
-                if let conversation = viewModel.conversations.first(where: { $0.id == id }) {
-                    Task {
-                        try? await viewModel.setConversationProject(
-                            conversationId: conversation.id,
-                            projectId: targetProjectId
-                        )
+        await multiSelectViewModel.moveToProject(
+            using: { ids, targetProjectId in
+                for id in ids {
+                    if let conversation = viewModel.conversations.first(where: { $0.id == id }) {
+                        Task {
+                            try? await viewModel.setConversationProject(
+                                conversationId: conversation.id,
+                                projectId: targetProjectId
+                            )
+                        }
                     }
                 }
-            }
-        }, projectId: projectId)
+            }, projectId: projectId)
         showingBatchMoveSheet = false
         await viewModel.loadConversations()
     }
@@ -459,25 +475,27 @@ struct ConversationsListView: View {
             let selectedConversations = viewModel.conversations.filter { ids.contains($0.id) }
 
             Task {
-                let items: [(conversation: ConversationResponse, messages: [MessageResponse])] = await withTaskGroup(of: (String, [MessageResponse]).self) { group in
-                    var results: [String: [MessageResponse]] = [:]
+                let items: [(conversation: ConversationResponse, messages: [MessageResponse])] =
+                    await withTaskGroup(of: (String, [MessageResponse]).self) { group in
+                        var results: [String: [MessageResponse]] = [:]
 
-                    for conversation in selectedConversations {
-                        group.addTask {
-                            let messages = try? await NanoChatAPI.shared.getMessages(conversationId: conversation.id)
-                            return (conversation.id, messages ?? [])
+                        for conversation in selectedConversations {
+                            group.addTask {
+                                let messages = try? await NanoChatAPI.shared.getMessages(
+                                    conversationId: conversation.id)
+                                return (conversation.id, messages ?? [])
+                            }
+                        }
+
+                        for await (conversationId, messages) in group {
+                            results[conversationId] = messages
+                        }
+
+                        return selectedConversations.compactMap { conv in
+                            guard let msgs = results[conv.id] else { return nil }
+                            return (conv, msgs)
                         }
                     }
-
-                    for await (conversationId, messages) in group {
-                        results[conversationId] = messages
-                    }
-
-                    return selectedConversations.compactMap { conv in
-                        guard let msgs = results[conv.id] else { return nil }
-                        return (conv, msgs)
-                    }
-                }
 
                 await MainActor.run {
                     ExportManager.shared.presentShareSheetForMultiple(items: items)
@@ -569,7 +587,8 @@ struct ConversationsListView: View {
     private func exportConversation(_ conversation: ConversationResponse) {
         Task {
             // Fetch messages for this conversation
-            let messages = try? await NanoChatAPI.shared.getMessages(conversationId: conversation.id)
+            let messages = try? await NanoChatAPI.shared.getMessages(
+                conversationId: conversation.id)
 
             await MainActor.run {
                 guard let messages = messages else {

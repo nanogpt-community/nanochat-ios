@@ -7,8 +7,8 @@ struct ChatView: View {
     @Binding var showSidebar: Bool
     // Add callback for new chat
     var onNewChat: (() -> Void)?
-    var isPushed: Bool // Add this property
-    
+    var isPushed: Bool  // Add this property
+
     let onMessageSent: (() -> Void)?
     @StateObject private var viewModel = ChatViewModel()
     @StateObject private var modelManager = ModelManager()
@@ -34,22 +34,23 @@ struct ChatView: View {
     @State private var isSearchVisible = false
     @State private var selectedDocument: MessageDocumentResponse?
     @State private var showAssistantPicker = false
-    
-    @Environment(\.dismiss) private var dismiss // For back button behavior
-    
+
+    @Environment(\.dismiss) private var dismiss  // For back button behavior
+
     // Initializer to support optional callbacks for backward compatibility
-    init(conversation: ConversationResponse, 
-         showSidebar: Binding<Bool> = .constant(false),
-         onNewChat: (() -> Void)? = nil,
-         onMessageSent: (() -> Void)? = nil,
-         isPushed: Bool = false) {
+    init(
+        conversation: ConversationResponse,
+        showSidebar: Binding<Bool> = .constant(false),
+        onNewChat: (() -> Void)? = nil,
+        onMessageSent: (() -> Void)? = nil,
+        isPushed: Bool = false
+    ) {
         self.conversation = conversation
         self._showSidebar = showSidebar
         self.onNewChat = onNewChat
         self.onMessageSent = onMessageSent
         self.isPushed = isPushed
     }
-
 
     var body: some View {
         ZStack {
@@ -61,7 +62,7 @@ struct ChatView: View {
                 VStack(spacing: 0) {
                     // Custom Header
                     chatHeader
-                    
+
                     if isSearchVisible {
                         HStack {
                             Image(systemName: "magnifyingglass")
@@ -89,9 +90,10 @@ struct ChatView: View {
 
                     messagesView(proxy: proxy)
                         .contentShape(Rectangle())
-                        .simultaneousGesture(TapGesture().onEnded {
-                            isInputFocused = false
-                        })
+                        .simultaneousGesture(
+                            TapGesture().onEnded {
+                                isInputFocused = false
+                            })
                 }
                 .safeAreaInset(edge: .bottom, spacing: 0) {
                     VStack(spacing: 0) {
@@ -101,7 +103,7 @@ struct ChatView: View {
                         inputArea
                     }
                 }
-                .toolbar(.hidden) // Hide default navigation bar
+                .toolbar(.hidden)  // Hide default navigation bar
                 .onAppear {
                     Task {
                         await loadData()
@@ -109,7 +111,8 @@ struct ChatView: View {
                 }
                 .onChange(of: viewModel.messages) { _, newValue in
                     multiSelectViewModel.items = newValue
-                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems.intersection(Set(newValue.map { $0.id }))
+                    multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems
+                        .intersection(Set(newValue.map { $0.id }))
                 }
                 .onChange(of: viewModel.messages.count) { _, _ in
                     scrollToLastMessage(proxy: proxy)
@@ -144,10 +147,12 @@ struct ChatView: View {
                 }
             )
         }
-        .sheet(item: Binding<PreviewDocumentItem?>(
-            get: { selectedDocument.map { PreviewDocumentItem(document: $0) } },
-            set: { if $0 == nil { selectedDocument = nil } }
-        )) { item in
+        .sheet(
+            item: Binding<PreviewDocumentItem?>(
+                get: { selectedDocument.map { PreviewDocumentItem(document: $0) } },
+                set: { if $0 == nil { selectedDocument = nil } }
+            )
+        ) { item in
             DocumentPreviewView(document: item.document) {
                 selectedDocument = nil
             }
@@ -166,7 +171,7 @@ struct ChatView: View {
             Text(voiceErrorMessage ?? "")
         }
     }
-    
+
     private var chatHeader: some View {
         HStack(spacing: Theme.scaled(12)) {
             if multiSelectViewModel.isEditMode {
@@ -399,7 +404,9 @@ struct ChatView: View {
                 selectedProviderId: viewModel.selectedProviderId,
                 onSelectProvider: { providerId in
                     viewModel.selectProvider(providerId: providerId)
-                    if let modelId = modelManager.selectedModel?.modelId, let providerId = providerId {
+                    if let modelId = modelManager.selectedModel?.modelId,
+                        let providerId = providerId
+                    {
                         modelManager.saveLastProvider(for: modelId, providerId: providerId)
                     }
                     withAnimation { showProviderPicker = false }
@@ -442,9 +449,14 @@ struct ChatView: View {
                                 withAnimation { showAssistantPicker = false }
                             } label: {
                                 HStack(spacing: Theme.scaled(12)) {
-                                    Image(systemName: assistant.isDefault ? "person.circle.fill" : "person.circle")
-                                        .font(Theme.font(size: 24))
-                                        .foregroundStyle(assistant.isDefault ? Theme.Colors.accent : Theme.Colors.textSecondary)
+                                    Image(
+                                        systemName: assistant.isDefault
+                                            ? "person.circle.fill" : "person.circle"
+                                    )
+                                    .font(Theme.font(size: 24))
+                                    .foregroundStyle(
+                                        assistant.isDefault
+                                            ? Theme.Colors.accent : Theme.Colors.textSecondary)
 
                                     VStack(alignment: .leading, spacing: Theme.scaled(4)) {
                                         HStack(spacing: Theme.scaled(6)) {
@@ -463,7 +475,9 @@ struct ChatView: View {
                                             }
                                         }
 
-                                        if let description = assistant.description, !description.isEmpty {
+                                        if let description = assistant.description,
+                                            !description.isEmpty
+                                        {
                                             Text(description)
                                                 .font(Theme.font(size: 13))
                                                 .foregroundStyle(Theme.Colors.textSecondary)
@@ -483,7 +497,8 @@ struct ChatView: View {
                                 .padding(.horizontal, Theme.scaled(16))
                                 .padding(.vertical, Theme.scaled(12))
                                 .background(
-                                    assistantManager.selectedAssistant?.id == assistant.id ? Theme.Colors.secondary.opacity(0.1) : Color.clear
+                                    assistantManager.selectedAssistant?.id == assistant.id
+                                        ? Theme.Colors.secondary.opacity(0.1) : Color.clear
                                 )
                                 .contentShape(Rectangle())
                             }
@@ -511,7 +526,7 @@ struct ChatView: View {
         Theme.Colors.backgroundStart
             .ignoresSafeArea()
     }
-    
+
     private var displayedMessages: [MessageResponse] {
         var messages = viewModel.messages
 
@@ -657,15 +672,18 @@ struct ChatView: View {
     private var regenerateHandler: () -> Void {
         return {
             // Find the last assistant message to regenerate
-            guard let lastAssistantMessage = viewModel.messages.last(where: { $0.role == "assistant" }),
-                  let _ = viewModel.messages.last(where: { $0.role == "user" }),
-                  let model = modelManager.selectedModel
+            guard
+                let lastAssistantMessage = viewModel.messages.last(where: { $0.role == "assistant" }
+                ),
+                viewModel.messages.last(where: { $0.role == "user" }) != nil,
+                let model = modelManager.selectedModel
             else { return }
 
             Task {
                 // Delete the old assistant message first
                 do {
-                    _ = try await NanoChatAPI.shared.deleteMessage(messageId: lastAssistantMessage.id)
+                    _ = try await NanoChatAPI.shared.deleteMessage(
+                        messageId: lastAssistantMessage.id)
                     // Remove from local messages array
                     await MainActor.run {
                         viewModel.messages.removeAll { $0.id == lastAssistantMessage.id }
@@ -719,7 +737,10 @@ struct ChatView: View {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 80 * Theme.imageScaleFactor, height: 80 * Theme.imageScaleFactor)
+                                        .frame(
+                                            width: 80 * Theme.imageScaleFactor,
+                                            height: 80 * Theme.imageScaleFactor
+                                        )
                                         .clipShape(
                                             RoundedRectangle(cornerRadius: Theme.CornerRadius.sm)
                                         )
@@ -752,7 +773,10 @@ struct ChatView: View {
                                         .foregroundStyle(Theme.Colors.textSecondary)
                                         .lineLimit(1)
                                 }
-                                .frame(width: 80 * Theme.imageScaleFactor, height: 80 * Theme.imageScaleFactor)
+                                .frame(
+                                    width: 80 * Theme.imageScaleFactor,
+                                    height: 80 * Theme.imageScaleFactor
+                                )
                                 .padding(Theme.Spacing.sm)
                                 .background(.ultraThinMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: Theme.CornerRadius.sm))
@@ -776,7 +800,7 @@ struct ChatView: View {
                 }
                 .frame(height: 100 * Theme.imageScaleFactor)
             }
-            
+
             // New "Capsule" Input Bar Style
             HStack(alignment: .bottom, spacing: Theme.Spacing.sm) {
                 // Attach Button (Left side)
@@ -797,21 +821,23 @@ struct ChatView: View {
                         .background(Theme.Colors.glassSurface)
                         .clipShape(Circle())
                 }
-                .highPriorityGesture(TapGesture().onEnded {
-                    // This is a workaround if Menu doesn't trigger nicely,
-                    // but usually Menu works.
-                    // However, we have an existing AttachmentButton. Let's use it but style it.
-                })
+                .highPriorityGesture(
+                    TapGesture().onEnded {
+                        // This is a workaround if Menu doesn't trigger nicely,
+                        // but usually Menu works.
+                        // However, we have an existing AttachmentButton. Let's use it but style it.
+                    }
+                )
                 // actually let's use the AttachmentButton but hide it inside this plus
                 .overlay {
-                     AttachmentButton { imageData in
+                    AttachmentButton { imageData in
                         selectedImages.append(imageData)
                     } onDocumentSelected: { documentURL in
                         selectedDocuments.append(documentURL)
                     } onVoiceInput: {
                         // Voice input is now handled separately on the right
                     }
-                    .opacity(0.01) // Invisible hit target over the plus button
+                    .opacity(0.01)  // Invisible hit target over the plus button
                 }
                 .padding(.bottom, Theme.scaled(6))
 
@@ -834,24 +860,29 @@ struct ChatView: View {
                         showProviderPicker = true
                     }
                 } label: {
-                     Image(systemName: viewModel.webSearchEnabled ? "globe" : "server.rack")
+                    Image(systemName: viewModel.webSearchEnabled ? "globe" : "server.rack")
                         .font(Theme.font(size: 18))
-                        .foregroundStyle(viewModel.webSearchEnabled ? Theme.Colors.accent : Theme.Colors.textSecondary)
+                        .foregroundStyle(
+                            viewModel.webSearchEnabled
+                                ? Theme.Colors.accent : Theme.Colors.textSecondary
+                        )
                         .frame(width: Theme.scaled(36), height: Theme.scaled(36))
                 }
                 .padding(.bottom, Theme.scaled(6))
 
                 // Voice / Send Button
-                if messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty && !viewModel.isGenerating {
-                     Button {
-                         showVoiceRecorder = true
-                     } label: {
-                         Image(systemName: "waveform") // ChatGPT style voice icon
-                             .font(Theme.font(size: 20))
-                             .foregroundStyle(Theme.Colors.text)
-                             .frame(width: Theme.scaled(36), height: Theme.scaled(36))
-                     }
-                     .padding(.bottom, Theme.scaled(6))
+                if messageText.isEmpty && selectedImages.isEmpty && selectedDocuments.isEmpty
+                    && !viewModel.isGenerating
+                {
+                    Button {
+                        showVoiceRecorder = true
+                    } label: {
+                        Image(systemName: "waveform")  // ChatGPT style voice icon
+                            .font(Theme.font(size: 20))
+                            .foregroundStyle(Theme.Colors.text)
+                            .frame(width: Theme.scaled(36), height: Theme.scaled(36))
+                    }
+                    .padding(.bottom, Theme.scaled(6))
                 } else {
                     sendButton
                         .padding(.bottom, 6)
@@ -883,9 +914,9 @@ struct ChatView: View {
                         )
                 } else {
                     Circle()
-                        .fill(Theme.Colors.text) // Solid black/white button
+                        .fill(Theme.Colors.text)  // Solid black/white button
                         .frame(width: 32, height: 32)
-                        
+
                     Image(systemName: "arrow.up")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(Theme.Colors.backgroundStart)
@@ -894,11 +925,9 @@ struct ChatView: View {
         }
         .buttonStyle(.plain)
         .disabled(
-             viewModel.isGenerating || isUploading || modelManager.selectedModel == nil
+            viewModel.isGenerating || isUploading || modelManager.selectedModel == nil
         )
     }
-
-
 
     private func sendMessage() {
         guard let model = modelManager.selectedModel,
@@ -1052,14 +1081,15 @@ struct ChatView: View {
             Rectangle()
                 .fill(Theme.Colors.glassBorder)
                 .frame(height: 1),
-                alignment: .top
+            alignment: .top
         )
     }
 
     private func batchCopyMessages() {
         multiSelectViewModel.exportSelected { ids in
             let selectedMessages = viewModel.messages.filter { ids.contains($0.id) }
-            let combinedContent = selectedMessages
+            let combinedContent =
+                selectedMessages
                 .map { message in
                     let role = message.role == "user" ? "You" : "Assistant"
                     return "\(role): \(message.content)"
@@ -1148,7 +1178,10 @@ struct MessageBubble: View {
                     Spacer(minLength: 40)
                 }
 
-                VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: Theme.Spacing.xs) {
+                VStack(
+                    alignment: message.role == "user" ? .trailing : .leading,
+                    spacing: Theme.Spacing.xs
+                ) {
                     headerView
                     mediaAttachmentsView
                     videoAttachmentView
@@ -1158,7 +1191,7 @@ struct MessageBubble: View {
                 }
 
                 if message.role == "assistant" {
-                    Spacer(minLength: 0) // Allow full width for assistant
+                    Spacer(minLength: 0)  // Allow full width for assistant
                 }
             }
             .contentShape(Rectangle())
@@ -1206,11 +1239,11 @@ struct MessageBubble: View {
             ImagePreviewView(item: imageItem)
         }
     }
-    
+
     private var avatarView: some View {
         Group {
             if message.role == "user" {
-                EmptyView() // User doesn't need avatar in ChatGPT style, usually just right aligned bubble
+                EmptyView()  // User doesn't need avatar in ChatGPT style, usually just right aligned bubble
             } else {
                 Circle()
                     .fill(Theme.Colors.text.opacity(0.1))
@@ -1223,7 +1256,7 @@ struct MessageBubble: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var headerView: some View {
         // ChatGPT style: No header text, just show star indicator if starred
@@ -1236,27 +1269,28 @@ struct MessageBubble: View {
             }
         }
     }
-    
+
     private func toggleStarred() {
         guard !isStarring else { return }
-        
+
         isStarring = true
         let newStarredState = !isStarred
-        
+
         // Optimistic UI update
         isStarred = newStarredState
         HapticManager.shared.tap()
-        
+
         Task {
             do {
-                _ = try await NanoChatAPI.shared.setMessageStarred(messageId: message.id, starred: newStarredState)
+                _ = try await NanoChatAPI.shared.setMessageStarred(
+                    messageId: message.id, starred: newStarredState)
                 await MainActor.run {
                     isStarring = false
                     // Real update will come from parent refresh, but local state is good
                 }
             } catch {
                 await MainActor.run {
-                    isStarred = !newStarredState // Revert
+                    isStarred = !newStarredState  // Revert
                     isStarring = false
                 }
             }
@@ -1270,7 +1304,9 @@ struct MessageBubble: View {
                 .frame(width: 24, height: 24)
                 .overlay(
                     Circle()
-                        .strokeBorder(isSelected ? Theme.Colors.accent : Theme.Colors.textTertiary, lineWidth: 2)
+                        .strokeBorder(
+                            isSelected ? Theme.Colors.accent : Theme.Colors.textTertiary,
+                            lineWidth: 2)
                 )
 
             if isSelected {
@@ -1282,17 +1318,19 @@ struct MessageBubble: View {
         .padding(Theme.Spacing.sm)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
-    
+
     @ViewBuilder
     private var mediaAttachmentsView: some View {
         if (message.images?.isEmpty == false) || (message.documents?.isEmpty == false) {
             VStack(alignment: message.role == "user" ? .trailing : .leading, spacing: 8) {
                 if let images = message.images, !images.isEmpty {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8)
+                    {
                         ForEach(images, id: \.url) { image in
                             Button {
                                 if let url = resolveURL(image.url) {
-                                    selectedImage = ImagePreviewItem(url: url, fileName: image.fileName ?? "Image")
+                                    selectedImage = ImagePreviewItem(
+                                        url: url, fileName: image.fileName ?? "Image")
                                 }
                             } label: {
                                 AsyncImage(url: resolveURL(image.url)) { phase in
@@ -1318,7 +1356,7 @@ struct MessageBubble: View {
                         }
                     }
                 }
-                
+
                 if let documents = message.documents, !documents.isEmpty {
                     ForEach(documents, id: \.url) { doc in
                         Button {
@@ -1353,11 +1391,14 @@ struct MessageBubble: View {
 
     private var videoURL: URL? {
         // First check for markdown pattern [Video Result](url) like the web app does
-        if let match = message.content.range(of: #"\[Video Result\]\((.*?)\)"#, options: .regularExpression) {
+        if let match = message.content.range(
+            of: #"\[Video Result\]\((.*?)\)"#, options: .regularExpression)
+        {
             let urlRange = message.content[match]
             // Extract URL from within parentheses
             if let openParen = urlRange.firstIndex(of: "("),
-               let closeParen = urlRange.lastIndex(of: ")") {
+                let closeParen = urlRange.lastIndex(of: ")")
+            {
                 let urlStart = urlRange.index(after: openParen)
                 let urlString = String(urlRange[urlStart..<closeParen])
                 if let url = URL(string: urlString) {
@@ -1374,8 +1415,9 @@ struct MessageBubble: View {
             let cleanWord = word.trimmingCharacters(in: .punctuationCharacters)
 
             if let url = URL(string: cleanWord),
-               url.scheme?.lowercased().hasPrefix("http") == true,
-               types.contains(where: { cleanWord.lowercased().hasSuffix($0) }) {
+                url.scheme?.lowercased().hasPrefix("http") == true,
+                types.contains(where: { cleanWord.lowercased().hasSuffix($0) })
+            {
                 return url
             }
         }
@@ -1393,7 +1435,7 @@ struct MessageBubble: View {
         let cleanPath = urlString.hasPrefix("/") ? urlString : "/" + urlString
         return URL(string: cleanBase + cleanPath)
     }
-    
+
     @ViewBuilder
     private var reasoningView: some View {
         if let reasoning = message.reasoning, !reasoning.isEmpty {
@@ -1402,7 +1444,7 @@ struct MessageBubble: View {
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(Theme.Colors.textSecondary)
                     .padding(8)
-                    .background(Color.black.opacity(0.2))
+                    .background(Theme.Colors.insetBackground)
                     .cornerRadius(8)
             } label: {
                 Text("Reasoning Process")
@@ -1412,7 +1454,7 @@ struct MessageBubble: View {
             .tint(Theme.Colors.textTertiary)
         }
     }
-    
+
     /// Content with video markdown stripped out when video is displayed separately
     private var displayContent: String {
         var content = message.content
@@ -1473,7 +1515,7 @@ struct MessageBubble: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var footerView: some View {
         if !isEditing {
@@ -1491,9 +1533,13 @@ struct MessageBubble: View {
                             ProgressView()
                                 .scaleEffect(0.5)
                         } else {
-                            Image(systemName: (audioPlayback.isPlaying && audioPlayback.currentMessageId == message.id) ? "stop.fill" : "speaker.wave.2")
-                                .font(Theme.font(size: 12))
-                                .foregroundStyle(Theme.Colors.textTertiary)
+                            Image(
+                                systemName: (audioPlayback.isPlaying
+                                    && audioPlayback.currentMessageId == message.id)
+                                    ? "stop.fill" : "speaker.wave.2"
+                            )
+                            .font(Theme.font(size: 12))
+                            .foregroundStyle(Theme.Colors.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -1531,7 +1577,8 @@ struct MessageBubble: View {
                         } else {
                             Image(systemName: isStarred ? "star.fill" : "star")
                                 .font(Theme.font(size: 12))
-                                .foregroundStyle(isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                                .foregroundStyle(
+                                    isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -1576,7 +1623,8 @@ struct MessageBubble: View {
                         } else {
                             Image(systemName: isStarred ? "star.fill" : "star")
                                 .font(Theme.font(size: 12))
-                                .foregroundStyle(isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
+                                .foregroundStyle(
+                                    isStarred ? Theme.Colors.secondary : Theme.Colors.textTertiary)
                         }
                     }
                     .buttonStyle(.plain)
@@ -1595,18 +1643,19 @@ struct MessageBubble: View {
             .padding(.top, Theme.scaled(4))
         }
     }
-    
+
     private func saveEdit() {
         guard !editedContent.isEmpty && editedContent != message.content else {
             isEditing = false
             return
         }
-        
+
         isSaving = true
-        
+
         Task {
-             _ = try? await NanoChatAPI.shared.updateMessageContent(messageId: message.id, content: editedContent)
-             
+            _ = try? await NanoChatAPI.shared.updateMessageContent(
+                messageId: message.id, content: editedContent)
+
             await MainActor.run {
                 isSaving = false
                 isEditing = false
@@ -1615,22 +1664,23 @@ struct MessageBubble: View {
             }
         }
     }
-    
+
     private func synthesizeSpeech() {
         isSynthesizingSpeech = true
         Task {
             do {
-                let result = try await NanoChatAPI.shared.textToSpeech(text: message.content, model: "tts-1", voice: "alloy", speed: 1.0)
-                
+                let result = try await NanoChatAPI.shared.textToSpeech(
+                    text: message.content, model: "tts-1", voice: "alloy", speed: 1.0)
+
                 switch result {
                 case .audioData(let data):
                     try audioPlayback.play(data: data, messageId: message.id)
                 case .audioUrl(let url):
                     audioPlayback.playAudio(url: url, messageId: message.id)
                 case .pending:
-                    break // Handle pending state if needed
+                    break  // Handle pending state if needed
                 }
-                
+
                 await MainActor.run {
                     isSynthesizingSpeech = false
                 }

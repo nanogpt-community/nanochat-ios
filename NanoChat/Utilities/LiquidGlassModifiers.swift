@@ -96,8 +96,13 @@ struct LiquidGlassTextFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
             .padding(12)
-            .background(Theme.Colors.glassPane, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .background(Theme.Colors.glassBackground, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(
+                Theme.Colors.glassPane, in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
+            .background(
+                Theme.Colors.glassBackground,
+                in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .strokeBorder(Theme.Colors.glassBorder.opacity(0.5), lineWidth: 1)
@@ -112,17 +117,20 @@ struct LiquidGlassTextFieldStyle: TextFieldStyle {
 
 struct LiquidGlassButtonStyle: ButtonStyle {
     var style: Style = .primary
-    
+
     enum Style {
         case primary
         case secondary
         case destructive
-        
+
         var gradient: LinearGradient {
             switch self {
             case .primary: return Theme.Gradients.primary
             case .secondary: return Theme.Gradients.glass
-            case .destructive: return LinearGradient(colors: [Theme.Colors.error.opacity(0.8), Theme.Colors.error.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            case .destructive:
+                return LinearGradient(
+                    colors: [Theme.Colors.error.opacity(0.8), Theme.Colors.error.opacity(0.4)],
+                    startPoint: .topLeading, endPoint: .bottomTrailing)
             }
         }
     }
@@ -136,8 +144,8 @@ struct LiquidGlassButtonStyle: ButtonStyle {
                 in: RoundedRectangle(cornerRadius: 12, style: .continuous)
             )
             .background(
-                configuration.isPressed 
-                    ? style.gradient.opacity(0.8) 
+                configuration.isPressed
+                    ? style.gradient.opacity(0.8)
                     : style.gradient.opacity(style == .primary ? 0.8 : 0.3)
             )
             .overlay(
@@ -172,7 +180,7 @@ struct LiquidGlassProgressView: View {
 
 struct LiquidGlassCard<Content: View>: View {
     let content: Content
-    
+
     init(@ViewBuilder content: () -> Content) {
         self.content = content()
     }
@@ -180,8 +188,13 @@ struct LiquidGlassCard<Content: View>: View {
     var body: some View {
         content
             .padding(20)
-            .background(Theme.Colors.glassPane, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-            .background(Theme.Colors.glassBackground, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .background(
+                Theme.Colors.glassPane, in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+            )
+            .background(
+                Theme.Colors.glassBackground,
+                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(Theme.Gradients.glass, lineWidth: 1)
@@ -194,15 +207,33 @@ struct LiquidGlassCard<Content: View>: View {
 
 extension View {
     func liquidGlassNavigationBar() -> some View {
-        self.toolbarBackground(.ultraThinMaterial, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+        self.modifier(LiquidGlassNavigationBarModifier())
     }
 
     func liquidGlassTabBar() -> some View {
-        self.toolbarBackground(.ultraThinMaterial, for: .tabBar)
+        self.modifier(LiquidGlassTabBarModifier())
+    }
+}
+
+private struct LiquidGlassNavigationBarModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .toolbarBackground(.ultraThinMaterial, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(colorScheme, for: .navigationBar)
+    }
+}
+
+private struct LiquidGlassTabBarModifier: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func body(content: Content) -> some View {
+        content
+            .toolbarBackground(.ultraThinMaterial, for: .tabBar)
             .toolbarBackground(.visible, for: .tabBar)
-            .toolbarColorScheme(.dark, for: .tabBar)
+            .toolbarColorScheme(colorScheme, for: .tabBar)
     }
 }
 
@@ -277,7 +308,9 @@ struct NativeGlassCapsuleButton: View {
     let action: () -> Void
     var tintColor: Color? = nil
 
-    init(_ title: String, icon: String? = nil, tintColor: Color? = nil, action: @escaping () -> Void) {
+    init(
+        _ title: String, icon: String? = nil, tintColor: Color? = nil, action: @escaping () -> Void
+    ) {
         self.title = title
         self.icon = icon
         self.tintColor = tintColor
@@ -314,7 +347,9 @@ struct NativeGlassChip: View {
     let action: () -> Void
     var isSelected: Bool = false
 
-    init(_ text: String, icon: String? = nil, isSelected: Bool = false, action: @escaping () -> Void) {
+    init(
+        _ text: String, icon: String? = nil, isSelected: Bool = false, action: @escaping () -> Void
+    ) {
         self.text = text
         self.icon = icon
         self.isSelected = isSelected
@@ -426,7 +461,9 @@ struct NativeGlassFloatingButton: View {
 
             // Capsule buttons
             HStack(spacing: 12) {
-                NativeGlassCapsuleButton("Send", icon: "paperplane.fill", tintColor: Theme.Colors.accent) {}
+                NativeGlassCapsuleButton(
+                    "Send", icon: "paperplane.fill", tintColor: Theme.Colors.accent
+                ) {}
                 NativeGlassCapsuleButton("Cancel") {}
             }
 
