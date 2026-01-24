@@ -66,9 +66,15 @@ struct SettingsView: View {
                     VStack(spacing: 8) {
                         // Account Section
                         SettingsSection(title: "Account") {
-                            SettingsMenuItem(icon: "envelope", title: "Server URL", subtitle: authManager.baseURL)
-                            SettingsMenuItem(icon: "plus.circle", title: "API Key", subtitle: String(authManager.apiKey.prefix(12)) + "...")
-                            SettingsMenuButton(icon: "arrow.triangle.2.circlepath", title: "Update Credentials") {
+                            SettingsMenuItem(
+                                icon: "envelope", title: "Server URL", subtitle: authManager.baseURL
+                            )
+                            SettingsMenuItem(
+                                icon: "plus.circle", title: "API Key",
+                                subtitle: String(authManager.apiKey.prefix(12)) + "...")
+                            SettingsMenuButton(
+                                icon: "arrow.triangle.2.circlepath", title: "Update Credentials"
+                            ) {
                                 authManager.isAuthenticated = false
                             }
                         }
@@ -111,9 +117,14 @@ struct SettingsView: View {
 
                         // About Section
                         SettingsSection(title: "About") {
-                            SettingsMenuItem(icon: "info.circle", title: "Version", subtitle: Bundle.main.fullVersion)
+                            SettingsMenuItem(
+                                icon: "info.circle", title: "Version",
+                                subtitle: Bundle.main.fullVersion)
 
-                            Link(destination: URL(string: "https://github.com/nanogpt-community/nanochat")!) {
+                            Link(
+                                destination: URL(
+                                    string: "https://github.com/nanogpt-community/nanochat")!
+                            ) {
                                 HStack {
                                     Image(systemName: "book")
                                         .font(.system(size: 18))
@@ -163,6 +174,7 @@ struct SettingsView: View {
                 .padding(.bottom, 32)
             }
             .background(Theme.Colors.backgroundStart)
+            .id(themeManager.currentTheme)
             .navigationBarHidden(true)
             .alert("Sign Out", isPresented: $showingLogoutAlert) {
                 Button("Cancel", role: .cancel) {}
@@ -309,19 +321,25 @@ struct AudioSettingsView: View {
         NavigationStack {
             List {
                 Section("Text to Speech") {
-                    Picker("Model", selection: Binding(
-                        get: { audioPreferences.ttsModel },
-                        set: { audioPreferences.updateTtsModel($0) }
-                    )) {
+                    Picker(
+                        "Model",
+                        selection: Binding(
+                            get: { audioPreferences.ttsModel },
+                            set: { audioPreferences.updateTtsModel($0) }
+                        )
+                    ) {
                         ForEach(AudioPreferences.ttsModels, id: \.id) { model in
                             Text(model.label).tag(model.id)
                         }
                     }
 
-                    Picker("Voice", selection: Binding(
-                        get: { audioPreferences.ttsVoice },
-                        set: { audioPreferences.updateVoice($0) }
-                    )) {
+                    Picker(
+                        "Voice",
+                        selection: Binding(
+                            get: { audioPreferences.ttsVoice },
+                            set: { audioPreferences.updateVoice($0) }
+                        )
+                    ) {
                         ForEach(audioPreferences.availableVoices, id: \.id) { voice in
                             Text(voice.label).tag(voice.id)
                         }

@@ -658,6 +658,17 @@ struct ChatView: View {
                     }
                 }
             }
+            .onChange(of: viewModel.followUpSuggestions) { _, suggestions in
+                guard !viewModel.isGenerating, !suggestions.isEmpty else { return }
+                Task {
+                    try? await Task.sleep(nanoseconds: 120_000_000)
+                    await MainActor.run {
+                        withAnimation {
+                            proxy.scrollTo("follow-up-questions", anchor: .bottom)
+                        }
+                    }
+                }
+            }
         }
     }
 
