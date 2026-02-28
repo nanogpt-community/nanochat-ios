@@ -10,6 +10,11 @@ final class Assistant {
     var isDefault: Bool
     var defaultModelId: String?
     var defaultWebSearchMode: String?
+    var defaultWebSearchProvider: String?
+    var defaultWebSearchExaDepth: String?
+    var defaultWebSearchContextSize: String?
+    var defaultWebSearchKagiSource: String?
+    var defaultWebSearchValyuSearchType: String?
     var createdAt: Date
     var updatedAt: Date
 
@@ -21,6 +26,11 @@ final class Assistant {
         isDefault: Bool = false,
         defaultModelId: String? = nil,
         defaultWebSearchMode: String? = nil,
+        defaultWebSearchProvider: String? = nil,
+        defaultWebSearchExaDepth: String? = nil,
+        defaultWebSearchContextSize: String? = nil,
+        defaultWebSearchKagiSource: String? = nil,
+        defaultWebSearchValyuSearchType: String? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -31,6 +41,11 @@ final class Assistant {
         self.isDefault = isDefault
         self.defaultModelId = defaultModelId
         self.defaultWebSearchMode = defaultWebSearchMode
+        self.defaultWebSearchProvider = defaultWebSearchProvider
+        self.defaultWebSearchExaDepth = defaultWebSearchExaDepth
+        self.defaultWebSearchContextSize = defaultWebSearchContextSize
+        self.defaultWebSearchKagiSource = defaultWebSearchKagiSource
+        self.defaultWebSearchValyuSearchType = defaultWebSearchValyuSearchType
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -44,6 +59,11 @@ struct AssistantResponse: Codable, Identifiable {
     let isDefault: Bool
     let defaultModelId: String?
     let defaultWebSearchMode: String?
+    let defaultWebSearchProvider: String?
+    let defaultWebSearchExaDepth: String?
+    let defaultWebSearchContextSize: String?
+    let defaultWebSearchKagiSource: String?
+    let defaultWebSearchValyuSearchType: String?
     let createdAt: Date
     let updatedAt: Date
 
@@ -55,6 +75,11 @@ struct AssistantResponse: Codable, Identifiable {
         case isDefault
         case defaultModelId
         case defaultWebSearchMode
+        case defaultWebSearchProvider
+        case defaultWebSearchExaDepth
+        case defaultWebSearchContextSize
+        case defaultWebSearchKagiSource
+        case defaultWebSearchValyuSearchType
         case createdAt
         case updatedAt
     }
@@ -67,7 +92,18 @@ struct AssistantResponse: Codable, Identifiable {
         systemPrompt = try container.decode(String.self, forKey: .systemPrompt)
         isDefault = try container.decode(Bool.self, forKey: .isDefault)
         defaultModelId = try container.decodeIfPresent(String.self, forKey: .defaultModelId)
-        defaultWebSearchMode = try container.decodeIfPresent(String.self, forKey: .defaultWebSearchMode)
+        defaultWebSearchMode = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchMode)
+        defaultWebSearchProvider = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchProvider)
+        defaultWebSearchExaDepth = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchExaDepth)
+        defaultWebSearchContextSize = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchContextSize)
+        defaultWebSearchKagiSource = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchKagiSource)
+        defaultWebSearchValyuSearchType = try container.decodeIfPresent(
+            String.self, forKey: .defaultWebSearchValyuSearchType)
 
         // Decode ISO 8601 date strings
         let createdAtString = try container.decode(String.self, forKey: .createdAt)
@@ -104,6 +140,11 @@ struct AssistantResponse: Codable, Identifiable {
         isDefault: Bool = false,
         defaultModelId: String? = nil,
         defaultWebSearchMode: String? = nil,
+        defaultWebSearchProvider: String? = nil,
+        defaultWebSearchExaDepth: String? = nil,
+        defaultWebSearchContextSize: String? = nil,
+        defaultWebSearchKagiSource: String? = nil,
+        defaultWebSearchValyuSearchType: String? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now
     ) {
@@ -114,6 +155,11 @@ struct AssistantResponse: Codable, Identifiable {
         self.isDefault = isDefault
         self.defaultModelId = defaultModelId
         self.defaultWebSearchMode = defaultWebSearchMode
+        self.defaultWebSearchProvider = defaultWebSearchProvider
+        self.defaultWebSearchExaDepth = defaultWebSearchExaDepth
+        self.defaultWebSearchContextSize = defaultWebSearchContextSize
+        self.defaultWebSearchKagiSource = defaultWebSearchKagiSource
+        self.defaultWebSearchValyuSearchType = defaultWebSearchValyuSearchType
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -125,4 +171,8 @@ struct CreateAssistantRequest: Codable {
     let defaultModelId: String?
     let defaultWebSearchMode: String?
     let defaultWebSearchProvider: String?
+    let defaultWebSearchExaDepth: String?
+    let defaultWebSearchContextSize: String?
+    let defaultWebSearchKagiSource: String?
+    let defaultWebSearchValyuSearchType: String?
 }

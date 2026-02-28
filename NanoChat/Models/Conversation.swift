@@ -141,3 +141,28 @@ struct SetConversationProjectRequest: Codable {
     let conversationId: String
     let projectId: String?
 }
+
+enum ConversationSearchMode: String, CaseIterable, Identifiable {
+    case words = "words"
+    case exact = "exact"
+    case fuzzy = "fuzzy"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .words: return "Word Matching"
+        case .exact: return "Exact Match"
+        case .fuzzy: return "Fuzzy Search"
+        }
+    }
+}
+
+struct ConversationSearchResult: Codable, Identifiable {
+    let conversation: ConversationResponse
+    let messages: [MessageResponse]
+    let score: Double
+    let titleMatch: Bool
+
+    var id: String { conversation.id }
+}

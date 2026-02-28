@@ -4,6 +4,10 @@ struct ConversationsListView: View {
     @StateObject private var viewModel = ChatViewModel()
     @StateObject private var multiSelectViewModel = MultiSelectViewModel<ConversationResponse>()
     @State private var searchText = ""
+    @State private var searchMode: ConversationSearchMode = .words
+    @State private var searchResults: [ConversationSearchResult] = []
+    @State private var searchTask: Task<Void, Never>?
+    @State private var isSearching = false
     @State private var navigationPath = [ConversationResponse]()
     @State private var showingRenameDialog = false
     @State private var conversationToRename: ConversationResponse?
@@ -38,7 +42,12 @@ struct ConversationsListView: View {
             NavigationStack(path: $navigationPath) {
                 ZStack(alignment: .top) {
                     Group {
-                        if viewModel.isLoading && viewModel.conversations.isEmpty {
+                        if (viewModel.isLoading && viewModel.conversations.isEmpty)
+                            || (isSearching
+                                && !searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    .isEmpty
+                                && filteredConversations.isEmpty)
+                        {
                             ScrollView {
                                 ConversationListSkeleton()
                                     .padding(.top, Theme.Spacing.xs)
@@ -46,16 +55,32 @@ struct ConversationsListView: View {
                             .transition(.opacity)
                         } else if filteredConversations.isEmpty && viewModel.errorMessage == nil {
                             ContentUnavailableView {
-                                Label("No Conversations", systemImage: "message.circle")
-                                    .foregroundStyle(Theme.Colors.textSecondary)
+                                Label(
+                                    searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        .isEmpty
+                                        ? "No Conversations" : "No Results",
+                                    systemImage: searchText.trimmingCharacters(
+                                        in: .whitespacesAndNewlines
+                                    ).isEmpty ? "message.circle" : "magnifyingglass"
+                                )
+                                .foregroundStyle(Theme.Colors.textSecondary)
                             } description: {
-                                Text("Start a new conversation to begin chatting")
-                                    .foregroundStyle(Theme.Colors.textTertiary)
+                                Text(
+                                    searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                        .isEmpty
+                                        ? "Start a new conversation to begin chatting"
+                                        : "No conversations matched your search"
+                                )
+                                .foregroundStyle(Theme.Colors.textTertiary)
                             } actions: {
-                                Button("New Chat") {
-                                    createNewConversation()
+                                if searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+                                    .isEmpty
+                                {
+                                    Button("New Chat") {
+                                        createNewConversation()
+                                    }
+                                    .buttonStyle(PrimaryButtonStyle())
                                 }
-                                .buttonStyle(PrimaryButtonStyle())
                             }
                         } else {
                             List {
@@ -259,6 +284,11 @@ struct ConversationsListView: View {
                     }
                 }
                 .searchable(text: $searchText, prompt: "Search conversations")
+                .searchScopes($searchMode) {
+                    ForEach(ConversationSearchMode.allCases) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
                 .tint(Theme.Colors.secondary)
                 .toolbar {
                     if multiSelectViewModel.isEditMode {
@@ -333,6 +363,18 @@ struct ConversationsListView: View {
                     // Remove selected items that no longer exist
                     multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems
                         .intersection(Set(newValue.map { $0.id }))
+                    if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        scheduleSearch()
+                    }
+                }
+                .onChange(of: searchText) { _, _ in
+                    scheduleSearch()
+                }
+                .onChange(of: searchMode) { _, _ in
+                    scheduleSearch()
+                }
+                .onDisappear {
+                    searchTask?.cancel()
                 }
                 .refreshable {
                     HapticManager.shared.refreshTriggered()
@@ -505,15 +547,47 @@ struct ConversationsListView: View {
     }
 
     private var filteredConversations: [ConversationResponse] {
-        let result: [ConversationResponse]
-        if searchText.isEmpty {
-            result = viewModel.conversations
-        } else {
-            result = viewModel.conversations.filter { conversation in
-                conversation.title.localizedCaseInsensitiveContains(searchText)
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return viewModel.conversations
+        }
+        return searchResults.map(\.conversation)
+    }
+
+    private func scheduleSearch() {
+        searchTask?.cancel()
+
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            isSearching = false
+            searchResults = []
+            return
+        }
+
+        isSearching = true
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            guard !Task.isCancelled else { return }
+
+            do {
+                let results = try await NanoChatAPI.shared.searchConversations(
+                    search: trimmed,
+                    mode: searchMode
+                )
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    searchResults = results
+                    isSearching = false
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    searchResults = []
+                    isSearching = false
+                    errorMessage = error.localizedDescription
+                }
             }
         }
-        return result
     }
 
     private func togglePin(_ conversation: ConversationResponse) async {

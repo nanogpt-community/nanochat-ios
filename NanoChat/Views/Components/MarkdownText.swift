@@ -23,7 +23,7 @@ struct MarkdownText: View {
                 case .codeBlock(let language):
                     CodeBlockView(code: block.content, language: language)
                 case .text:
-                    renderInlineMarkdown(block.content)
+                    renderMarkdown(block.content)
                 }
             }
         }
@@ -100,18 +100,21 @@ struct MarkdownText: View {
         return blocks
     }
 
-    // MARK: - Inline Markdown Rendering
+    // MARK: - Markdown Rendering
 
     @ViewBuilder
-    private func renderInlineMarkdown(_ text: String) -> some View {
+    private func renderMarkdown(_ text: String) -> some View {
+        // Preserve user-visible newlines from model output. Full markdown parsing can collapse
+        // soft line breaks, which makes final answers appear as a single jumbled paragraph.
         if let attributedString = try? AttributedString(
             markdown: text,
             options: AttributedString.MarkdownParsingOptions(
-                interpretedSyntax: .inlineOnlyPreservingWhitespace))
-        {
+                interpretedSyntax: .inlineOnlyPreservingWhitespace
+            )
+        ) {
             Text(attributedString)
-                .font(Theme.Typography.body)
                 .foregroundStyle(textColor)
+                .tint(Theme.Colors.accent)
                 .textSelection(.enabled)
         } else {
             // Fallback to plain text if markdown parsing fails

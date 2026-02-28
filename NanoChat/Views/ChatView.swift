@@ -1,5 +1,6 @@
 import AVKit
 import SwiftUI
+import UIKit
 
 struct ChatView: View {
     let conversation: ConversationResponse
@@ -22,6 +23,12 @@ struct ChatView: View {
     @FocusState private var isInputFocused: Bool
     @State private var webSearchMode: WebSearchMode = .off
     @State private var webSearchProvider: WebSearchProvider = .linkup
+    @State private var webSearchExaDepth: WebSearchExaDepth = .auto
+    @State private var webSearchContextSize: WebSearchContextSize = .medium
+    @State private var webSearchKagiSource: WebSearchKagiSource = .web
+    @State private var webSearchValyuSearchType: WebSearchValyuSearchType = .all
+    @State private var reasoningEffort: ReasoningEffort = .low
+    @State private var temporaryMode = false
     @State private var selectedImages: [Data] = []
     @State private var selectedDocuments: [URL] = []
     @State private var isUploading = false
@@ -31,11 +38,31 @@ struct ChatView: View {
     @State private var showImageSettings = false
     @State private var showVideoSettings = false
     @State private var searchText = ""
+    @State private var messageSearchMode: ConversationSearchMode = .words
     @State private var isSearchVisible = false
     @State private var selectedDocument: MessageDocumentResponse?
     @State private var showAssistantPicker = false
+    @State private var shouldAutoScrollToBottom = true
+    @State private var conversationIsPublic = false
+    @State private var isUpdatingConversationVisibility = false
+    @State private var showPromptTemplates = false
+    @State private var showPromptVariables = false
+    @State private var isLoadingPromptTemplates = false
+    @State private var isEnhancingPrompt = false
+    @State private var promptTemplates: [PromptTemplate] = []
+    @State private var selectedPromptTemplate: PromptTemplate?
+    @State private var promptVariableValues: [String: String] = [:]
 
     @Environment(\.dismiss) private var dismiss  // For back button behavior
+    @Environment(\.colorScheme) private var colorScheme
+
+    private var isWebSearchEnabled: Bool {
+        webSearchMode != .off
+    }
+
+    private var activeConversationId: String {
+        viewModel.currentConversation?.id ?? conversation.id
+    }
 
     // Initializer to support optional callbacks for backward compatibility
     init(
@@ -70,6 +97,17 @@ struct ChatView: View {
                             TextField("Search in chat...", text: $searchText)
                                 .textFieldStyle(.plain)
                                 .foregroundStyle(Theme.Colors.text)
+
+                            Menu {
+                                Picker("Search Mode", selection: $messageSearchMode) {
+                                    ForEach(ConversationSearchMode.allCases) { mode in
+                                        Text(mode.displayName).tag(mode)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "line.3.horizontal.decrease.circle")
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                            }
 
                             if !searchText.isEmpty {
                                 Button {
@@ -109,12 +147,18 @@ struct ChatView: View {
                         await loadData()
                     }
                 }
+                .onChange(of: viewModel.currentConversation?.isPublic) { _, newValue in
+                    if let newValue {
+                        conversationIsPublic = newValue
+                    }
+                }
                 .onChange(of: viewModel.messages) { _, newValue in
                     multiSelectViewModel.items = newValue
                     multiSelectViewModel.selectedItems = multiSelectViewModel.selectedItems
                         .intersection(Set(newValue.map { $0.id }))
                 }
                 .onChange(of: viewModel.messages.count) { _, _ in
+                    guard shouldAutoScrollToBottom else { return }
                     scrollToLastMessage(proxy: proxy)
                 }
                 .onChange(of: modelManager.selectedModel?.modelId) { _, newValue in
@@ -131,6 +175,11 @@ struct ChatView: View {
                                 }
                             }
                         }
+                    }
+                }
+                .onChange(of: assistantManager.selectedAssistant?.id) { _, _ in
+                    Task {
+                        await applyAssistantDefaults()
                     }
                 }
             }
@@ -169,6 +218,31 @@ struct ChatView: View {
             }
         } message: {
             Text(voiceErrorMessage ?? "")
+        }
+        .sheet(isPresented: $showPromptTemplates) {
+            PromptTemplatePickerView(
+                templates: promptTemplates,
+                isLoading: isLoadingPromptTemplates,
+                onRefresh: { Task { await loadPromptTemplates() } },
+                onApply: { template in
+                    handlePromptTemplateSelection(template)
+                }
+            )
+            .presentationDetents([.medium, .large])
+        }
+        .sheet(isPresented: $showPromptVariables) {
+            if let selectedPromptTemplate {
+                PromptVariableValuesView(
+                    template: selectedPromptTemplate,
+                    values: $promptVariableValues,
+                    onApply: {
+                        applyPromptTemplate(selectedPromptTemplate, with: promptVariableValues)
+                        showPromptVariables = false
+                    },
+                    onCancel: { showPromptVariables = false }
+                )
+                .presentationDetents([.medium, .large])
+            }
         }
     }
 
@@ -228,6 +302,51 @@ struct ChatView: View {
                     } label: {
                         Label("Search", systemImage: "magnifyingglass")
                     }
+
+                    Button {
+                        Task {
+                            await loadPromptTemplates()
+                            showPromptTemplates = true
+                        }
+                    } label: {
+                        Label("Prompt Templates", systemImage: "text.badge.plus")
+                    }
+
+                    Button {
+                        enhanceCurrentPrompt()
+                    } label: {
+                        Label(
+                            isEnhancingPrompt ? "Enhancing..." : "Enhance Prompt",
+                            systemImage: "wand.and.stars"
+                        )
+                    }
+                    .disabled(
+                        isEnhancingPrompt
+                            || messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    Button {
+                        toggleConversationPublic()
+                    } label: {
+                        Label(
+                            conversationIsPublic ? "Disable Public Link" : "Enable Public Link",
+                            systemImage: conversationIsPublic ? "lock.fill" : "globe"
+                        )
+                    }
+                    .disabled(isUpdatingConversationVisibility)
+
+                    if conversationIsPublic {
+                        Button {
+                            copyPublicShareLink()
+                        } label: {
+                            Label("Copy Public Link", systemImage: "doc.on.doc")
+                        }
+
+                        Button {
+                            openPublicShareLink()
+                        } label: {
+                            Label("Open Public Link", systemImage: "arrow.up.right.square")
+                        }
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                         .font(Theme.font(size: 22))
@@ -271,6 +390,51 @@ struct ChatView: View {
                         }
                     } label: {
                         Label("Change Assistant", systemImage: "person.circle")
+                    }
+
+                    Button {
+                        Task {
+                            await loadPromptTemplates()
+                            showPromptTemplates = true
+                        }
+                    } label: {
+                        Label("Prompt Templates", systemImage: "text.badge.plus")
+                    }
+
+                    Button {
+                        enhanceCurrentPrompt()
+                    } label: {
+                        Label(
+                            isEnhancingPrompt ? "Enhancing..." : "Enhance Prompt",
+                            systemImage: "wand.and.stars"
+                        )
+                    }
+                    .disabled(
+                        isEnhancingPrompt
+                            || messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                    Button {
+                        toggleConversationPublic()
+                    } label: {
+                        Label(
+                            conversationIsPublic ? "Disable Public Link" : "Enable Public Link",
+                            systemImage: conversationIsPublic ? "lock.fill" : "globe"
+                        )
+                    }
+                    .disabled(isUpdatingConversationVisibility)
+
+                    if conversationIsPublic {
+                        Button {
+                            copyPublicShareLink()
+                        } label: {
+                            Label("Copy Public Link", systemImage: "doc.on.doc")
+                        }
+
+                        Button {
+                            openPublicShareLink()
+                        } label: {
+                            Label("Open Public Link", systemImage: "arrow.up.right.square")
+                        }
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -412,7 +576,13 @@ struct ChatView: View {
                     withAnimation { showProviderPicker = false }
                 },
                 webSearchMode: $webSearchMode,
-                webSearchProvider: $webSearchProvider
+                webSearchProvider: $webSearchProvider,
+                webSearchExaDepth: $webSearchExaDepth,
+                webSearchContextSize: $webSearchContextSize,
+                webSearchKagiSource: $webSearchKagiSource,
+                webSearchValyuSearchType: $webSearchValyuSearchType,
+                reasoningEffort: $reasoningEffort,
+                temporaryMode: $temporaryMode
             )
             .padding(.bottom, 80)
         }
@@ -538,7 +708,53 @@ struct ChatView: View {
         if searchText.isEmpty {
             return messages
         }
-        return messages.filter { $0.content.localizedCaseInsensitiveContains(searchText) }
+        let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return messages }
+
+        return messages.filter { message in
+            messageMatchesSearch(message.content, query: trimmed)
+        }
+    }
+
+    private func messageMatchesSearch(_ content: String, query: String) -> Bool {
+        let normalizedContent = content.lowercased()
+        let normalizedQuery = query.lowercased()
+
+        switch messageSearchMode {
+        case .exact:
+            return normalizedContent.contains(normalizedQuery)
+        case .words:
+            let queryWords = normalizedQuery.split(whereSeparator: \.isWhitespace)
+            guard !queryWords.isEmpty else { return true }
+            let contentWords = normalizedContent.split(whereSeparator: \.isWhitespace)
+            return queryWords.allSatisfy { queryWord in
+                contentWords.contains { contentWord in
+                    contentWord.hasPrefix(queryWord)
+                }
+            }
+        case .fuzzy:
+            if normalizedContent.contains(normalizedQuery) { return true }
+            return fuzzyMatch(needle: normalizedQuery, haystack: normalizedContent)
+        }
+    }
+
+    private func fuzzyMatch(needle: String, haystack: String) -> Bool {
+        if needle.isEmpty { return true }
+        var haystackIndex = haystack.startIndex
+
+        for char in needle {
+            while haystackIndex < haystack.endIndex && haystack[haystackIndex] != char {
+                haystack.formIndex(after: &haystackIndex)
+            }
+
+            if haystackIndex == haystack.endIndex {
+                return false
+            }
+
+            haystack.formIndex(after: &haystackIndex)
+        }
+
+        return true
     }
 
     @ViewBuilder
@@ -569,17 +785,19 @@ struct ChatView: View {
                         index, message in
                         MessageBubble(
                             message: message,
-                            conversationId: conversation.id,
+                            conversationId: activeConversationId,
                             onRegenerate: message.role == "assistant" ? regenerateHandler : nil,
                             onMessageUpdated: { _ in
                                 Task {
-                                    await viewModel.loadMessages(conversationId: conversation.id)
+                                    await viewModel.loadMessages(
+                                        conversationId: activeConversationId)
                                 }
                             },
                             onBranch: {
                                 Task {
                                     await viewModel.loadConversations()
-                                    await viewModel.loadMessages(conversationId: conversation.id)
+                                    await viewModel.loadMessages(
+                                        conversationId: activeConversationId)
                                 }
                             },
                             onDocumentTap: { document in
@@ -632,6 +850,13 @@ struct ChatView: View {
                         .id("follow-up-questions")
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                     }
+
+                    Color.clear
+                        .frame(height: 1)
+                        .id("bottom-anchor")
+                        .onAppear {
+                            shouldAutoScrollToBottom = true
+                        }
                 }
                 .padding(.horizontal, Theme.Spacing.lg)
                 .padding(.vertical, Theme.Spacing.md)
@@ -642,24 +867,37 @@ struct ChatView: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .refreshable {
-                await viewModel.loadMessages(conversationId: conversation.id)
+                await viewModel.loadMessages(conversationId: activeConversationId)
             }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 8)
+                    .onChanged { value in
+                        guard viewModel.isGenerating else { return }
+                        guard value.translation.height > 12 else { return }
+                        shouldAutoScrollToBottom = false
+                    }
+            )
             .onChange(of: viewModel.isGenerating) { _, isGenerating in
-                if isGenerating {
+                if isGenerating && shouldAutoScrollToBottom {
                     withAnimation {
                         proxy.scrollTo("typing-indicator", anchor: .bottom)
                     }
                 }
             }
             .onChange(of: viewModel.streamingContent) { _, _ in
-                if viewModel.isGenerating && !viewModel.streamingContent.isEmpty {
+                if viewModel.isGenerating
+                    && !viewModel.streamingContent.isEmpty
+                    && shouldAutoScrollToBottom
+                {
                     withAnimation {
                         proxy.scrollTo("streaming-message", anchor: .bottom)
                     }
                 }
             }
             .onChange(of: viewModel.followUpSuggestions) { _, suggestions in
-                guard !viewModel.isGenerating, !suggestions.isEmpty else { return }
+                guard !viewModel.isGenerating, !suggestions.isEmpty, shouldAutoScrollToBottom else {
+                    return
+                }
                 Task {
                     try? await Task.sleep(nanoseconds: 120_000_000)
                     await MainActor.run {
@@ -707,27 +945,105 @@ struct ChatView: View {
                 // Generate a new response (without creating a new user message)
                 // The API will see the conversation ending with the user message
                 await viewModel.regenerateResponse(
-                    conversationId: conversation.id,
+                    conversationId: activeConversationId,
                     modelId: model.modelId,
                     assistantId: assistantManager.selectedAssistant?.id,
-                    webSearchEnabled: viewModel.webSearchEnabled,
-                    webSearchMode: viewModel.webSearchEnabled
-                        ? viewModel.webSearchMode.rawValue : nil,
-                    webSearchProvider: viewModel.webSearchEnabled
-                        ? viewModel.webSearchProvider.rawValue : nil,
-                    providerId: viewModel.selectedProviderId
+                    webSearchEnabled: isWebSearchEnabled,
+                    webSearchMode: isWebSearchEnabled ? webSearchMode.rawValue : nil,
+                    webSearchProvider: isWebSearchEnabled ? webSearchProvider.rawValue : nil,
+                    webSearchExaDepth: isWebSearchEnabled && webSearchProvider == .exa
+                        ? webSearchExaDepth.rawValue : nil,
+                    webSearchContextSize: isWebSearchEnabled
+                        ? webSearchContextSize.rawValue : nil,
+                    webSearchKagiSource: isWebSearchEnabled && webSearchProvider == .kagi
+                        ? webSearchKagiSource.rawValue : nil,
+                    webSearchValyuSearchType: isWebSearchEnabled && webSearchProvider == .valyu
+                        ? webSearchValyuSearchType.rawValue : nil,
+                    providerId: viewModel.selectedProviderId,
+                    reasoningEffort: model.capabilities?.reasoning == true
+                        && reasoningEffort != .low
+                        ? reasoningEffort.rawValue : nil,
+                    temporaryMode: temporaryMode ? true : nil
                 )
             }
         }
     }
 
     private func loadData() async {
+        await viewModel.loadConversations()
         await viewModel.loadMessages(conversationId: conversation.id)
+        if let fromLoadedConversation = viewModel.currentConversation?.isPublic {
+            conversationIsPublic = fromLoadedConversation
+        } else {
+            conversationIsPublic = conversation.isPublic ?? false
+        }
         await modelManager.loadModels()
         await assistantManager.loadAssistants()
+        await applyAssistantDefaults()
+    }
+
+    private func applyAssistantDefaults() async {
+        guard let assistant = assistantManager.selectedAssistant else { return }
+
+        if let defaultModelId = assistant.defaultModelId,
+            let matchingModel = modelManager.allModels.first(where: { $0.modelId == defaultModelId }
+            )
+        {
+            modelManager.selectModel(matchingModel)
+            await viewModel.fetchModelProviders(modelId: matchingModel.modelId)
+        }
+
+        if let mode = assistant.defaultWebSearchMode,
+            let parsedMode = WebSearchMode(rawValue: mode)
+        {
+            webSearchMode = parsedMode
+        } else {
+            webSearchMode = .off
+        }
+
+        if let provider = assistant.defaultWebSearchProvider,
+            let parsedProvider = WebSearchProvider(rawValue: provider)
+        {
+            webSearchProvider = parsedProvider
+        } else {
+            webSearchProvider = .linkup
+        }
+
+        if let exaDepth = assistant.defaultWebSearchExaDepth,
+            let parsedExaDepth = WebSearchExaDepth(rawValue: exaDepth)
+        {
+            webSearchExaDepth = parsedExaDepth
+        } else {
+            webSearchExaDepth = .auto
+        }
+
+        if let contextSize = assistant.defaultWebSearchContextSize,
+            let parsedContextSize = WebSearchContextSize(rawValue: contextSize)
+        {
+            webSearchContextSize = parsedContextSize
+        } else {
+            webSearchContextSize = .medium
+        }
+
+        if let kagiSource = assistant.defaultWebSearchKagiSource,
+            let parsedKagiSource = WebSearchKagiSource(rawValue: kagiSource)
+        {
+            webSearchKagiSource = parsedKagiSource
+        } else {
+            webSearchKagiSource = .web
+        }
+
+        if let valyuType = assistant.defaultWebSearchValyuSearchType,
+            let parsedValyuType = WebSearchValyuSearchType(rawValue: valyuType)
+        {
+            webSearchValyuSearchType = parsedValyuType
+        } else {
+            webSearchValyuSearchType = .all
+        }
     }
 
     private func scrollToLastMessage(proxy: ScrollViewProxy) {
+        guard shouldAutoScrollToBottom else { return }
         if let lastMessage = displayedMessages.last {
             withAnimation(.easeOut(duration: 0.3)) {
                 proxy.scrollTo(lastMessage.id, anchor: .bottom)
@@ -829,7 +1145,11 @@ struct ChatView: View {
                         .font(Theme.font(size: 20, weight: .medium))
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .frame(width: Theme.scaled(36), height: Theme.scaled(36))
-                        .background(Theme.Colors.glassSurface)
+                        .background(inputControlBackground)
+                        .overlay {
+                            Circle()
+                                .stroke(Theme.Colors.border.opacity(0.5), lineWidth: 0.8)
+                        }
                         .clipShape(Circle())
                 }
                 .highPriorityGesture(
@@ -862,8 +1182,12 @@ struct ChatView: View {
                     .padding(.horizontal, Theme.scaled(16))
                     .frame(minHeight: Theme.scaled(44))
                     .lineLimit(1...6)
-                    .background(Theme.Colors.glassSurface)
+                    .background(inputControlBackground)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(22)))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: Theme.scaled(22))
+                            .stroke(Theme.Colors.border.opacity(0.5), lineWidth: 0.8)
+                    }
 
                 // Search/Provider Toggle
                 Button {
@@ -871,10 +1195,10 @@ struct ChatView: View {
                         showProviderPicker = true
                     }
                 } label: {
-                    Image(systemName: viewModel.webSearchEnabled ? "globe" : "server.rack")
+                    Image(systemName: isWebSearchEnabled ? "globe" : "server.rack")
                         .font(Theme.font(size: 18))
                         .foregroundStyle(
-                            viewModel.webSearchEnabled
+                            isWebSearchEnabled
                                 ? Theme.Colors.accent : Theme.Colors.textSecondary
                         )
                         .frame(width: Theme.scaled(36), height: Theme.scaled(36))
@@ -903,10 +1227,14 @@ struct ChatView: View {
             .padding(.bottom, Theme.Spacing.lg)
         }
         .background {
-            // Optional: Glass background behind input area
-            // Rectangle()
-            //    .fill(Theme.Colors.glassPane)
-            //    .ignoresSafeArea()
+            Rectangle()
+                .fill(inputAreaBackgroundColor)
+                .ignoresSafeArea(edges: .bottom)
+        }
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Theme.Colors.border.opacity(colorScheme == .light ? 0.55 : 0.3))
+                .frame(height: 1)
         }
     }
 
@@ -945,6 +1273,8 @@ struct ChatView: View {
             !messageText.isEmpty || !selectedImages.isEmpty || !selectedDocuments.isEmpty
         else { return }
 
+        shouldAutoScrollToBottom = true
+
         // Haptic feedback on send
         HapticManager.shared.messageSent()
 
@@ -960,12 +1290,26 @@ struct ChatView: View {
         selectedImages = []
         selectedDocuments = []
 
-        let webSearchEnabled = viewModel.webSearchEnabled
+        let webSearchEnabled = isWebSearchEnabled
         let webSearchModeString = webSearchEnabled ? webSearchMode.rawValue : nil
         let webSearchProviderString = webSearchEnabled ? webSearchProvider.rawValue : nil
+        let webSearchExaDepthString =
+            (webSearchEnabled && webSearchProvider == .exa) ? webSearchExaDepth.rawValue : nil
+        let webSearchContextSizeString =
+            webSearchEnabled ? webSearchContextSize.rawValue : nil
+        let webSearchKagiSourceString =
+            (webSearchEnabled && webSearchProvider == .kagi) ? webSearchKagiSource.rawValue : nil
+        let webSearchValyuSearchTypeString =
+            (webSearchEnabled && webSearchProvider == .valyu)
+            ? webSearchValyuSearchType.rawValue : nil
+        let reasoningEffortString =
+            (model.capabilities?.reasoning == true && reasoningEffort != .low)
+            ? reasoningEffort.rawValue : nil
 
         let isImageModel = model.capabilities?.images == true
         let isVideoModel = model.capabilities?.video == true
+        let targetConversationId: String? =
+            (temporaryMode && viewModel.messages.isEmpty) ? nil : activeConversationId
 
         Task {
             // Upload attachments first
@@ -1002,16 +1346,24 @@ struct ChatView: View {
             await viewModel.sendMessage(
                 message: currentMessage,
                 modelId: model.modelId,
-                conversationId: conversation.id,
+                conversationId: targetConversationId,
                 assistantId: assistantManager.selectedAssistant?.id,
                 webSearchEnabled: isImageModel || isVideoModel ? false : webSearchEnabled,  // Disable search for gen models
                 webSearchMode: isImageModel || isVideoModel ? nil : webSearchModeString,
                 webSearchProvider: isImageModel || isVideoModel ? nil : webSearchProviderString,
+                webSearchExaDepth: isImageModel || isVideoModel ? nil : webSearchExaDepthString,
+                webSearchContextSize: isImageModel || isVideoModel
+                    ? nil : webSearchContextSizeString,
+                webSearchKagiSource: isImageModel || isVideoModel ? nil : webSearchKagiSourceString,
+                webSearchValyuSearchType: isImageModel || isVideoModel
+                    ? nil : webSearchValyuSearchTypeString,
                 providerId: isImageModel || isVideoModel ? nil : viewModel.selectedProviderId,  // Disable provider check if desired, or keep it
                 images: uploadedImages.isEmpty ? nil : uploadedImages,
                 documents: uploadedDocuments.isEmpty ? nil : uploadedDocuments,
                 imageParams: isImageModel ? viewModel.imageParams : nil,
-                videoParams: isVideoModel ? viewModel.videoParams : nil
+                videoParams: isVideoModel ? viewModel.videoParams : nil,
+                reasoningEffort: isImageModel || isVideoModel ? nil : reasoningEffortString,
+                temporaryMode: temporaryMode ? true : nil
             )
 
             // Generate follow-up questions after message generation completes
@@ -1022,7 +1374,7 @@ struct ChatView: View {
                 lastMessage.content.count > 100
             {
                 await viewModel.fetchFollowUpQuestions(
-                    conversationId: conversation.id,
+                    conversationId: activeConversationId,
                     messageId: lastMessage.id
                 )
             }
@@ -1051,6 +1403,168 @@ struct ChatView: View {
             fileName: filename,
             format: .markdown
         )
+    }
+
+    private var publicShareURL: URL? {
+        URL(string: "\(APIConfiguration.shared.baseURL)/share/\(activeConversationId)")
+    }
+
+    private func copyPublicShareLink() {
+        guard let shareURL = publicShareURL else { return }
+        UIPasteboard.general.string = shareURL.absoluteString
+        HapticManager.shared.success()
+    }
+
+    private func openPublicShareLink() {
+        guard let shareURL = publicShareURL else { return }
+        UIApplication.shared.open(shareURL)
+    }
+
+    private func toggleConversationPublic() {
+        guard !isUpdatingConversationVisibility else { return }
+        let nextValue = !conversationIsPublic
+        let previousValue = conversationIsPublic
+        conversationIsPublic = nextValue
+        isUpdatingConversationVisibility = true
+
+        Task {
+            do {
+                try await NanoChatAPI.shared.setConversationPublic(
+                    conversationId: activeConversationId,
+                    isPublic: nextValue
+                )
+                await viewModel.loadConversations()
+                if let updated = viewModel.conversations.first(where: {
+                    $0.id == activeConversationId
+                }) {
+                    conversationIsPublic = updated.isPublic ?? nextValue
+                }
+                HapticManager.shared.success()
+            } catch {
+                conversationIsPublic = previousValue
+            }
+            isUpdatingConversationVisibility = false
+        }
+    }
+
+    private func loadPromptTemplates() async {
+        isLoadingPromptTemplates = true
+        defer { isLoadingPromptTemplates = false }
+
+        do {
+            promptTemplates = try await NanoChatAPI.shared.getPrompts()
+        } catch {
+            promptTemplates = []
+        }
+    }
+
+    private func handlePromptTemplateSelection(_ template: PromptTemplate) {
+        selectedPromptTemplate = template
+        let variables = template.variables ?? []
+
+        if variables.isEmpty {
+            applyPromptTemplate(template, with: [:])
+            return
+        }
+
+        promptVariableValues = Dictionary(
+            uniqueKeysWithValues: variables.map { variable in
+                (variable.name, variable.defaultValue ?? "")
+            }
+        )
+        showPromptVariables = true
+    }
+
+    private func enhanceCurrentPrompt() {
+        let trimmed = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        guard !isEnhancingPrompt else { return }
+
+        isEnhancingPrompt = true
+        Task {
+            do {
+                let enhanced = try await NanoChatAPI.shared.enhancePrompt(trimmed)
+                messageText = enhanced
+                HapticManager.shared.success()
+            } catch {
+                // Keep existing text on failure.
+            }
+            isEnhancingPrompt = false
+        }
+    }
+
+    private func applyPromptTemplate(_ template: PromptTemplate, with values: [String: String]) {
+        let rendered = renderPromptTemplate(template.content, with: values)
+        let mode = template.appendMode ?? .replace
+
+        switch mode {
+        case .replace:
+            messageText = rendered
+        case .prepend:
+            if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                messageText = rendered
+            } else {
+                messageText = rendered + "\n\n" + messageText
+            }
+        case .append:
+            if messageText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                messageText = rendered
+            } else {
+                messageText += "\n\n" + rendered
+            }
+        }
+
+        if let defaultModelId = template.defaultModelId,
+            let model = modelManager.allModels.first(where: { $0.modelId == defaultModelId })
+        {
+            modelManager.selectModel(model)
+        }
+
+        if let modeRaw = template.defaultWebSearchMode,
+            let mode = WebSearchMode(rawValue: modeRaw)
+        {
+            webSearchMode = mode
+        }
+
+        if let providerRaw = template.defaultWebSearchProvider,
+            let provider = WebSearchProvider(rawValue: providerRaw)
+        {
+            webSearchProvider = provider
+        }
+    }
+
+    private func renderPromptTemplate(_ content: String, with values: [String: String]) -> String {
+        let pattern = #"\{\{\s*([a-zA-Z0-9_]+)(?::([^}]*))?\s*\}\}"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return content
+        }
+
+        let nsContent = content as NSString
+        let matches = regex.matches(
+            in: content,
+            range: NSRange(location: 0, length: nsContent.length)
+        )
+
+        var result = content
+        for match in matches.reversed() {
+            guard match.numberOfRanges >= 3 else { continue }
+            let fullRange = match.range(at: 0)
+            let variableName = match.range(at: 1)
+            let defaultValue = match.range(at: 2)
+
+            let name =
+                variableName.location != NSNotFound
+                ? nsContent.substring(with: variableName) : ""
+            let fallback =
+                defaultValue.location != NSNotFound
+                ? nsContent.substring(with: defaultValue) : ""
+            let replacement = values[name] ?? fallback
+
+            if let range = Range(fullRange, in: result) {
+                result.replaceSubrange(range, with: replacement)
+            }
+        }
+        return result
     }
 
     // MARK: - Message Batch Operations
@@ -1147,7 +1661,16 @@ struct ChatView: View {
                 }
             }
         }
-        await viewModel.loadMessages(conversationId: conversation.id)
+        await viewModel.loadMessages(conversationId: activeConversationId)
+    }
+
+    private var inputAreaBackgroundColor: Color {
+        colorScheme == .light
+            ? Theme.Colors.backgroundStart : Theme.Colors.backgroundStart.opacity(0.92)
+    }
+
+    private var inputControlBackground: Color {
+        colorScheme == .light ? .white : Theme.Colors.glassSurface
     }
 }
 
@@ -1337,31 +1860,20 @@ struct MessageBubble: View {
                 if let images = message.images, !images.isEmpty {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 8)], spacing: 8)
                     {
-                        ForEach(images, id: \.url) { image in
+                        ForEach(images, id: \.storageId) { image in
                             Button {
                                 if let url = resolveURL(image.url) {
                                     selectedImage = ImagePreviewItem(
-                                        url: url, fileName: image.fileName ?? "Image")
+                                        url: url,
+                                        fileName: image.fileName ?? "Image",
+                                        storageId: image.storageId
+                                    )
                                 }
                             } label: {
-                                AsyncImage(url: resolveURL(image.url)) { phase in
-                                    switch phase {
-                                    case .empty:
-                                        ProgressView()
-                                            .frame(height: 150)
-                                    case .success(let image):
-                                        image
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fill)
-                                            .frame(height: 150)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    case .failure:
-                                        Image(systemName: "photo")
-                                            .frame(height: 150)
-                                    @unknown default:
-                                        EmptyView()
-                                    }
-                                }
+                                AuthenticatedMessageImageThumbnail(
+                                    storageId: image.storageId,
+                                    fallbackURL: resolveURL(image.url)
+                                )
                             }
                             .buttonStyle(.plain)
                         }
@@ -1620,6 +2132,22 @@ struct MessageBubble: View {
                     }
                     .buttonStyle(.plain)
 
+                    // Branch Button
+                    Button {
+                        branchConversation()
+                    } label: {
+                        if isBranching {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        } else {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(Theme.font(size: 12))
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isBranching)
+
                     Spacer()
                 } else {
                     Spacer()
@@ -1649,6 +2177,21 @@ struct MessageBubble: View {
                             .foregroundStyle(Theme.Colors.textTertiary)
                     }
                     .buttonStyle(.plain)
+
+                    Button {
+                        branchConversation()
+                    } label: {
+                        if isBranching {
+                            ProgressView()
+                                .scaleEffect(0.5)
+                        } else {
+                            Image(systemName: "arrow.triangle.branch")
+                                .font(Theme.font(size: 12))
+                                .foregroundStyle(Theme.Colors.textTertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isBranching)
                 }
             }
             .padding(.top, Theme.scaled(4))
@@ -1703,6 +2246,120 @@ struct MessageBubble: View {
             }
         }
     }
+
+    private func branchConversation() {
+        guard !isBranching else { return }
+
+        isBranching = true
+        Task {
+            do {
+                _ = try await NanoChatAPI.shared.branchConversation(
+                    conversationId: conversationId,
+                    fromMessageId: message.id
+                )
+                await MainActor.run {
+                    isBranching = false
+                    HapticManager.shared.success()
+                    onBranch?()
+                }
+            } catch {
+                await MainActor.run {
+                    isBranching = false
+                }
+            }
+        }
+    }
+}
+
+private struct AuthenticatedMessageImageThumbnail: View {
+    let storageId: String
+    let fallbackURL: URL?
+
+    @State private var imageData: Data?
+    @State private var loadFailed = false
+
+    private static let cache = NSCache<NSString, NSData>()
+
+    var body: some View {
+        ZStack {
+            Theme.Colors.glassSurface
+
+            if let imageData {
+                if let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    Image(systemName: "photo")
+                        .foregroundStyle(Theme.Colors.textTertiary)
+                }
+            } else if loadFailed {
+                Image(systemName: "photo")
+                    .foregroundStyle(Theme.Colors.textTertiary)
+            } else {
+                ProgressView()
+                    .tint(Theme.Colors.secondary)
+            }
+        }
+        .frame(height: 150)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Theme.Colors.border, lineWidth: 1)
+        )
+        .clipped()
+        .task(id: taskIdentifier) {
+            await loadImage()
+        }
+    }
+
+    private var taskIdentifier: String {
+        "\(storageId)|\(fallbackURL?.absoluteString ?? "")"
+    }
+
+    @MainActor
+    private func loadImage() async {
+        let storageCacheKey = "storage:\(storageId)" as NSString
+        if let cached = Self.cache.object(forKey: storageCacheKey) {
+            imageData = cached as Data
+            loadFailed = false
+            return
+        }
+
+        do {
+            let data = try await NanoChatAPI.shared.downloadStorageData(storageId: storageId)
+            Self.cache.setObject(data as NSData, forKey: storageCacheKey)
+            imageData = data
+            loadFailed = false
+            return
+        } catch {
+            // fall through to URL retry below
+        }
+
+        guard let fallbackURL else {
+            imageData = nil
+            loadFailed = true
+            return
+        }
+
+        let urlCacheKey = "url:\(fallbackURL.absoluteString)" as NSString
+        if let cached = Self.cache.object(forKey: urlCacheKey) {
+            imageData = cached as Data
+            loadFailed = false
+            return
+        }
+
+        do {
+            let data = try await NanoChatAPI.shared.downloadData(from: fallbackURL)
+            Self.cache.setObject(data as NSData, forKey: urlCacheKey)
+            imageData = data
+            loadFailed = false
+        } catch {
+            imageData = nil
+            loadFailed = true
+        }
+    }
 }
 
 struct VideoPlayerView: View {
@@ -1718,5 +2375,140 @@ struct VideoPlayerView: View {
             }
             .frame(height: 200)
             .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct PromptTemplatePickerView: View {
+    let templates: [PromptTemplate]
+    let isLoading: Bool
+    let onRefresh: () -> Void
+    let onApply: (PromptTemplate) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+
+    private var filteredTemplates: [PromptTemplate] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return templates }
+        return templates.filter { template in
+            template.name.localizedCaseInsensitiveContains(query)
+                || template.content.localizedCaseInsensitiveContains(query)
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView()
+                } else if filteredTemplates.isEmpty {
+                    ContentUnavailableView(
+                        searchText.isEmpty ? "No Prompt Templates" : "No Matching Templates",
+                        systemImage: "text.badge.plus"
+                    )
+                } else {
+                    List(filteredTemplates, id: \.id) { template in
+                        Button {
+                            onApply(template)
+                            dismiss()
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text(template.name)
+                                        .font(.headline)
+                                        .foregroundStyle(Theme.Colors.text)
+                                    Spacer()
+                                    Text((template.appendMode ?? .replace).rawValue.capitalized)
+                                        .font(.caption2)
+                                        .foregroundStyle(Theme.Colors.textTertiary)
+                                }
+                                if let description = template.description, !description.isEmpty {
+                                    Text(description)
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.Colors.textSecondary)
+                                        .lineLimit(2)
+                                }
+                                Text(template.content)
+                                    .font(.caption2)
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                                    .lineLimit(2)
+                            }
+                            .padding(.vertical, 4)
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Theme.Colors.sectionBackground)
+                    }
+                    .scrollContentBackground(.hidden)
+                    .background(Theme.Colors.backgroundStart)
+                }
+            }
+            .navigationTitle("Prompt Templates")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $searchText, prompt: "Search templates")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") { dismiss() }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button("Refresh") { onRefresh() }
+                }
+            }
+        }
+    }
+}
+
+struct PromptVariableValuesView: View {
+    let template: PromptTemplate
+    @Binding var values: [String: String]
+    let onApply: () -> Void
+    let onCancel: () -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(template.variables ?? [], id: \.name) { variable in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(variable.name)
+                            .font(.headline)
+                            .foregroundStyle(Theme.Colors.text)
+                        if let description = variable.description, !description.isEmpty {
+                            Text(description)
+                                .font(.caption)
+                                .foregroundStyle(Theme.Colors.textSecondary)
+                        }
+                        TextField(
+                            variable.defaultValue ?? "Value",
+                            text: Binding(
+                                get: { values[variable.name] ?? "" },
+                                set: { values[variable.name] = $0 }
+                            )
+                        )
+                        .textFieldStyle(.roundedBorder)
+                    }
+                    .padding(.vertical, 4)
+                    .listRowBackground(Theme.Colors.sectionBackground)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
+            .navigationTitle(template.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        onCancel()
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Apply") {
+                        onApply()
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }

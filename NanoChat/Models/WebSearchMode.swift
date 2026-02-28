@@ -23,3 +23,19 @@ enum WebSearchMode: String, CaseIterable, Identifiable {
         }
     }
 }
+
+enum ReasoningEffort: String, CaseIterable, Identifiable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        }
+    }
+}

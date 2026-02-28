@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 struct AccountSettingsView: View {
@@ -50,12 +51,33 @@ struct AccountSettingsView: View {
 
     private var generalSettingsSection: some View {
         Section("General") {
-            Toggle(isOn: Binding(
-                get: { viewModel.privacyMode },
-                set: { newValue in
-                    Task { await viewModel.updatePrivacyMode(newValue) }
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text("Timezone")
+                        .foregroundStyle(Theme.Colors.text)
+                    Spacer()
+                    Text(viewModel.timezone)
+                        .font(.caption)
+                        .foregroundStyle(Theme.Colors.textSecondary)
                 }
-            )) {
+                Button("Use Device Timezone") {
+                    Task {
+                        await viewModel.updateTimezone(TimeZone.current.identifier)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(Theme.Colors.accent)
+            }
+            .listRowBackground(Theme.Colors.sectionBackground)
+
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.privacyMode },
+                    set: { newValue in
+                        Task { await viewModel.updatePrivacyMode(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("Hide Personal Information")
                         .foregroundStyle(Theme.Colors.text)
@@ -67,12 +89,14 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.contextMemoryEnabled },
-                set: { newValue in
-                    Task { await viewModel.updateContextMemoryEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.contextMemoryEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateContextMemoryEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("Context Memory")
                         .foregroundStyle(Theme.Colors.text)
@@ -84,12 +108,14 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.persistentMemoryEnabled },
-                set: { newValue in
-                    Task { await viewModel.updatePersistentMemoryEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.persistentMemoryEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updatePersistentMemoryEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("Persistent Memory")
                         .foregroundStyle(Theme.Colors.text)
@@ -101,12 +127,14 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.youtubeTranscriptsEnabled },
-                set: { newValue in
-                    Task { await viewModel.updateYoutubeTranscriptsEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.youtubeTranscriptsEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateYoutubeTranscriptsEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("YouTube Transcripts")
                         .foregroundStyle(Theme.Colors.text)
@@ -118,12 +146,14 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.webScrapingEnabled },
-                set: { newValue in
-                    Task { await viewModel.updateWebScrapingEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.webScrapingEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateWebScrapingEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("Web Scraping")
                         .foregroundStyle(Theme.Colors.text)
@@ -135,16 +165,39 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.mcpEnabled },
-                set: { newValue in
-                    Task { await viewModel.updateMcpEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.mcpEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateMcpEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
                     Text("Nano-GPT MCP")
                         .foregroundStyle(Theme.Colors.text)
-                    Text("Supports Vision, YouTube Transcripts, Web Scraping, Nano-GPT Balance, Image Generation, and Model Lists")
+                    Text(
+                        "Supports Vision, YouTube Transcripts, Web Scraping, Nano-GPT Balance, Image Generation, and Model Lists"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(Theme.Colors.textSecondary)
+                }
+            }
+            .tint(Theme.Colors.accent)
+            .listRowBackground(Theme.Colors.sectionBackground)
+
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.followUpQuestionsEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateFollowUpQuestionsEnabled(newValue) }
+                    }
+                )
+            ) {
+                VStack(alignment: .leading) {
+                    Text("Follow-up Questions")
+                        .foregroundStyle(Theme.Colors.text)
+                    Text("Show suggested follow-up questions after each response")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
@@ -152,16 +205,18 @@ struct AccountSettingsView: View {
             .tint(Theme.Colors.accent)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            Toggle(isOn: Binding(
-                get: { viewModel.followUpQuestionsEnabled },
-                set: { newValue in
-                    Task { await viewModel.updateFollowUpQuestionsEnabled(newValue) }
-                }
-            )) {
+            Toggle(
+                isOn: Binding(
+                    get: { viewModel.suggestedPromptsEnabled },
+                    set: { newValue in
+                        Task { await viewModel.updateSuggestedPromptsEnabled(newValue) }
+                    }
+                )
+            ) {
                 VStack(alignment: .leading) {
-                    Text("Follow-up Questions")
+                    Text("Suggested Prompts")
                         .foregroundStyle(Theme.Colors.text)
-                    Text("Show suggested follow-up questions after each response")
+                    Text("Show suggested prompts on the home screen")
                         .font(.caption)
                         .foregroundStyle(Theme.Colors.textSecondary)
                 }
@@ -183,18 +238,24 @@ struct AccountSettingsView: View {
             .listRowBackground(Theme.Colors.sectionBackground)
 
             // Title Generation Model
-            Picker("Chat Title Generation", selection: Binding(
-                get: {
-                    if viewModel.titleModelId.isEmpty ||
-                       !modelManager.allModels.contains(where: { $0.modelId == viewModel.titleModelId }) {
-                        return ""
+            Picker(
+                "Chat Title Generation",
+                selection: Binding(
+                    get: {
+                        if viewModel.titleModelId.isEmpty
+                            || !modelManager.allModels.contains(where: {
+                                $0.modelId == viewModel.titleModelId
+                            })
+                        {
+                            return ""
+                        }
+                        return viewModel.titleModelId
+                    },
+                    set: { (newValue: String) in
+                        Task { await viewModel.updateTitleModelId(newValue) }
                     }
-                    return viewModel.titleModelId
-                },
-                set: { (newValue: String) in
-                    Task { await viewModel.updateTitleModelId(newValue) }
-                }
-            )) {
+                )
+            ) {
                 Text("Default (GLM-4.5-Air)").tag("")
                 ForEach(modelManager.allModels.filter { $0.enabled }, id: \.id) { model in
                     Text(model.name ?? model.modelId).tag(model.modelId)
@@ -203,19 +264,53 @@ struct AccountSettingsView: View {
             .foregroundStyle(Theme.Colors.text)
             .listRowBackground(Theme.Colors.sectionBackground)
 
-            // Follow-up Questions Model
-            Picker("Follow-up Questions", selection: Binding(
-                get: {
-                    if viewModel.followUpModelId.isEmpty ||
-                       !modelManager.allModels.contains(where: { $0.modelId == viewModel.followUpModelId }) {
-                        return ""
+            if viewModel.titleSupportsProviderSelection && !viewModel.titleModelId.isEmpty {
+                Picker(
+                    "Title Provider",
+                    selection: Binding(
+                        get: {
+                            if viewModel.titleProviderId.isEmpty
+                                || viewModel.titleModelProviders.contains(where: {
+                                    $0.provider == viewModel.titleProviderId
+                                })
+                            {
+                                return viewModel.titleProviderId
+                            }
+                            return ""
+                        },
+                        set: { (newValue: String) in
+                            Task { await viewModel.updateTitleProviderId(newValue) }
+                        }
+                    )
+                ) {
+                    Text("Auto").tag("")
+                    ForEach(viewModel.titleModelProviders, id: \.provider) { provider in
+                        Text(formatProviderName(provider.provider)).tag(provider.provider)
                     }
-                    return viewModel.followUpModelId
-                },
-                set: { (newValue: String) in
-                    Task { await viewModel.updateFollowUpModelId(newValue) }
                 }
-            )) {
+                .foregroundStyle(Theme.Colors.text)
+                .listRowBackground(Theme.Colors.sectionBackground)
+            }
+
+            // Follow-up Questions Model
+            Picker(
+                "Follow-up Questions",
+                selection: Binding(
+                    get: {
+                        if viewModel.followUpModelId.isEmpty
+                            || !modelManager.allModels.contains(where: {
+                                $0.modelId == viewModel.followUpModelId
+                            })
+                        {
+                            return ""
+                        }
+                        return viewModel.followUpModelId
+                    },
+                    set: { (newValue: String) in
+                        Task { await viewModel.updateFollowUpModelId(newValue) }
+                    }
+                )
+            ) {
                 Text("Default (GLM-4.5-Air)").tag("")
                 ForEach(modelManager.allModels.filter { $0.enabled }, id: \.id) { model in
                     Text(model.name ?? model.modelId).tag(model.modelId)
@@ -223,6 +318,34 @@ struct AccountSettingsView: View {
             }
             .foregroundStyle(Theme.Colors.text)
             .listRowBackground(Theme.Colors.sectionBackground)
+
+            if viewModel.followUpSupportsProviderSelection && !viewModel.followUpModelId.isEmpty {
+                Picker(
+                    "Follow-up Provider",
+                    selection: Binding(
+                        get: {
+                            if viewModel.followUpProviderId.isEmpty
+                                || viewModel.followUpModelProviders.contains(where: {
+                                    $0.provider == viewModel.followUpProviderId
+                                })
+                            {
+                                return viewModel.followUpProviderId
+                            }
+                            return ""
+                        },
+                        set: { (newValue: String) in
+                            Task { await viewModel.updateFollowUpProviderId(newValue) }
+                        }
+                    )
+                ) {
+                    Text("Auto").tag("")
+                    ForEach(viewModel.followUpModelProviders, id: \.provider) { provider in
+                        Text(formatProviderName(provider.provider)).tag(provider.provider)
+                    }
+                }
+                .foregroundStyle(Theme.Colors.text)
+                .listRowBackground(Theme.Colors.sectionBackground)
+            }
         }
     }
 
@@ -271,6 +394,15 @@ struct AccountSettingsView: View {
             .disabled(viewModel.isUpdating)
             .listRowBackground(Theme.Colors.sectionBackground)
         }
+    }
+
+    private func formatProviderName(_ id: String) -> String {
+        id
+            .split(separator: "-")
+            .map { token in
+                token.prefix(1).uppercased() + String(token.dropFirst())
+            }
+            .joined(separator: " ")
     }
 }
 

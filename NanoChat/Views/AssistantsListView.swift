@@ -4,6 +4,7 @@ struct AssistantsListView: View {
     @State private var assistants: [AssistantResponse] = []
     @State private var isLoading = false
     @State private var showingNewAssistant = false
+    @State private var editingAssistant: AssistantResponse?
     @State private var errorMessage: String?
 
     var body: some View {
@@ -40,10 +41,29 @@ struct AssistantsListView: View {
                                 } label: {
                                     Label(
                                         assistant.isDefault ? "Unset Default" : "Set Default",
-                                        systemImage: assistant.isDefault ? "star.slash.fill" : "star.fill"
+                                        systemImage: assistant.isDefault
+                                            ? "star.slash.fill" : "star.fill"
                                     )
                                 }
                                 .tint(.orange)
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button(role: .destructive) {
+                                    HapticManager.shared.tap()
+                                    Task {
+                                        await deleteAssistant(assistant)
+                                    }
+                                } label: {
+                                    Label("Delete", systemImage: "trash.fill")
+                                }
+
+                                Button {
+                                    HapticManager.shared.tap()
+                                    editingAssistant = assistant
+                                } label: {
+                                    Label("Edit", systemImage: "pencil")
+                                }
+                                .tint(.blue)
                             }
                         }
                     }
@@ -64,6 +84,14 @@ struct AssistantsListView: View {
                 NewAssistantView { assistant in
                     Task {
                         await createAssistant(assistant)
+                    }
+                }
+                .presentationDetents([.large])
+            }
+            .sheet(item: $editingAssistant) { assistant in
+                EditAssistantView(assistant: assistant) { updated in
+                    Task {
+                        await updateAssistant(assistantId: assistant.id, request: updated)
                     }
                 }
                 .presentationDetents([.large])
@@ -99,23 +127,72 @@ struct AssistantsListView: View {
 
     private func createAssistant(_ assistant: CreateAssistantRequest) async {
         do {
-            let newAssistant = try await NanoChatAPI.shared.createAssistant(
+            _ = try await NanoChatAPI.shared.createAssistant(
                 name: assistant.name,
                 systemPrompt: assistant.systemPrompt,
                 defaultModelId: assistant.defaultModelId,
-                defaultWebSearchMode: assistant.defaultWebSearchMode
+                defaultWebSearchMode: assistant.defaultWebSearchMode,
+                defaultWebSearchProvider: assistant.defaultWebSearchProvider,
+                defaultWebSearchExaDepth: assistant.defaultWebSearchExaDepth,
+                defaultWebSearchContextSize: assistant.defaultWebSearchContextSize,
+                defaultWebSearchKagiSource: assistant.defaultWebSearchKagiSource,
+                defaultWebSearchValyuSearchType: assistant.defaultWebSearchValyuSearchType
             )
             HapticManager.shared.success()
-            assistants.append(newAssistant)
+            await loadAssistants()
         } catch {
             HapticManager.shared.error()
             errorMessage = error.localizedDescription
         }
     }
-    
+
     private func setDefaultAssistant(_ assistant: AssistantResponse) async {
-        // TODO: Implement set default API call when available
-        HapticManager.shared.success()
+        do {
+            try await NanoChatAPI.shared.setDefaultAssistant(id: assistant.id)
+            HapticManager.shared.success()
+            await loadAssistants()
+        } catch {
+            HapticManager.shared.error()
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func updateAssistant(assistantId: String, request: EditAssistantRequest) async {
+        do {
+            try await NanoChatAPI.shared.updateAssistant(
+                id: assistantId,
+                name: request.name,
+                systemPrompt: request.systemPrompt,
+                defaultModelId: request.defaultModelId,
+                defaultWebSearchMode: request.defaultWebSearchMode,
+                defaultWebSearchProvider: request.defaultWebSearchProvider,
+                defaultWebSearchExaDepth: request.defaultWebSearchExaDepth,
+                defaultWebSearchContextSize: request.defaultWebSearchContextSize,
+                defaultWebSearchKagiSource: request.defaultWebSearchKagiSource,
+                defaultWebSearchValyuSearchType: request.defaultWebSearchValyuSearchType
+            )
+            HapticManager.shared.success()
+            await loadAssistants()
+        } catch {
+            HapticManager.shared.error()
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func deleteAssistant(_ assistant: AssistantResponse) async {
+        guard !assistant.isDefault else {
+            errorMessage = "Cannot delete the default assistant."
+            return
+        }
+
+        do {
+            try await NanoChatAPI.shared.deleteAssistant(id: assistant.id)
+            HapticManager.shared.success()
+            await loadAssistants()
+        } catch {
+            HapticManager.shared.error()
+            errorMessage = error.localizedDescription
+        }
     }
 }
 
@@ -155,7 +232,7 @@ struct AssistantRow: View {
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .lineLimit(1)
                 }
-                
+
                 Text(assistant.systemPrompt)
                     .font(.caption2)
                     .foregroundStyle(Theme.Colors.textTertiary)
@@ -199,6 +276,26 @@ struct AssistantDetailView: View {
                     LabeledContent("Web Search", value: webSearchMode)
                         .foregroundStyle(Theme.Colors.text)
                 }
+                if let webSearchProvider = assistant.defaultWebSearchProvider {
+                    LabeledContent("Search Provider", value: webSearchProvider)
+                        .foregroundStyle(Theme.Colors.text)
+                }
+                if let exaDepth = assistant.defaultWebSearchExaDepth {
+                    LabeledContent("Exa Depth", value: exaDepth)
+                        .foregroundStyle(Theme.Colors.text)
+                }
+                if let contextSize = assistant.defaultWebSearchContextSize {
+                    LabeledContent("Context Size", value: contextSize)
+                        .foregroundStyle(Theme.Colors.text)
+                }
+                if let kagiSource = assistant.defaultWebSearchKagiSource {
+                    LabeledContent("Kagi Source", value: kagiSource)
+                        .foregroundStyle(Theme.Colors.text)
+                }
+                if let valyuSearchType = assistant.defaultWebSearchValyuSearchType {
+                    LabeledContent("Valyu Type", value: valyuSearchType)
+                        .foregroundStyle(Theme.Colors.text)
+                }
                 LabeledContent("Default", value: assistant.isDefault ? "Yes" : "No")
                     .foregroundStyle(Theme.Colors.text)
             }
@@ -211,14 +308,18 @@ struct AssistantDetailView: View {
     }
 }
 
-
 struct NewAssistantView: View {
     @Environment(\.dismiss) var dismiss
     @State private var name = ""
     @State private var systemPrompt = ""
     @State private var description = ""
     @State private var defaultModelId = "gpt-4"
-    @State private var defaultWebSearchMode = "off"
+    @State private var defaultWebSearchMode: WebSearchMode = .off
+    @State private var defaultWebSearchProvider: WebSearchProvider = .linkup
+    @State private var defaultWebSearchExaDepth: WebSearchExaDepth = .auto
+    @State private var defaultWebSearchContextSize: WebSearchContextSize = .medium
+    @State private var defaultWebSearchKagiSource: WebSearchKagiSource = .web
+    @State private var defaultWebSearchValyuSearchType: WebSearchValyuSearchType = .all
 
     let onCreate: (CreateAssistantRequest) -> Void
 
@@ -233,7 +334,11 @@ struct NewAssistantView: View {
                 }
                 .listRowBackground(Theme.Colors.sectionBackground)
 
-                Section(header: Text("System Prompt"), footer: Text("Define the assistant's behavior and personality").foregroundStyle(Theme.Colors.textTertiary)) {
+                Section(
+                    header: Text("System Prompt"),
+                    footer: Text("Define the assistant's behavior and personality").foregroundStyle(
+                        Theme.Colors.textTertiary)
+                ) {
                     TextEditor(text: $systemPrompt)
                         .frame(minHeight: 150)
                         .foregroundStyle(Theme.Colors.text)
@@ -251,11 +356,54 @@ struct NewAssistantView: View {
                     .foregroundStyle(Theme.Colors.text)
 
                     Picker("Web Search", selection: $defaultWebSearchMode) {
-                        Text("Off").tag("off")
-                        Text("Standard").tag("standard")
-                        Text("Deep").tag("deep")
+                        ForEach(WebSearchMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
                     }
                     .foregroundStyle(Theme.Colors.text)
+
+                    if defaultWebSearchMode != .off {
+                        Picker("Search Provider", selection: $defaultWebSearchProvider) {
+                            ForEach(WebSearchProvider.allCases) { provider in
+                                Text(provider.displayName).tag(provider)
+                            }
+                        }
+                        .foregroundStyle(Theme.Colors.text)
+
+                        Picker("Context Size", selection: $defaultWebSearchContextSize) {
+                            ForEach(WebSearchContextSize.allCases) { size in
+                                Text(size.displayName).tag(size)
+                            }
+                        }
+                        .foregroundStyle(Theme.Colors.text)
+
+                        if defaultWebSearchProvider == .exa {
+                            Picker("Exa Depth", selection: $defaultWebSearchExaDepth) {
+                                ForEach(WebSearchExaDepth.allCases) { depth in
+                                    Text(depth.displayName).tag(depth)
+                                }
+                            }
+                            .foregroundStyle(Theme.Colors.text)
+                        }
+
+                        if defaultWebSearchProvider == .kagi {
+                            Picker("Kagi Source", selection: $defaultWebSearchKagiSource) {
+                                ForEach(WebSearchKagiSource.allCases) { source in
+                                    Text(source.displayName).tag(source)
+                                }
+                            }
+                            .foregroundStyle(Theme.Colors.text)
+                        }
+
+                        if defaultWebSearchProvider == .valyu {
+                            Picker("Valyu Type", selection: $defaultWebSearchValyuSearchType) {
+                                ForEach(WebSearchValyuSearchType.allCases) { searchType in
+                                    Text(searchType.displayName).tag(searchType)
+                                }
+                            }
+                            .foregroundStyle(Theme.Colors.text)
+                        }
+                    }
                 }
                 .listRowBackground(Theme.Colors.sectionBackground)
             }
@@ -276,14 +424,199 @@ struct NewAssistantView: View {
                             name: name,
                             systemPrompt: systemPrompt,
                             defaultModelId: defaultModelId.isEmpty ? nil : defaultModelId,
-                            defaultWebSearchMode: defaultWebSearchMode == "off" ? nil : defaultWebSearchMode,
-                            defaultWebSearchProvider: nil
+                            defaultWebSearchMode: defaultWebSearchMode == .off
+                                ? nil : defaultWebSearchMode.rawValue,
+                            defaultWebSearchProvider: defaultWebSearchMode == .off
+                                ? nil : defaultWebSearchProvider.rawValue,
+                            defaultWebSearchExaDepth: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .exa
+                                    ? defaultWebSearchExaDepth.rawValue : nil),
+                            defaultWebSearchContextSize: defaultWebSearchMode == .off
+                                ? nil : defaultWebSearchContextSize.rawValue,
+                            defaultWebSearchKagiSource: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .kagi
+                                    ? defaultWebSearchKagiSource.rawValue : nil),
+                            defaultWebSearchValyuSearchType: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .valyu
+                                    ? defaultWebSearchValyuSearchType.rawValue : nil)
                         )
                         onCreate(request)
                         dismiss()
                     }
                     .disabled(name.isEmpty || systemPrompt.isEmpty)
                     .foregroundStyle(Theme.Colors.accent)
+                }
+            }
+        }
+    }
+}
+
+struct EditAssistantRequest {
+    let name: String
+    let systemPrompt: String
+    let defaultModelId: String?
+    let defaultWebSearchMode: String?
+    let defaultWebSearchProvider: String?
+    let defaultWebSearchExaDepth: String?
+    let defaultWebSearchContextSize: String?
+    let defaultWebSearchKagiSource: String?
+    let defaultWebSearchValyuSearchType: String?
+}
+
+struct EditAssistantView: View {
+    @Environment(\.dismiss) var dismiss
+    let assistant: AssistantResponse
+    let onSave: (EditAssistantRequest) -> Void
+
+    @State private var name: String
+    @State private var systemPrompt: String
+    @State private var defaultModelId: String
+    @State private var defaultWebSearchMode: WebSearchMode
+    @State private var defaultWebSearchProvider: WebSearchProvider
+    @State private var defaultWebSearchExaDepth: WebSearchExaDepth
+    @State private var defaultWebSearchContextSize: WebSearchContextSize
+    @State private var defaultWebSearchKagiSource: WebSearchKagiSource
+    @State private var defaultWebSearchValyuSearchType: WebSearchValyuSearchType
+
+    init(assistant: AssistantResponse, onSave: @escaping (EditAssistantRequest) -> Void) {
+        self.assistant = assistant
+        self.onSave = onSave
+        _name = State(initialValue: assistant.name)
+        _systemPrompt = State(initialValue: assistant.systemPrompt)
+        _defaultModelId = State(initialValue: assistant.defaultModelId ?? "")
+        _defaultWebSearchMode = State(
+            initialValue: WebSearchMode(rawValue: assistant.defaultWebSearchMode ?? "off") ?? .off
+        )
+        _defaultWebSearchProvider = State(
+            initialValue: WebSearchProvider(
+                rawValue: assistant.defaultWebSearchProvider ?? "linkup")
+                ?? .linkup
+        )
+        _defaultWebSearchExaDepth = State(
+            initialValue: WebSearchExaDepth(rawValue: assistant.defaultWebSearchExaDepth ?? "auto")
+                ?? .auto
+        )
+        _defaultWebSearchContextSize = State(
+            initialValue: WebSearchContextSize(
+                rawValue: assistant.defaultWebSearchContextSize ?? "medium"
+            ) ?? .medium
+        )
+        _defaultWebSearchKagiSource = State(
+            initialValue: WebSearchKagiSource(
+                rawValue: assistant.defaultWebSearchKagiSource ?? "web")
+                ?? .web
+        )
+        _defaultWebSearchValyuSearchType = State(
+            initialValue: WebSearchValyuSearchType(
+                rawValue: assistant.defaultWebSearchValyuSearchType ?? "all"
+            ) ?? .all
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Details") {
+                    TextField("Name", text: $name)
+                        .foregroundStyle(Theme.Colors.text)
+                    TextEditor(text: $systemPrompt)
+                        .frame(minHeight: 140)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .foregroundStyle(Theme.Colors.text)
+                }
+                .listRowBackground(Theme.Colors.sectionBackground)
+
+                Section("Configuration") {
+                    TextField("Default Model ID (optional)", text: $defaultModelId)
+                        .textInputAutocapitalization(.never)
+                        .foregroundStyle(Theme.Colors.text)
+
+                    Picker("Web Search", selection: $defaultWebSearchMode) {
+                        ForEach(WebSearchMode.allCases) { mode in
+                            Text(mode.displayName).tag(mode)
+                        }
+                    }
+
+                    if defaultWebSearchMode != .off {
+                        Picker("Search Provider", selection: $defaultWebSearchProvider) {
+                            ForEach(WebSearchProvider.allCases) { provider in
+                                Text(provider.displayName).tag(provider)
+                            }
+                        }
+
+                        Picker("Context Size", selection: $defaultWebSearchContextSize) {
+                            ForEach(WebSearchContextSize.allCases) { size in
+                                Text(size.displayName).tag(size)
+                            }
+                        }
+
+                        if defaultWebSearchProvider == .exa {
+                            Picker("Exa Depth", selection: $defaultWebSearchExaDepth) {
+                                ForEach(WebSearchExaDepth.allCases) { depth in
+                                    Text(depth.displayName).tag(depth)
+                                }
+                            }
+                        }
+
+                        if defaultWebSearchProvider == .kagi {
+                            Picker("Kagi Source", selection: $defaultWebSearchKagiSource) {
+                                ForEach(WebSearchKagiSource.allCases) { source in
+                                    Text(source.displayName).tag(source)
+                                }
+                            }
+                        }
+
+                        if defaultWebSearchProvider == .valyu {
+                            Picker("Valyu Type", selection: $defaultWebSearchValyuSearchType) {
+                                ForEach(WebSearchValyuSearchType.allCases) { searchType in
+                                    Text(searchType.displayName).tag(searchType)
+                                }
+                            }
+                        }
+                    }
+                }
+                .listRowBackground(Theme.Colors.sectionBackground)
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.Colors.backgroundStart)
+            .navigationTitle("Edit Assistant")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        let request = EditAssistantRequest(
+                            name: name,
+                            systemPrompt: systemPrompt,
+                            defaultModelId: defaultModelId.isEmpty ? nil : defaultModelId,
+                            defaultWebSearchMode: defaultWebSearchMode.rawValue,
+                            defaultWebSearchProvider: defaultWebSearchMode == .off
+                                ? nil : defaultWebSearchProvider.rawValue,
+                            defaultWebSearchExaDepth: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .exa
+                                    ? defaultWebSearchExaDepth.rawValue : nil),
+                            defaultWebSearchContextSize: defaultWebSearchMode == .off
+                                ? nil : defaultWebSearchContextSize.rawValue,
+                            defaultWebSearchKagiSource: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .kagi
+                                    ? defaultWebSearchKagiSource.rawValue : nil),
+                            defaultWebSearchValyuSearchType: defaultWebSearchMode == .off
+                                ? nil
+                                : (defaultWebSearchProvider == .valyu
+                                    ? defaultWebSearchValyuSearchType.rawValue : nil)
+                        )
+                        onSave(request)
+                        dismiss()
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
             }
         }

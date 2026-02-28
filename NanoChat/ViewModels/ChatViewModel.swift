@@ -82,9 +82,10 @@ final class ChatViewModel: ObservableObject {
         // Reuse existing empty "New Chat" if available
         if title == nil {
             if let latest = conversations.first,
-               latest.title == "New Chat",
-               latest.projectId == projectId {
-                
+                latest.title == "New Chat",
+                latest.projectId == projectId
+            {
+
                 // Verify it has no messages to be safe
                 if let msgs = try? await api.getMessages(conversationId: latest.id), msgs.isEmpty {
                     currentConversation = latest
@@ -127,12 +128,17 @@ final class ChatViewModel: ObservableObject {
         webSearchEnabled: Bool = false,
         webSearchMode: String? = nil,
         webSearchProvider: String? = nil,
+        webSearchExaDepth: String? = nil,
+        webSearchContextSize: String? = nil,
+        webSearchKagiSource: String? = nil,
+        webSearchValyuSearchType: String? = nil,
         providerId: String? = nil,
         images: [ImageAttachment]? = nil,
         documents: [DocumentAttachment]? = nil,
         imageParams: [String: AnyCodable]? = nil,
         videoParams: [String: AnyCodable]? = nil,
-        reasoningEffort: String? = nil
+        reasoningEffort: String? = nil,
+        temporaryMode: Bool? = nil
     ) async {
         guard !message.isEmpty || images?.isEmpty == false || documents?.isEmpty == false else {
             return
@@ -152,9 +158,14 @@ final class ChatViewModel: ObservableObject {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchMode,
                 webSearchProvider: webSearchProvider,
+                webSearchExaDepth: webSearchExaDepth,
+                webSearchContextSize: webSearchContextSize,
+                webSearchKagiSource: webSearchKagiSource,
+                webSearchValyuSearchType: webSearchValyuSearchType,
                 providerId: providerId,
                 documents: documents,
-                reasoningEffort: reasoningEffort
+                reasoningEffort: reasoningEffort,
+                temporaryMode: temporaryMode
             )
         } else {
             // Fallback to polling for image/video generation
@@ -166,11 +177,16 @@ final class ChatViewModel: ObservableObject {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchMode,
                 webSearchProvider: webSearchProvider,
+                webSearchExaDepth: webSearchExaDepth,
+                webSearchContextSize: webSearchContextSize,
+                webSearchKagiSource: webSearchKagiSource,
+                webSearchValyuSearchType: webSearchValyuSearchType,
                 providerId: providerId,
                 images: images,
                 documents: documents,
                 imageParams: imageParams,
-                videoParams: videoParams
+                videoParams: videoParams,
+                temporaryMode: temporaryMode
             )
         }
     }
@@ -184,9 +200,14 @@ final class ChatViewModel: ObservableObject {
         webSearchEnabled: Bool = false,
         webSearchMode: String? = nil,
         webSearchProvider: String? = nil,
+        webSearchExaDepth: String? = nil,
+        webSearchContextSize: String? = nil,
+        webSearchKagiSource: String? = nil,
+        webSearchValyuSearchType: String? = nil,
         providerId: String? = nil,
         documents: [DocumentAttachment]? = nil,
-        reasoningEffort: String? = nil
+        reasoningEffort: String? = nil,
+        temporaryMode: Bool? = nil
     ) async {
         isGenerating = true
         streamingContent = ""
@@ -206,9 +227,14 @@ final class ChatViewModel: ObservableObject {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchMode,
                 webSearchProvider: webSearchProvider,
+                webSearchExaDepth: webSearchExaDepth,
+                webSearchContextSize: webSearchContextSize,
+                webSearchKagiSource: webSearchKagiSource,
+                webSearchValyuSearchType: webSearchValyuSearchType,
                 providerId: providerId,
                 documents: documents,
-                reasoningEffort: reasoningEffort
+                reasoningEffort: reasoningEffort,
+                temporary: temporaryMode
             )
 
             for try await event in stream {
@@ -283,7 +309,8 @@ final class ChatViewModel: ObservableObject {
         } catch {
             // If streaming failed and we didn't receive any events, fall back to polling
             if !receivedAnyEvent {
-                print("SSE streaming failed, falling back to polling: \(error.localizedDescription)")
+                print(
+                    "SSE streaming failed, falling back to polling: \(error.localizedDescription)")
                 streamingMessageId = nil
                 streamingConversationId = nil
                 streamingContent = ""
@@ -297,11 +324,16 @@ final class ChatViewModel: ObservableObject {
                     webSearchEnabled: webSearchEnabled,
                     webSearchMode: webSearchMode,
                     webSearchProvider: webSearchProvider,
+                    webSearchExaDepth: webSearchExaDepth,
+                    webSearchContextSize: webSearchContextSize,
+                    webSearchKagiSource: webSearchKagiSource,
+                    webSearchValyuSearchType: webSearchValyuSearchType,
                     providerId: providerId,
                     images: nil,
                     documents: documents,
                     imageParams: nil,
-                    videoParams: nil
+                    videoParams: nil,
+                    temporaryMode: temporaryMode
                 )
             } else {
                 errorMessage = error.localizedDescription
@@ -323,11 +355,16 @@ final class ChatViewModel: ObservableObject {
         webSearchEnabled: Bool = false,
         webSearchMode: String? = nil,
         webSearchProvider: String? = nil,
+        webSearchExaDepth: String? = nil,
+        webSearchContextSize: String? = nil,
+        webSearchKagiSource: String? = nil,
+        webSearchValyuSearchType: String? = nil,
         providerId: String? = nil,
         images: [ImageAttachment]? = nil,
         documents: [DocumentAttachment]? = nil,
         imageParams: [String: AnyCodable]? = nil,
-        videoParams: [String: AnyCodable]? = nil
+        videoParams: [String: AnyCodable]? = nil,
+        temporaryMode: Bool? = nil
     ) async {
         isGenerating = true
 
@@ -340,11 +377,16 @@ final class ChatViewModel: ObservableObject {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchMode,
                 webSearchProvider: webSearchProvider,
+                webSearchExaDepth: webSearchExaDepth,
+                webSearchContextSize: webSearchContextSize,
+                webSearchKagiSource: webSearchKagiSource,
+                webSearchValyuSearchType: webSearchValyuSearchType,
                 providerId: providerId,
                 images: images,
                 documents: documents,
                 imageParams: imageParams,
-                videoParams: videoParams
+                videoParams: videoParams,
+                temporary: temporaryMode
             )
 
             let targetConversationId =
@@ -453,7 +495,13 @@ final class ChatViewModel: ObservableObject {
         webSearchEnabled: Bool = false,
         webSearchMode: String? = nil,
         webSearchProvider: String? = nil,
-        providerId: String? = nil
+        webSearchExaDepth: String? = nil,
+        webSearchContextSize: String? = nil,
+        webSearchKagiSource: String? = nil,
+        webSearchValyuSearchType: String? = nil,
+        providerId: String? = nil,
+        reasoningEffort: String? = nil,
+        temporaryMode: Bool? = nil
     ) async {
         isGenerating = true
         streamingContent = ""
@@ -471,9 +519,14 @@ final class ChatViewModel: ObservableObject {
                 webSearchEnabled: webSearchEnabled,
                 webSearchMode: webSearchMode,
                 webSearchProvider: webSearchProvider,
+                webSearchExaDepth: webSearchExaDepth,
+                webSearchContextSize: webSearchContextSize,
+                webSearchKagiSource: webSearchKagiSource,
+                webSearchValyuSearchType: webSearchValyuSearchType,
                 providerId: providerId,
                 documents: nil,
-                reasoningEffort: nil
+                reasoningEffort: reasoningEffort,
+                temporary: temporaryMode
             )
 
             for try await event in stream {

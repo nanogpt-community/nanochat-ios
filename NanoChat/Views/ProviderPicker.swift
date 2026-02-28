@@ -4,10 +4,16 @@ struct ProviderPicker: View {
     let availableProviders: [ProviderInfo]
     let selectedProviderId: String?
     let onSelectProvider: (String?) -> Void
-    
+
     @Binding var webSearchMode: WebSearchMode
     @Binding var webSearchProvider: WebSearchProvider
-    
+    @Binding var webSearchExaDepth: WebSearchExaDepth
+    @Binding var webSearchContextSize: WebSearchContextSize
+    @Binding var webSearchKagiSource: WebSearchKagiSource
+    @Binding var webSearchValyuSearchType: WebSearchValyuSearchType
+    @Binding var reasoningEffort: ReasoningEffort
+    @Binding var temporaryMode: Bool
+
     var body: some View {
         VStack(spacing: 0) {
             Text("Settings")
@@ -50,21 +56,21 @@ struct ProviderPicker: View {
                                     .frame(maxWidth: .infinity)
                                     .background(
                                         webSearchMode == mode
-                                        ? Theme.Colors.accent.opacity(0.1)
-                                        : Theme.Colors.glassBackground
+                                            ? Theme.Colors.accent.opacity(0.1)
+                                            : Theme.Colors.glassBackground
                                     )
                                     .foregroundStyle(
                                         webSearchMode == mode
-                                        ? Theme.Colors.accent
-                                        : Theme.Colors.text
+                                            ? Theme.Colors.accent
+                                            : Theme.Colors.text
                                     )
                                     .clipShape(RoundedRectangle(cornerRadius: Theme.scaled(8)))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: Theme.scaled(8))
                                             .stroke(
                                                 webSearchMode == mode
-                                                ? Theme.Colors.accent
-                                                : Color.clear,
+                                                    ? Theme.Colors.accent
+                                                    : Color.clear,
                                                 lineWidth: 1
                                             )
                                     )
@@ -99,21 +105,21 @@ struct ProviderPicker: View {
                                                 .padding(.horizontal, Theme.scaled(12))
                                                 .background(
                                                     webSearchProvider == provider
-                                                    ? Theme.Colors.primary.opacity(0.1)
-                                                    : Theme.Colors.glassBackground
+                                                        ? Theme.Colors.primary.opacity(0.1)
+                                                        : Theme.Colors.glassBackground
                                                 )
                                                 .foregroundStyle(
                                                     webSearchProvider == provider
-                                                    ? Theme.Colors.primary
-                                                    : Theme.Colors.text
+                                                        ? Theme.Colors.primary
+                                                        : Theme.Colors.text
                                                 )
                                                 .clipShape(Capsule())
                                                 .overlay(
                                                     Capsule()
                                                         .stroke(
                                                             webSearchProvider == provider
-                                                            ? Theme.Colors.primary
-                                                            : Theme.Colors.border,
+                                                                ? Theme.Colors.primary
+                                                                : Theme.Colors.border,
                                                             lineWidth: 1
                                                         )
                                                 )
@@ -126,9 +132,82 @@ struct ProviderPicker: View {
                                 }
                             }
                             .transition(.opacity.combined(with: .move(edge: .top)))
+
+                            optionChips(
+                                title: "Context Size",
+                                items: WebSearchContextSize.allCases,
+                                selected: webSearchContextSize,
+                                selection: { webSearchContextSize = $0 }
+                            )
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+
+                            if webSearchProvider == .exa {
+                                optionChips(
+                                    title: "Exa Depth",
+                                    items: WebSearchExaDepth.allCases,
+                                    selected: webSearchExaDepth,
+                                    selection: { webSearchExaDepth = $0 }
+                                )
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+
+                            if webSearchProvider == .kagi {
+                                optionChips(
+                                    title: "Kagi Source",
+                                    items: WebSearchKagiSource.allCases,
+                                    selected: webSearchKagiSource,
+                                    selection: { webSearchKagiSource = $0 }
+                                )
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+
+                            if webSearchProvider == .valyu {
+                                optionChips(
+                                    title: "Valyu Search Type",
+                                    items: WebSearchValyuSearchType.allCases,
+                                    selected: webSearchValyuSearchType,
+                                    selection: { webSearchValyuSearchType = $0 }
+                                )
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                         }
                     }
                     .padding(.top, Theme.scaled(16))
+
+                    Divider()
+
+                    // MARK: - Generation Section
+                    VStack(alignment: .leading, spacing: Theme.scaled(12)) {
+                        Text("Generation")
+                            .font(Theme.font(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.textSecondary)
+                            .padding(.horizontal, Theme.scaled(16))
+
+                        optionChips(
+                            title: "Reasoning Effort",
+                            items: ReasoningEffort.allCases,
+                            selected: reasoningEffort,
+                            selection: { reasoningEffort = $0 }
+                        )
+
+                        HStack {
+                            VStack(alignment: .leading, spacing: Theme.scaled(2)) {
+                                Text("Temporary Mode")
+                                    .font(Theme.font(size: 14, weight: .medium))
+                                    .foregroundStyle(Theme.Colors.text)
+                                Text("Do not store this conversation")
+                                    .font(Theme.font(size: 12))
+                                    .foregroundStyle(Theme.Colors.textTertiary)
+                            }
+
+                            Spacer()
+
+                            Toggle("", isOn: $temporaryMode)
+                                .labelsHidden()
+                                .tint(Theme.Colors.accent)
+                        }
+                        .padding(.horizontal, Theme.scaled(16))
+                    }
 
                     Divider()
 
@@ -181,9 +260,11 @@ struct ProviderPicker: View {
                                         Text(provider.provider.capitalized)
                                             .font(Theme.font(size: 16))
                                             .foregroundStyle(Theme.Colors.text)
-                                        Text("\(formatPrice(provider.pricing.inputPer1kTokens)) input / \(formatPrice(provider.pricing.outputPer1kTokens)) output")
-                                            .font(Theme.font(size: 12))
-                                            .foregroundStyle(Theme.Colors.textSecondary)
+                                        Text(
+                                            "\(formatPrice(provider.pricing.inputPer1kTokens)) input / \(formatPrice(provider.pricing.outputPer1kTokens)) output"
+                                        )
+                                        .font(Theme.font(size: 12))
+                                        .foregroundStyle(Theme.Colors.textSecondary)
                                     }
 
                                     Spacer()
@@ -220,7 +301,67 @@ struct ProviderPicker: View {
         .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
         .padding(.horizontal, Theme.scaled(16))
     }
-    
+
+    private func optionChips<T: CaseIterable & Identifiable>(
+        title: String,
+        items: T.AllCases,
+        selected: T,
+        selection: @escaping (T) -> Void
+    ) -> some View where T: RawRepresentable, T.RawValue == String, T.ID == String {
+        VStack(alignment: .leading, spacing: Theme.scaled(8)) {
+            Text(title)
+                .font(Theme.font(size: 12))
+                .foregroundStyle(Theme.Colors.textTertiary)
+                .padding(.horizontal, Theme.scaled(16))
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: Theme.scaled(8)) {
+                    ForEach(Array(items), id: \.id) { item in
+                        Button {
+                            selection(item)
+                        } label: {
+                            Text(prettyLabel(item.rawValue))
+                                .font(Theme.font(size: 12))
+                                .padding(.vertical, Theme.scaled(6))
+                                .padding(.horizontal, Theme.scaled(12))
+                                .background(
+                                    selected.id == item.id
+                                        ? Theme.Colors.secondary.opacity(0.15)
+                                        : Theme.Colors.glassBackground
+                                )
+                                .foregroundStyle(
+                                    selected.id == item.id
+                                        ? Theme.Colors.secondary
+                                        : Theme.Colors.text
+                                )
+                                .clipShape(Capsule())
+                                .overlay(
+                                    Capsule()
+                                        .stroke(
+                                            selected.id == item.id
+                                                ? Theme.Colors.secondary
+                                                : Theme.Colors.border,
+                                            lineWidth: 1
+                                        )
+                                )
+                                .contentShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, Theme.scaled(16))
+            }
+        }
+    }
+
+    private func prettyLabel(_ rawValue: String) -> String {
+        rawValue
+            .replacingOccurrences(of: "-", with: " ")
+            .split(separator: " ")
+            .map { $0.capitalized }
+            .joined(separator: " ")
+    }
+
     private func formatPrice(_ price: Double) -> String {
         String(format: "$%.4f", price)
     }

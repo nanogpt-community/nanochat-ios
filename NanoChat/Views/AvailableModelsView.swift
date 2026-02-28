@@ -117,9 +117,15 @@ struct AvailableModelsView: View {
 
                         LazyVStack(spacing: Theme.Spacing.sm) {
                             ForEach(filteredModels) { model in
+                                let isEnabled = !modelManager.hiddenModelIds.contains(model.modelId)
                                 HStack(spacing: Theme.Spacing.sm) {
                                     Button {
-                                        modelManager.toggleModelVisibility(id: model.modelId)
+                                        Task {
+                                            await modelManager.setModelEnabled(
+                                                id: model.modelId,
+                                                enabled: !isEnabled
+                                            )
+                                        }
                                     } label: {
                                         HStack {
                                             VStack(alignment: .leading, spacing: 4) {
@@ -136,8 +142,7 @@ struct AvailableModelsView: View {
 
                                             Spacer()
 
-                                            if !modelManager.hiddenModelIds.contains(model.modelId)
-                                            {
+                                            if isEnabled {
                                                 Image(systemName: "checkmark.circle.fill")
                                                     .font(.title3)
                                                     .foregroundStyle(Theme.Colors.secondary)
