@@ -1,36 +1,72 @@
 # NanoChat iOS
 
-A native iOS app for [NanoChat](https://github.com/nanogpt-community/nanochat)
-
+Native iOS client for [nanochat](https://github.com/nanogpt-community/nanochat), built with SwiftUI and a Liquid Glass UI.
 
 ## Download
 
-[Join the TestFlight Beta](https://testflight.apple.com/join/afmPp2xW)
+- TestFlight: https://testflight.apple.com/join/afmPp2xW
 
-## Features
+## What This App Supports
 
-### Chat
+### Chat and Generation
+
 - Real-time streaming responses
-- Multi-model support with provider selection
-- Web search integration (Linkup, Tavily, Serper, SearXNG)
+- Model selection with per-model provider override
+- Web search modes: `off`, `standard`, `deep`
+- Web search providers:
+  - Linkup
+  - Tavily
+  - Exa
+  - Kagi
+  - Perplexity
+  - Valyu
+  - Brave / Brave Pro / Brave Research
+- Provider-specific search options:
+  - Exa depth (`fast`, `auto`, `neural`, `deep`)
+  - Context size (`low`, `medium`, `high`)
+  - Kagi source (`web`, `news`, `search`)
+  - Valyu search type (`all`, `web`)
+- Reasoning effort control (`low`, `medium`, `high`)
+- Temporary mode (do not store conversation)
 - Image and document attachments
-- Voice input with audio recording
+- Voice input (speech-to-text)
 - Text-to-speech playback
 - Markdown rendering with syntax highlighting
-- Follow-up question suggestions
-- Message starring and search
-- Batch message operations
+- Follow-up suggestion chips
+- Message actions: star, edit, branch, regenerate, batch operations
+- Public conversation toggle and share link actions
 
-### Organization
-- **Conversations** - Chat history with pinning support
-- **Projects** - Organize conversations into projects
-- **Assistants** - Create and manage custom AI assistants
-- **Starred Messages** - Quick access to important messages
+### Organization and Navigation
+
+- Conversations with pinning, rename, delete, and move-to-project
+- Conversation search modes in sidebar:
+  - Word Matching
+  - Exact Match
+  - Fuzzy Search
+- In-chat message search with same search modes
+- Assistants management
+- Projects management
+- Starred messages view
+- Native Gallery view in sidebar showing all image files
+- Stored files gallery in Settings
+
+### Settings and Account
+
+- Account profile/settings editing
+- NanoGPT API key (BYOK) management
+- Developer API key management
+- Prompt templates management
+- Scheduled tasks management
+- Audio settings
+- Analytics view
+- Theme selection (System, Light, Dark)
 
 ### Security
+
 - API key stored in Keychain
-- Bearer token authentication
-- Local data persistence with SwiftData
+- Bearer token auth for API calls
+- Local persistence with SwiftData
+- Authenticated image loading for private storage files
 
 ## Requirements
 
@@ -40,54 +76,55 @@ A native iOS app for [NanoChat](https://github.com/nanogpt-community/nanochat)
 
 ## Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/nanogpt-community/nanochat-ios
-   cd nanochat-ios
-   ```
+1. Clone the repo:
 
-2. **Open in Xcode**
-   ```bash
-   open NanoChatApp.xcodeproj
-   ```
+```bash
+git clone https://github.com/nanogpt-community/nanochat-ios
+cd nanochat-ios
+```
 
-3. **Build and Run**
-   - Select a simulator or device
-   - Press Cmd+R to build and run
+2. Open the project:
 
-## Configuration
+```bash
+open NanoChatApp.xcodeproj
+```
+
+3. Run from Xcode on iPhone or iPad simulator/device.
+
+## Connect to NanoChat
 
 ### API Key
 
-1. Go to your NanoChat web app (Public instance at t3.0xgingi.xyz or selfhost it yourself)
-2. Navigate to Settings > Developer
-3. Generate an API key
-4. Enter the key in the iOS app login screen
+1. Open your NanoChat web app (public instance: `https://t3.0xgingi.xyz` or your self-hosted instance).
+2. Go to account/developer settings.
+3. Generate an API key.
+4. Enter it in the iOS app authentication screen.
 
 ### Server URL
 
-Default server: `https://t3.0xgingi.xyz`
-
-You can connect to a self-hosted NanoChat server by entering your server URL on the login screen.
+- Default server: `https://t3.0xgingi.xyz`
+- You can point the app to any compatible self-hosted NanoChat server from the login/server settings flow.
 
 ## Architecture
 
-The app follows **MVVM architecture** with:
+The app uses MVVM with SwiftUI:
 
-- **Models** - SwiftData models for local persistence
-- **ViewModels** - `@Observable` classes managing state
-- **Views** - SwiftUI views with Liquid Glass styling
-- **Services** - Singleton services for API, audio, storage
+- Models: `NanoChat/Models`
+- ViewModels: `NanoChat/ViewModels`
+- Views: `NanoChat/Views`
+- Services: `NanoChat/Services`
 
-### Key Components
+Key services/components:
 
-| Component | Purpose |
-|-----------|---------|
-| `NanoChatAPI` | HTTP client for all API calls |
-| `AuthenticationManager` | User authentication state |
-| `ChatViewModel` | Chat functionality and streaming |
-| `ModelManager` | AI model and provider management |
-| `AssistantManager` | Assistant CRUD operations |
-| `KeychainManager` | Secure credential storage |
-| `AudioRecorder` | Voice input recording |
-| `AudioPlaybackManager` | TTS audio playback |
+- `NanoChatAPI` for HTTP/API integration
+- `AuthenticationManager` for auth state
+- `ChatViewModel` for chat state/streaming
+- `ModelManager` for model/provider state
+- `AssistantManager` for assistant CRUD
+- `KeychainManager` for credential storage
+- `AudioRecorder` / `AudioPlaybackManager` for voice features
+
+## Notes
+
+- This repository currently targets iOS (iPhone/iPad).
+- API compatibility depends on the NanoChat server version.
